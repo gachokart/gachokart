@@ -1,4 +1,8 @@
-## Hi there 👋
+<h1 align="center" style="font-size: 3em;">Taras Gachok</h1>
+
+<div align="center" style="background: linear-gradient(to right, #d00000, #000000); padding: 20px; border-radius: 10px;">
+  <h2 style="color: white; font-size: 2em; margin: 0;">Analyst</h2>
+</div>
 
 <!--
 **gachokart/gachokart** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
