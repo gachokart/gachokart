@@ -2,27 +2,63 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <title>Blazkowicz</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blazkowicz Analyst</title>
   <style>
     body {
-      text-align: center;
-      background: linear-gradient(to right, #d00000, #000000);
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom, #000000, #990000);
       color: white;
-      font-family: sans-serif;
-      padding-top: 100px;
     }
-    h1 {
-      font-size: 3em;
-      margin-bottom: 0.2em;
+
+    header {
+      text-align: center;
+      padding: 40px 20px 10px;
+      background-color: rgba(0, 0, 0, 0.8);
     }
-    h2 {
-      font-size: 2em;
-      margin-top: 0;
+
+    header h1 {
+      font-size: 48px;
+      margin: 0;
+      letter-spacing: 2px;
+    }
+
+    header h2 {
+      font-size: 24px;
+      margin-top: 10px;
+      color: white;
+    }
+
+    .section {
+      height: calc(100vh / 3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .section:nth-child(2) {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .section:nth-child(3) {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .section:nth-child(4) {
+      background-color: rgba(255, 255, 255, 0.15);
     }
   </style>
 </head>
 <body>
-  <h1>Blazkowicz</h1>
-  <h2>Analyst</h2>
+  <header>
+    <h1>Blazkowicz</h1>
+    <h2>Analyst</h2>
+  </header>
+
+  <div class="section">Секція 1</div>
+  <div class="section">Секція 2</div>
+  <div class="section">Секція 3</div>
 </body>
 </html>
