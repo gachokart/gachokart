@@ -76,16 +76,42 @@
     .section:nth-child(4) {
       background-color: rgba(255, 255, 255, 0.15);
     }
+
+    /* Custom dropdown with flags */
+    .language-selector select option {
+      background-color: #000;
+      color: #fff;
+      padding-left: 25px;
+      background-repeat: no-repeat;
+      background-size: 20px 15px;
+      background-position: 5px center;
+    }
+
+    option[value="uk"] {
+      background-image: url("flags/uk.png");
+    }
+
+    option[value="en"] {
+      background-image: url("flags/en.png");
+    }
+
+    option[value="pl"] {
+      background-image: url("flags/pl.png");
+    }
+
+    option[value="de"] {
+      background-image: url("flags/de.png");
+    }
   </style>
 </head>
 <body>
   <header>
     <div class="language-selector">
       <select id="languageSelect" onchange="changeLanguage()">
-        <option value="uk">🇺🇦 Українська</option>
-        <option value="en">🇬🇧 English</option>
-        <option value="pl">🇵🇱 Polski</option>
-        <option value="de">🇩🇪 Deutsch</option>
+        <option value="uk">Українська</option>
+        <option value="en">English</option>
+        <option value="pl">Polski</option>
+        <option value="de">Deutsch</option>
       </select>
     </div>
     <h1>Blazkowicz</h1>
