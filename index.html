@@ -81,19 +81,56 @@
 <body>
   <header>
     <div class="language-selector">
-      <select name="language">
-        <option value="uk">Українська</option>
-        <option value="en">English</option>
-        <option value="pl">Polski</option>
-        <option value="de">Deutsch</option>
+      <select id="languageSelect" onchange="changeLanguage()">
+        <option value="uk">🇺🇦 Українська</option>
+        <option value="en">🇬🇧 English</option>
+        <option value="pl">🇵🇱 Polski</option>
+        <option value="de">🇩🇪 Deutsch</option>
       </select>
     </div>
     <h1>Blazkowicz</h1>
-    <h2>Analyst</h2>
+    <h2 id="analystText">Аналітик</h2>
   </header>
 
-  <div class="section">Games</div>
-  <div class="section">Data</div>
-  <div class="section">Education</div>
+  <div class="section" id="gamesSection">Ігри</div>
+  <div class="section" id="dataSection">Дані</div>
+  <div class="section" id="educationSection">Освіта</div>
+
+  <script>
+    const translations = {
+      uk: {
+        games: "Ігри",
+        data: "Дані",
+        education: "Освіта",
+        analyst: "Аналітик"
+      },
+      en: {
+        games: "Games",
+        data: "Data",
+        education: "Education",
+        analyst: "Analyst"
+      },
+      pl: {
+        games: "Gry",
+        data: "Dane",
+        education: "Edukacja",
+        analyst: "Analityk"
+      },
+      de: {
+        games: "Spiele",
+        data: "Daten",
+        education: "Bildung",
+        analyst: "Analyst"
+      }
+    };
+
+    function changeLanguage() {
+      const lang = document.getElementById("languageSelect").value;
+      document.getElementById("analystText").textContent = translations[lang].analyst;
+      document.getElementById("gamesSection").textContent = translations[lang].games;
+      document.getElementById("dataSection").textContent = translations[lang].data;
+      document.getElementById("educationSection").textContent = translations[lang].education;
+    }
+  </script>
 </body>
 </html>
