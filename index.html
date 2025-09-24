@@ -15,6 +15,7 @@
     }
 
     header {
+      position: relative;
       text-align: center;
       padding: 40px 20px 10px;
       background-color: rgba(0, 0, 0, 0.8);
@@ -34,6 +35,22 @@
       font-size: 20px;
       margin-top: 10px;
       color: #ffffff;
+      text-shadow: 1px 1px #000;
+    }
+
+    .language-selector {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+
+    .language-selector select {
+      font-family: 'Press Start 2P', cursive;
+      background-color: #000;
+      color: #fff;
+      border: 2px solid #ff0000;
+      padding: 5px;
+      font-size: 12px;
       text-shadow: 1px 1px #000;
     }
 
@@ -63,6 +80,14 @@
 </head>
 <body>
   <header>
+    <div class="language-selector">
+      <select name="language">
+        <option value="uk">Українська</option>
+        <option value="en">English</option>
+        <option value="pl">Polski</option>
+        <option value="de">Deutsch</option>
+      </select>
+    </div>
     <h1>Blazkowicz</h1>
     <h2>Analyst</h2>
   </header>
