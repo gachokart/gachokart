@@ -42,19 +42,59 @@
       position: absolute;
       top: 20px;
       right: 20px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
     }
 
-    .language-selector select {
-      font-family: 'Press Start 2P', cursive;
+    /* кастомний селект */
+    .custom-select {
+      position: relative;
+      width: 150px;
+      cursor: pointer;
+      border: 2px solid #ff0000;
       background-color: #000;
       color: #fff;
-      border: 2px solid #ff0000;
-      padding: 5px;
-      font-size: 12px;
       text-shadow: 1px 1px #000;
-      background-repeat: no-repeat;
-      background-position: 5px center;
-      background-size: 20px 15px;
+    }
+
+    .selected-option {
+      display: flex;
+      align-items: center;
+      padding: 5px 10px;
+    }
+
+    .selected-option img {
+      width: 20px;
+      height: 15px;
+      margin-right: 8px;
+    }
+
+    .options {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      background-color: #111;
+      border: 2px solid #ff0000;
+      z-index: 10;
+    }
+
+    .option {
+      display: flex;
+      align-items: center;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+
+    .option:hover {
+      background-color: #333;
+    }
+
+    .option img {
+      width: 20px;
+      height: 15px;
+      margin-right: 8px;
     }
 
     .section {
@@ -68,28 +108,26 @@
       letter-spacing: 1px;
     }
 
-    .section:nth-child(2) {
-      background-color: rgba(255, 255, 255, 0.05);
-    }
-
-    .section:nth-child(3) {
-      background-color: rgba(255, 255, 255, 0.1);
-    }
-
-    .section:nth-child(4) {
-      background-color: rgba(255, 255, 255, 0.15);
-    }
+    .section:nth-child(2) { background-color: rgba(255, 255, 255, 0.05); }
+    .section:nth-child(3) { background-color: rgba(255, 255, 255, 0.1); }
+    .section:nth-child(4) { background-color: rgba(255, 255, 255, 0.15); }
   </style>
 </head>
 <body>
   <header>
     <div class="language-selector">
-      <select id="languageSelect" onchange="changeLanguage()">
-        <option value="ua" style="background-image: url('flags/ua.png');">Українська</option>
-        <option value="en" style="background-image: url('flags/gb.png');">English</option>
-        <option value="pl" style="background-image: url('flags/pl.png');">Polski</option>
-        <option value="de" style="background-image: url('flags/de.png');">Deutsch</option>
-      </select>
+      <div class="custom-select" id="languageSelect">
+        <div class="selected-option">
+          <img src="flags/ua.png" alt="UA">
+          <span>Українська</span>
+        </div>
+        <div class="options">
+          <div class="option" data-lang="ua"><img src="flags/ua.png">Українська</div>
+          <div class="option" data-lang="en"><img src="flags/gb.png">English</div>
+          <div class="option" data-lang="pl"><img src="flags/pl.png">Polski</div>
+          <div class="option" data-lang="de"><img src="flags/de.png">Deutsch</div>
+        </div>
+      </div>
     </div>
     <h1>Blazkowicz</h1>
     <h2 id="analystText">Аналітик</h2>
@@ -101,39 +139,46 @@
 
   <script>
     const translations = {
-      ua: {
-        games: "Ігри",
-        data: "Дані",
-        education: "Освіта",
-        analyst: "Аналітик"
-      },
-      en: {
-        games: "Games",
-        data: "Data",
-        education: "Education",
-        analyst: "Analyst"
-      },
-      pl: {
-        games: "Gry",
-        data: "Dane",
-        education: "Edukacja",
-        analyst: "Analityk"
-      },
-      de: {
-        games: "Spiele",
-        data: "Daten",
-        education: "Bildung",
-        analyst: "Analyst"
-      }
+      ua: { games: "Ігри", data: "Дані", education: "Освіта", analyst: "Аналітик" },
+      en: { games: "Games", data: "Data", education: "Education", analyst: "Analyst" },
+      pl: { games: "Gry", data: "Dane", education: "Edukacja", analyst: "Analityk" },
+      de: { games: "Spiele", data: "Daten", education: "Bildung", analyst: "Analyst" }
     };
 
-    function changeLanguage() {
-      const lang = document.getElementById("languageSelect").value;
-      document.getElementById("analystText").textContent = translations[lang].analyst;
-      document.getElementById("gamesSection").textContent = translations[lang].games;
-      document.getElementById("dataSection").textContent = translations[lang].data;
-      document.getElementById("educationSection").textContent = translations[lang].education;
-    }
+    const select = document.getElementById("languageSelect");
+    const selected = select.querySelector(".selected-option");
+    const options = select.querySelector(".options");
+
+    // відкриття/закриття списку
+    selected.addEventListener("click", () => {
+      options.style.display = options.style.display === "block" ? "none" : "block";
+    });
+
+    // вибір мови
+    select.querySelectorAll(".option").forEach(opt => {
+      opt.addEventListener("click", () => {
+        const lang = opt.dataset.lang;
+        const img = opt.querySelector("img").src;
+        const text = opt.textContent;
+
+        selected.innerHTML = `<img src="${img}" alt="${lang}"><span>${text}</span>`;
+        options.style.display = "none";
+
+        // переклад секцій
+        document.getElementById("analystText").textContent = translations[lang].analyst;
+        document.getElementById("gamesSection").textContent = translations[lang].games;
+        document.getElementById("dataSection").textContent = translations[lang].data;
+        document.getElementById("educationSection").textContent = translations[lang].education;
+      });
+    });
+
+    // закриття при кліку поза селектором
+    document.addEventListener("click", (e) => {
+      if (!select.contains(e.target)) {
+        options.style.display = "none";
+      }
+    });
   </script>
 </body>
 </html>
+
