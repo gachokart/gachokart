@@ -53,6 +53,7 @@
       background-color: #000;
       color: #fff;
       text-shadow: 1px 1px #000;
+      font-family: 'Press Start 2P'
       font-size: 11px; /* зменшив шрифт */
       user-select: none;
     }
@@ -69,10 +70,12 @@
       margin-right: 8px;
     }
 
-    .selected-option span {
-      font-size: 11px;
-      white-space: nowrap; /* не переносити */
-    }
+    .selected-option span,
+.option span {
+  font-family: 'Press Start 2P', cursive; /* ✅ шрифт у стилі Blazkowicz */
+  font-size: 10px;
+  white-space: nowrap;
+}
 
     .options {
       display: none;
