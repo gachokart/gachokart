@@ -38,23 +38,23 @@
       text-shadow: 1px 1px #000;
     }
 
+    /* ==== Language Selector ==== */
     .language-selector {
       position: absolute;
       top: 20px;
       right: 20px;
-      font-family: 'Press Start 2P', cursive;
-      font-size: 12px;
     }
 
-    /* кастомний селект */
     .custom-select {
       position: relative;
-      width: 150px;
+      width: 180px; /* збільшив ширину */
       cursor: pointer;
       border: 2px solid #ff0000;
       background-color: #000;
       color: #fff;
       text-shadow: 1px 1px #000;
+      font-size: 11px; /* зменшив шрифт */
+      user-select: none;
     }
 
     .selected-option {
@@ -69,15 +69,20 @@
       margin-right: 8px;
     }
 
+    .selected-option span {
+      font-size: 11px;
+      white-space: nowrap; /* не переносити */
+    }
+
     .options {
       display: none;
       position: absolute;
       top: 100%;
       left: 0;
       width: 100%;
-      background-color: #111;
+      background-color: #000;
       border: 2px solid #ff0000;
-      z-index: 10;
+      z-index: 1000;
     }
 
     .option {
@@ -88,7 +93,7 @@
     }
 
     .option:hover {
-      background-color: #333;
+      background-color: rgba(255, 0, 0, 0.5);
     }
 
     .option img {
@@ -97,6 +102,7 @@
       margin-right: 8px;
     }
 
+    /* ==== Sections ==== */
     .section {
       height: calc(100vh / 3);
       display: flex;
@@ -108,9 +114,17 @@
       letter-spacing: 1px;
     }
 
-    .section:nth-child(2) { background-color: rgba(255, 255, 255, 0.05); }
-    .section:nth-child(3) { background-color: rgba(255, 255, 255, 0.1); }
-    .section:nth-child(4) { background-color: rgba(255, 255, 255, 0.15); }
+    .section:nth-child(2) {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .section:nth-child(3) {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .section:nth-child(4) {
+      background-color: rgba(255, 255, 255, 0.15);
+    }
   </style>
 </head>
 <body>
@@ -122,10 +136,10 @@
           <span>Українська</span>
         </div>
         <div class="options">
-          <div class="option" data-lang="ua"><img src="flags/ua.png">Українська</div>
-          <div class="option" data-lang="en"><img src="flags/gb.png">English</div>
-          <div class="option" data-lang="pl"><img src="flags/pl.png">Polski</div>
-          <div class="option" data-lang="de"><img src="flags/de.png">Deutsch</div>
+          <div class="option" data-lang="ua"><img src="flags/ua.png" alt="UA"><span>Українська</span></div>
+          <div class="option" data-lang="en"><img src="flags/gb.png" alt="EN"><span>English</span></div>
+          <div class="option" data-lang="pl"><img src="flags/pl.png" alt="PL"><span>Polski</span></div>
+          <div class="option" data-lang="de"><img src="flags/de.png" alt="DE"><span>Deutsch</span></div>
         </div>
       </div>
     </div>
@@ -145,26 +159,20 @@
       de: { games: "Spiele", data: "Daten", education: "Bildung", analyst: "Analyst" }
     };
 
-    const select = document.getElementById("languageSelect");
-    const selected = select.querySelector(".selected-option");
-    const options = select.querySelector(".options");
+    const languageSelect = document.getElementById("languageSelect");
+    const selectedOption = languageSelect.querySelector(".selected-option");
+    const options = languageSelect.querySelector(".options");
 
-    // відкриття/закриття списку
-    selected.addEventListener("click", () => {
+    selectedOption.addEventListener("click", () => {
       options.style.display = options.style.display === "block" ? "none" : "block";
     });
 
-    // вибір мови
-    select.querySelectorAll(".option").forEach(opt => {
-      opt.addEventListener("click", () => {
-        const lang = opt.dataset.lang;
-        const img = opt.querySelector("img").src;
-        const text = opt.textContent;
-
-        selected.innerHTML = `<img src="${img}" alt="${lang}"><span>${text}</span>`;
+    document.querySelectorAll(".option").forEach(option => {
+      option.addEventListener("click", () => {
+        const lang = option.getAttribute("data-lang");
+        selectedOption.innerHTML = option.innerHTML;
         options.style.display = "none";
 
-        // переклад секцій
         document.getElementById("analystText").textContent = translations[lang].analyst;
         document.getElementById("gamesSection").textContent = translations[lang].games;
         document.getElementById("dataSection").textContent = translations[lang].data;
@@ -172,13 +180,13 @@
       });
     });
 
-    // закриття при кліку поза селектором
     document.addEventListener("click", (e) => {
-      if (!select.contains(e.target)) {
+      if (!languageSelect.contains(e.target)) {
         options.style.display = "none";
       }
     });
   </script>
 </body>
 </html>
+
 
