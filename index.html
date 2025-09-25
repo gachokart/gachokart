@@ -7,11 +7,68 @@
   <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
   <style>
-    body {
+    body, html {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(to bottom, #000000, #990000);
-      color: white;
+      padding: 0;
+      height: 100%;
+      background: black;
+      overflow: hidden;
+    }
+
+    /* ==== LOADING SCREEN ==== */
+    #loadingScreen {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom, #000, #600000);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Press Start 2P', cursive;
+      color: #ff0000;
+      text-shadow: 2px 2px #000;
+      z-index: 9999;
+    }
+
+    #loadingText {
+      font-size: 20px;
+      margin-bottom: 20px;
+      animation: blink 1s infinite;
+    }
+
+    #progressBar {
+      width: 80%;
+      height: 30px;
+      border: 3px solid #ff0000;
+      background: #111;
+      position: relative;
+    }
+
+    #progressFill {
+      height: 100%;
+      width: 0%;
+      background: #ff0000;
+      transition: width 0.1s linear;
+    }
+
+    #progressPercent {
+      margin-top: 15px;
+      font-size: 18px;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0.5; }
+    }
+
+    /* ==== SITE CONTENT ==== */
+    #mainContent {
+      display: none;
+    }
+
+    body.loaded {
+      overflow: auto;
     }
 
     header {
@@ -47,14 +104,14 @@
 
     .custom-select {
       position: relative;
-      width: 180px; /* збільшив ширину */
+      width: 180px;
       cursor: pointer;
       border: 2px solid #ff0000;
       background-color: #000;
       color: #fff;
       text-shadow: 1px 1px #000;
-      font-family: 'Press Start 2P'
-      font-size: 11px; /* зменшив шрифт */
+      font-family: 'Press Start 2P', cursive; /* стиль як Blazkowicz */
+      font-size: 10px;
       user-select: none;
     }
 
@@ -70,12 +127,10 @@
       margin-right: 8px;
     }
 
-    .selected-option span,
-.option span {
-  font-family: 'Press Start 2P', cursive; /* ✅ шрифт у стилі Blazkowicz */
-  font-size: 10px;
-  white-space: nowrap;
-}
+    .selected-option span {
+      font-size: 10px;
+      white-space: nowrap;
+    }
 
     .options {
       display: none;
@@ -93,6 +148,8 @@
       align-items: center;
       padding: 5px 10px;
       cursor: pointer;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 10px;
     }
 
     .option:hover {
@@ -131,30 +188,65 @@
   </style>
 </head>
 <body>
-  <header>
-    <div class="language-selector">
-      <div class="custom-select" id="languageSelect">
-        <div class="selected-option">
-          <img src="flags/ua.png" alt="UA">
-          <span>Українська</span>
-        </div>
-        <div class="options">
-          <div class="option" data-lang="ua"><img src="flags/ua.png" alt="UA"><span>Українська</span></div>
-          <div class="option" data-lang="en"><img src="flags/gb.png" alt="EN"><span>English</span></div>
-          <div class="option" data-lang="pl"><img src="flags/pl.png" alt="PL"><span>Polski</span></div>
-          <div class="option" data-lang="de"><img src="flags/de.png" alt="DE"><span>Deutsch</span></div>
+  <!-- LOADING SCREEN -->
+  <div id="loadingScreen">
+    <div id="loadingText">LOADING...</div>
+    <div id="progressBar">
+      <div id="progressFill"></div>
+    </div>
+    <div id="progressPercent">0%</div>
+  </div>
+
+  <!-- MAIN SITE -->
+  <div id="mainContent">
+    <header>
+      <div class="language-selector">
+        <div class="custom-select" id="languageSelect">
+          <div class="selected-option">
+            <img src="flags/ua.png" alt="UA">
+            <span>Українська</span>
+          </div>
+          <div class="options">
+            <div class="option" data-lang="ua"><img src="flags/ua.png" alt="UA"><span>Українська</span></div>
+            <div class="option" data-lang="en"><img src="flags/gb.png" alt="EN"><span>English</span></div>
+            <div class="option" data-lang="pl"><img src="flags/pl.png" alt="PL"><span>Polski</span></div>
+            <div class="option" data-lang="de"><img src="flags/de.png" alt="DE"><span>Deutsch</span></div>
+          </div>
         </div>
       </div>
-    </div>
-    <h1>Blazkowicz</h1>
-    <h2 id="analystText">Аналітик</h2>
-  </header>
+      <h1>Blazkowicz</h1>
+      <h2 id="analystText">Аналітик</h2>
+    </header>
 
-  <div class="section" id="gamesSection">Ігри</div>
-  <div class="section" id="dataSection">Дані</div>
-  <div class="section" id="educationSection">Освіта</div>
+    <div class="section" id="gamesSection">Ігри</div>
+    <div class="section" id="dataSection">Дані</div>
+    <div class="section" id="educationSection">Освіта</div>
+  </div>
 
   <script>
+    /* ==== LOADING SCRIPT ==== */
+    let progress = 0;
+    const fill = document.getElementById("progressFill");
+    const percent = document.getElementById("progressPercent");
+    const loadingScreen = document.getElementById("loadingScreen");
+    const mainContent = document.getElementById("mainContent");
+
+    const interval = setInterval(() => {
+      progress++;
+      fill.style.width = progress + "%";
+      percent.textContent = progress + "%";
+
+      if (progress >= 100) {
+        clearInterval(interval);
+        setTimeout(() => {
+          loadingScreen.style.display = "none";
+          mainContent.style.display = "block";
+          document.body.classList.add("loaded");
+        }, 500);
+      }
+    }, 40);
+
+    /* ==== LANGUAGE SELECTOR ==== */
     const translations = {
       ua: { games: "Ігри", data: "Дані", education: "Освіта", analyst: "Аналітик" },
       en: { games: "Games", data: "Data", education: "Education", analyst: "Analyst" },
@@ -191,5 +283,6 @@
   </script>
 </body>
 </html>
+
 
 
