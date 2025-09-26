@@ -65,46 +65,32 @@
     /* ==== SITE CONTENT ==== */
     #mainContent {
       display: none;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
     }
 
     body.loaded {
       overflow: auto;
     }
 
-    /* ==== Logo ==== */
-    .logo {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 25vh; /* розмір секції */
-      z-index: 100;
-    }
-
-    .logo img {
-      height: 100%;
-      width: auto;
-    }
-
-    /* ==== Sections ==== */
-    .section {
-      height: 25vh; /* однакова висота */
+    header {
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      border-top: 1px solid rgba(255, 255, 255, 0.2);
-      font-family: 'MedievalSharp', cursive;
-      font-size: 36px;
-      letter-spacing: 1px;
-      color: #ffffff;
-      text-align: center;
+      align-items: flex-start;
+      justify-content: flex-start;
+      gap: 20px;
+      padding: 20px;
       position: relative;
     }
 
-    .section h1 {
+    .logo img {
+      height: 100px;
+      width: auto;
+      display: block;
+    }
+
+    .title-block {
+      text-align: left;
+    }
+
+    header h1 {
       font-family: 'Press Start 2P', cursive;
       font-size: 48px;
       margin: 0;
@@ -113,20 +99,19 @@
       text-shadow: 2px 2px #000;
     }
 
-    .section h2 {
+    header h2 {
       font-family: 'Press Start 2P', cursive;
       font-size: 20px;
-      margin: 10px 0 0;
+      margin: 5px 0 0;
       color: #ffffff;
       text-shadow: 1px 1px #000;
     }
 
     /* ==== Language Selector ==== */
     .language-selector {
-      position: fixed;
+      position: absolute;
       top: 20px;
       right: 20px;
-      z-index: 200;
     }
 
     .custom-select {
@@ -188,6 +173,19 @@
       height: 15px;
       margin-right: 8px;
     }
+
+    /* ==== Sections ==== */
+    .section {
+      height: 25vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      font-family: 'MedievalSharp', cursive;
+      font-size: 36px;
+      letter-spacing: 1px;
+      color: #ffffff;
+    }
   </style>
 </head>
 <body>
@@ -202,35 +200,38 @@
 
   <!-- MAIN SITE -->
   <div id="mainContent">
-    <!-- ЛОГОТИП -->
-    <div class="logo">
-      <img src="flags/LOGO1.png" alt="Logo">
-    </div>
-
-    <!-- Секції -->
-    <div class="section" id="blazkowiczSection">
-      <h1>Blazkowicz</h1>
-      <h2>Analyst</h2>
-    </div>
-    <div class="section" id="gamesSection">Games</div>
-    <div class="section" id="dataSection">Data</div>
-    <div class="section" id="educationSection">Education</div>
-  </div>
-
-  <!-- Вибір мови -->
-  <div class="language-selector">
-    <div class="custom-select" id="languageSelect">
-      <div class="selected-option">
-        <img src="flags/ua.png" alt="UA">
-        <span>Українська</span>
+    <header>
+      <!-- ЛОГОТИП -->
+      <div class="logo">
+        <img src="flags/LOGO_no_bg.png" alt="Logo">
       </div>
-      <div class="options">
-        <div class="option" data-lang="ua"><img src="flags/ua.png" alt="UA"><span>Українська</span></div>
-        <div class="option" data-lang="en"><img src="flags/gb.png" alt="EN"><span>English</span></div>
-        <div class="option" data-lang="pl"><img src="flags/pl.png" alt="PL"><span>Polski</span></div>
-        <div class="option" data-lang="de"><img src="flags/de.png" alt="DE"><span>Deutsch</span></div>
+
+      <!-- ТЕКСТОВА ЧАСТИНА -->
+      <div class="title-block">
+        <h1>Blazkowicz</h1>
+        <h2 id="analystText">Analyst</h2>
       </div>
-    </div>
+
+      <!-- Вибір мови -->
+      <div class="language-selector">
+        <div class="custom-select" id="languageSelect">
+          <div class="selected-option">
+            <img src="flags/ua.png" alt="UA">
+            <span>Українська</span>
+          </div>
+          <div class="options">
+            <div class="option" data-lang="ua"><img src="flags/ua.png" alt="UA"><span>Українська</span></div>
+            <div class="option" data-lang="en"><img src="flags/gb.png" alt="EN"><span>English</span></div>
+            <div class="option" data-lang="pl"><img src="flags/pl.png" alt="PL"><span>Polski</span></div>
+            <div class="option" data-lang="de"><img src="flags/de.png" alt="DE"><span>Deutsch</span></div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="section" id="gamesSection">Ігри</div>
+    <div class="section" id="dataSection">Дані</div>
+    <div class="section" id="educationSection">Освіта</div>
   </div>
 
   <script>
@@ -250,7 +251,7 @@
         clearInterval(interval);
         setTimeout(() => {
           loadingScreen.style.display = "none";
-          mainContent.style.display = "flex";
+          mainContent.style.display = "block";
           document.body.classList.add("loaded");
         }, 500);
       }
@@ -268,6 +269,18 @@
     const selectedOption = languageSelect.querySelector(".selected-option");
     const options = languageSelect.querySelector(".options");
 
+    function setLanguage(lang) {
+      document.getElementById("gamesSection").textContent = translations[lang].games;
+      document.getElementById("dataSection").textContent = translations[lang].data;
+      document.getElementById("educationSection").textContent = translations[lang].education;
+      document.getElementById("analystText").textContent = "Analyst"; // завжди англійською
+    }
+
+    // При першому завантаженні ставимо українську
+    window.addEventListener("load", () => {
+      setLanguage("ua");
+    });
+
     selectedOption.addEventListener("click", () => {
       options.style.display = options.style.display === "block" ? "none" : "block";
     });
@@ -277,10 +290,7 @@
         const lang = option.getAttribute("data-lang");
         selectedOption.innerHTML = option.innerHTML;
         options.style.display = "none";
-
-        document.getElementById("gamesSection").textContent = translations[lang].games;
-        document.getElementById("dataSection").textContent = translations[lang].data;
-        document.getElementById("educationSection").textContent = translations[lang].education;
+        setLanguage(lang);
       });
     });
 
@@ -292,6 +302,7 @@
   </script>
 </body>
 </html>
+
 
 
 
