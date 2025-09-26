@@ -4,87 +4,36 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Blazkowicz Analyst</title>
-  <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
   <style>
-    body, html {
+    body {
       margin: 0;
       padding: 0;
-      height: 100%;
-      background: black;
-      overflow: hidden;
-    }
-
-    /* ==== LOADING SCREEN ==== */
-    #loadingScreen {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(to bottom, #000, #600000);
+      font-family: 'Press Start 2P', cursive;
+      background: linear-gradient(135deg, #000000, #8b0000);
+      color: #fff;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
-      font-family: 'Press Start 2P', cursive;
-      color: #ff0000;
-      text-shadow: 2px 2px #000;
-      z-index: 9999;
-    }
-
-    #loadingText {
-      font-size: 20px;
-      margin-bottom: 20px;
-      animation: blink 1s infinite;
-    }
-
-    #progressBar {
-      width: 80%;
-      height: 30px;
-      border: 3px solid #ff0000;
-      background: #111;
-      position: relative;
-    }
-
-    #progressFill {
-      height: 100%;
-      width: 0%;
-      background: #ff0000;
-      transition: width 0.1s linear;
-    }
-
-    #progressPercent {
-      margin-top: 15px;
-      font-size: 18px;
-    }
-
-    @keyframes blink {
-      50% { opacity: 0.5; }
-    }
-
-    /* ==== SITE CONTENT ==== */
-    #mainContent {
-      display: none;
-    }
-
-    body.loaded {
-      overflow: auto;
+      justify-content: center;
     }
 
     header {
       display: flex;
       align-items: center;
-      justify-content: center; /* по центру */
+      justify-content: center;
       gap: 20px;
-      padding: 40px 20px;
-      background: linear-gradient(to right, #000000, #600000);
+      padding: 20px;
+      background-color: rgba(0, 0, 0, 0.7);
+      border: 2px solid #ff0000;
+      border-radius: 10px;
       position: relative;
     }
 
     .logo img {
       height: 80px;
       width: auto;
-      display: block;
     }
 
     .title-block {
@@ -92,7 +41,6 @@
     }
 
     header h1 {
-      font-family: 'Press Start 2P', cursive;
       font-size: 48px;
       margin: 0;
       letter-spacing: 2px;
@@ -101,14 +49,12 @@
     }
 
     header h2 {
-      font-family: 'Press Start 2P', cursive;
       font-size: 20px;
       margin: 5px 0 0;
       color: #ffffff;
       text-shadow: 1px 1px #000;
     }
 
-    /* ==== Language Selector ==== */
     .language-selector {
       position: absolute;
       top: 20px;
@@ -118,195 +64,112 @@
     .custom-select {
       position: relative;
       width: 180px;
-      cursor: pointer;
+      background: #111;
       border: 2px solid #ff0000;
-      background-color: #000;
+      border-radius: 8px;
+      cursor: pointer;
       color: #fff;
-      text-shadow: 1px 1px #000;
-      font-family: 'Press Start 2P', cursive;
-      font-size: 10px;
-      user-select: none;
+      font-size: 14px;
+      text-align: left;
     }
 
-    .selected-option {
+    .custom-select .selected-option {
       display: flex;
       align-items: center;
-      padding: 5px 10px;
+      padding: 10px;
     }
 
-    .selected-option img {
+    .custom-select img {
       width: 20px;
       height: 15px;
-      margin-right: 8px;
+      margin-right: 10px;
     }
 
-    .selected-option span {
-      font-size: 10px;
-      white-space: nowrap;
-    }
-
-    .options {
+    .custom-select .options {
       display: none;
       position: absolute;
       top: 100%;
       left: 0;
       width: 100%;
-      background-color: #000;
+      background: #111;
       border: 2px solid #ff0000;
-      z-index: 1000;
+      border-radius: 0 0 8px 8px;
+      z-index: 10;
     }
 
-    .option {
+    .custom-select.active .options {
+      display: block;
+    }
+
+    .custom-select .option {
       display: flex;
       align-items: center;
-      padding: 5px 10px;
-      cursor: pointer;
-      font-family: 'Press Start 2P', cursive;
-      font-size: 10px;
+      padding: 10px;
+      transition: background 0.3s;
     }
 
-    .option:hover {
-      background-color: rgba(255, 0, 0, 0.5);
-    }
-
-    .option img {
-      width: 20px;
-      height: 15px;
-      margin-right: 8px;
-    }
-
-    /* ==== Sections ==== */
-    .section {
-      height: calc(100vh / 3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-top: 1px solid rgba(255, 255, 255, 0.2);
-      font-family: 'MedievalSharp', cursive;
-      font-size: 36px;
-      letter-spacing: 1px;
-      color: #ffffff
-    }
-
-    .section:nth-child(2) {
-      background-color: rgba(255, 255, 255, 0.05);
-    }
-
-    .section:nth-child(3) {
-      background-color: rgba(255, 255, 255, 0.1);
-    }
-
-    .section:nth-child(4) {
-      background-color: rgba(255, 255, 255, 0.15);
+    .custom-select .option:hover {
+      background: #ff0000;
     }
   </style>
 </head>
 <body>
-  <!-- LOADING SCREEN -->
-  <div id="loadingScreen">
-    <div id="loadingText">LOADING...</div>
-    <div id="progressBar">
-      <div id="progressFill"></div>
+  <header>
+    <!-- ЛОГОТИП -->
+    <div class="logo">
+      <img src="flags/LOGO.png" alt="Logo">
     </div>
-    <div id="progressPercent">0%</div>
-  </div>
 
-  <!-- MAIN SITE -->
-  <div id="mainContent">
-    <header>
-      <!-- ЛОГОТИП -->
-      <div class="logo">
-        <img src="LOGO.png" alt="Logo">
-      </div>
+    <!-- ТЕКСТОВА ЧАСТИНА -->
+    <div class="title-block">
+      <h1>Blazkowicz</h1>
+      <h2 id="analystText">Аналітик</h2>
+    </div>
 
-      <!-- ТЕКСТОВА ЧАСТИНА -->
-      <div class="title-block">
-        <h1>Blazkowicz</h1>
-        <h2 id="analystText">Аналітик</h2>
-      </div>
-
-      <!-- Вибір мови -->
-      <div class="language-selector">
-        <div class="custom-select" id="languageSelect">
-          <div class="selected-option">
-            <img src="flags/ua.png" alt="UA">
-            <span>Українська</span>
-          </div>
-          <div class="options">
-            <div class="option" data-lang="ua"><img src="flags/ua.png" alt="UA"><span>Українська</span></div>
-            <div class="option" data-lang="en"><img src="flags/gb.png" alt="EN"><span>English</span></div>
-            <div class="option" data-lang="pl"><img src="flags/pl.png" alt="PL"><span>Polski</span></div>
-            <div class="option" data-lang="de"><img src="flags/de.png" alt="DE"><span>Deutsch</span></div>
-          </div>
+    <!-- Вибір мови -->
+    <div class="language-selector">
+      <div class="custom-select" id="languageSelect">
+        <div class="selected-option">
+          <img src="flags/ua.png" alt="UA">
+          <span>Українська</span>
+        </div>
+        <div class="options">
+          <div class="option" data-lang="ua"><img src="flags/ua.png" alt="UA"><span>Українська</span></div>
+          <div class="option" data-lang="en"><img src="flags/gb.png" alt="EN"><span>English</span></div>
+          <div class="option" data-lang="pl"><img src="flags/pl.png" alt="PL"><span>Polski</span></div>
+          <div class="option" data-lang="de"><img src="flags/de.png" alt="DE"><span>Deutsch</span></div>
         </div>
       </div>
-    </header>
-
-    <div class="section" id="gamesSection">Ігри</div>
-    <div class="section" id="dataSection">Дані</div>
-    <div class="section" id="educationSection">Освіта</div>
-  </div>
+    </div>
+  </header>
 
   <script>
-    /* ==== LOADING SCRIPT ==== */
-    let progress = 0;
-    const fill = document.getElementById("progressFill");
-    const percent = document.getElementById("progressPercent");
-    const loadingScreen = document.getElementById("loadingScreen");
-    const mainContent = document.getElementById("mainContent");
+    // Скрипт для кастомного селектора мови
+    const select = document.getElementById("languageSelect");
+    const selected = select.querySelector(".selected-option");
+    const options = select.querySelector(".options");
+    const optionItems = options.querySelectorAll(".option");
 
-    const interval = setInterval(() => {
-      progress++;
-      fill.style.width = progress + "%";
-      percent.textContent = progress + "%";
-
-      if (progress >= 100) {
-        clearInterval(interval);
-        setTimeout(() => {
-          loadingScreen.style.display = "none";
-          mainContent.style.display = "block";
-          document.body.classList.add("loaded");
-        }, 500);
-      }
-    }, 40);
-
-    /* ==== LANGUAGE SELECTOR ==== */
-    const translations = {
-      ua: { games: "Ігри", data: "Дані", education: "Освіта", analyst: "Аналітик" },
-      en: { games: "Games", data: "Data", education: "Education", analyst: "Analyst" },
-      pl: { games: "Gry", data: "Dane", education: "Edukacja", analyst: "Analityk" },
-      de: { games: "Spiele", data: "Daten", education: "Bildung", analyst: "Analyst" }
-    };
-
-    const languageSelect = document.getElementById("languageSelect");
-    const selectedOption = languageSelect.querySelector(".selected-option");
-    const options = languageSelect.querySelector(".options");
-
-    selectedOption.addEventListener("click", () => {
-      options.style.display = options.style.display === "block" ? "none" : "block";
+    selected.addEventListener("click", () => {
+      select.classList.toggle("active");
     });
 
-    document.querySelectorAll(".option").forEach(option => {
+    optionItems.forEach(option => {
       option.addEventListener("click", () => {
-        const lang = option.getAttribute("data-lang");
-        selectedOption.innerHTML = option.innerHTML;
-        options.style.display = "none";
-
-        document.getElementById("analystText").textContent = translations[lang].analyst;
-        document.getElementById("gamesSection").textContent = translations[lang].games;
-        document.getElementById("dataSection").textContent = translations[lang].data;
-        document.getElementById("educationSection").textContent = translations[lang].education;
+        selected.innerHTML = option.innerHTML;
+        select.classList.remove("active");
       });
     });
 
     document.addEventListener("click", (e) => {
-      if (!languageSelect.contains(e.target)) {
-        options.style.display = "none";
+      if (!select.contains(e.target)) {
+        select.classList.remove("active");
       }
     });
   </script>
 </body>
 </html>
+
 
 
 
