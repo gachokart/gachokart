@@ -11,7 +11,7 @@
       margin: 0;
       padding: 0;
       height: 100%;
-      background: black;
+      background: linear-gradient(to bottom, #000000, #600000);
       overflow: hidden;
     }
 
@@ -65,33 +65,46 @@
     /* ==== SITE CONTENT ==== */
     #mainContent {
       display: none;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
     }
 
     body.loaded {
       overflow: auto;
     }
 
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: center; /* по центру */
-      gap: 20px;
-      padding: 40px 20px;
-      background: linear-gradient(to right, #000000, #600000);
-      position: relative;
+    /* ==== Logo ==== */
+    .logo {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 25vh; /* розмір секції */
+      z-index: 100;
     }
 
     .logo img {
-      height: 80px;
+      height: 100%;
       width: auto;
-      display: block;
     }
 
-    .title-block {
+    /* ==== Sections ==== */
+    .section {
+      height: 25vh; /* однакова висота */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      font-family: 'MedievalSharp', cursive;
+      font-size: 36px;
+      letter-spacing: 1px;
+      color: #ffffff;
       text-align: center;
+      position: relative;
     }
 
-    header h1 {
+    .section h1 {
       font-family: 'Press Start 2P', cursive;
       font-size: 48px;
       margin: 0;
@@ -100,19 +113,20 @@
       text-shadow: 2px 2px #000;
     }
 
-    header h2 {
+    .section h2 {
       font-family: 'Press Start 2P', cursive;
       font-size: 20px;
-      margin: 5px 0 0;
+      margin: 10px 0 0;
       color: #ffffff;
       text-shadow: 1px 1px #000;
     }
 
     /* ==== Language Selector ==== */
     .language-selector {
-      position: absolute;
+      position: fixed;
       top: 20px;
       right: 20px;
+      z-index: 200;
     }
 
     .custom-select {
@@ -174,31 +188,6 @@
       height: 15px;
       margin-right: 8px;
     }
-
-    /* ==== Sections ==== */
-    .section {
-      height: calc(100vh / 3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-top: 1px solid rgba(255, 255, 255, 0.2);
-      font-family: 'MedievalSharp', cursive;
-      font-size: 36px;
-      letter-spacing: 1px;
-      color: #ffffff
-    }
-
-    .section:nth-child(2) {
-      background-color: rgba(255, 255, 255, 0.05);
-    }
-
-    .section:nth-child(3) {
-      background-color: rgba(255, 255, 255, 0.1);
-    }
-
-    .section:nth-child(4) {
-      background-color: rgba(255, 255, 255, 0.15);
-    }
   </style>
 </head>
 <body>
@@ -213,38 +202,35 @@
 
   <!-- MAIN SITE -->
   <div id="mainContent">
-    <header>
-      <!-- ЛОГОТИП -->
-      <div class="logo">
-        <img src="flags/LOGO.png" alt="Logo">
-      </div>
+    <!-- ЛОГОТИП -->
+    <div class="logo">
+      <img src="flags/LOGO.png" alt="Logo">
+    </div>
 
-      <!-- ТЕКСТОВА ЧАСТИНА -->
-      <div class="title-block">
-        <h1>Blazkowicz</h1>
-        <h2 id="analystText">Аналітик</h2>
-      </div>
-
-      <!-- Вибір мови -->
-      <div class="language-selector">
-        <div class="custom-select" id="languageSelect">
-          <div class="selected-option">
-            <img src="flags/ua.png" alt="UA">
-            <span>Українська</span>
-          </div>
-          <div class="options">
-            <div class="option" data-lang="ua"><img src="flags/ua.png" alt="UA"><span>Українська</span></div>
-            <div class="option" data-lang="en"><img src="flags/gb.png" alt="EN"><span>English</span></div>
-            <div class="option" data-lang="pl"><img src="flags/pl.png" alt="PL"><span>Polski</span></div>
-            <div class="option" data-lang="de"><img src="flags/de.png" alt="DE"><span>Deutsch</span></div>
-          </div>
-        </div>
-      </div>
-    </header>
-
+    <!-- Секції -->
+    <div class="section" id="blazkowiczSection">
+      <h1>Blazkowicz</h1>
+      <h2 id="analystText">Аналітик</h2>
+    </div>
     <div class="section" id="gamesSection">Ігри</div>
     <div class="section" id="dataSection">Дані</div>
     <div class="section" id="educationSection">Освіта</div>
+  </div>
+
+  <!-- Вибір мови -->
+  <div class="language-selector">
+    <div class="custom-select" id="languageSelect">
+      <div class="selected-option">
+        <img src="flags/ua.png" alt="UA">
+        <span>Українська</span>
+      </div>
+      <div class="options">
+        <div class="option" data-lang="ua"><img src="flags/ua.png" alt="UA"><span>Українська</span></div>
+        <div class="option" data-lang="en"><img src="flags/gb.png" alt="EN"><span>English</span></div>
+        <div class="option" data-lang="pl"><img src="flags/pl.png" alt="PL"><span>Polski</span></div>
+        <div class="option" data-lang="de"><img src="flags/de.png" alt="DE"><span>Deutsch</span></div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -264,7 +250,7 @@
         clearInterval(interval);
         setTimeout(() => {
           loadingScreen.style.display = "none";
-          mainContent.style.display = "block";
+          mainContent.style.display = "flex";
           document.body.classList.add("loaded");
         }, 500);
       }
@@ -307,6 +293,7 @@
   </script>
 </body>
 </html>
+
 
 
 
