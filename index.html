@@ -210,11 +210,11 @@
     <!-- Секції -->
     <div class="section" id="blazkowiczSection">
       <h1>Blazkowicz</h1>
-      <h2 id="analystText">Аналітик</h2>
+      <h2>Analyst</h2>
     </div>
-    <div class="section" id="gamesSection">Ігри</div>
-    <div class="section" id="dataSection">Дані</div>
-    <div class="section" id="educationSection">Освіта</div>
+    <div class="section" id="gamesSection">Games</div>
+    <div class="section" id="dataSection">Data</div>
+    <div class="section" id="educationSection">Education</div>
   </div>
 
   <!-- Вибір мови -->
@@ -258,10 +258,10 @@
 
     /* ==== LANGUAGE SELECTOR ==== */
     const translations = {
-      ua: { games: "Ігри", data: "Дані", education: "Освіта", analyst: "Аналітик" },
-      en: { games: "Games", data: "Data", education: "Education", analyst: "Analyst" },
-      pl: { games: "Gry", data: "Dane", education: "Edukacja", analyst: "Analityk" },
-      de: { games: "Spiele", data: "Daten", education: "Bildung", analyst: "Analyst" }
+      ua: { games: "Ігри", data: "Дані", education: "Освіта" },
+      en: { games: "Games", data: "Data", education: "Education" },
+      pl: { games: "Gry", data: "Dane", education: "Edukacja" },
+      de: { games: "Spiele", data: "Daten", education: "Bildung" }
     };
 
     const languageSelect = document.getElementById("languageSelect");
@@ -278,7 +278,6 @@
         selectedOption.innerHTML = option.innerHTML;
         options.style.display = "none";
 
-        document.getElementById("analystText").textContent = translations[lang].analyst;
         document.getElementById("gamesSection").textContent = translations[lang].games;
         document.getElementById("dataSection").textContent = translations[lang].data;
         document.getElementById("educationSection").textContent = translations[lang].education;
@@ -293,6 +292,7 @@
   </script>
 </body>
 </html>
+
 
 
 
