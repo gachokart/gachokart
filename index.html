@@ -72,10 +72,22 @@
     }
 
     header {
-      position: relative;
-      text-align: center;
-      padding: 40px 20px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start; /* вирівнюємо зліва */
+      padding: 20px;
       background-color: rgba(0, 0, 0, 0.8);
+      position: relative;
+    }
+
+    .logo img {
+      height: 80px; /* розмір логотипа */
+      width: auto;
+      margin-right: 20px;
+    }
+
+    .title-block {
+      text-align: left;
     }
 
     header h1 {
@@ -90,7 +102,7 @@
     header h2 {
       font-family: 'Press Start 2P', cursive;
       font-size: 20px;
-      margin-top: 10px;
+      margin: 5px 0 0;
       color: #ffffff;
       text-shadow: 1px 1px #000;
     }
@@ -110,7 +122,7 @@
       background-color: #000;
       color: #fff;
       text-shadow: 1px 1px #000;
-      font-family: 'Press Start 2P', cursive; /* стиль як Blazkowicz */
+      font-family: 'Press Start 2P', cursive;
       font-size: 10px;
       user-select: none;
     }
@@ -201,6 +213,18 @@
   <!-- MAIN SITE -->
   <div id="mainContent">
     <header>
+      <!-- ЛОГОТИП -->
+      <div class="logo">
+        <img src="LOGO.png" alt="Logo">
+      </div>
+
+      <!-- ТЕКСТОВА ЧАСТИНА -->
+      <div class="title-block">
+        <h1>Blazkowicz</h1>
+        <h2 id="analystText">Аналітик</h2>
+      </div>
+
+      <!-- Вибір мови -->
       <div class="language-selector">
         <div class="custom-select" id="languageSelect">
           <div class="selected-option">
@@ -215,8 +239,6 @@
           </div>
         </div>
       </div>
-      <h1>Blazkowicz</h1>
-      <h2 id="analystText">Аналітик</h2>
     </header>
 
     <div class="section" id="gamesSection">Ігри</div>
@@ -284,6 +306,7 @@
   </script>
 </body>
 </html>
+
 
 
 
