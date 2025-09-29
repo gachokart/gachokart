@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="flags/LOGO.png" />
+  <link rel="icon" type="image/png" href="flags/LOGO1.png" />
   
   <style>
     body, html {
@@ -74,10 +74,16 @@
       padding: 20px;
       position: relative;
     }
+    /* ==== ЛОГОТИП ==== */
     .logo img {
       height: 100px;
       width: auto;
       display: block;
+      transition: 0.3s ease;
+    }
+    .logo img:hover {
+      filter: drop-shadow(0 0 15px #ff0000) brightness(1.2);
+      transform: scale(1.08);
     }
     .title-block {
       text-align: left;
@@ -184,7 +190,9 @@
     <header>
       <!-- ЛОГОТИП -->
       <div class="logo">
-        <img src="flags/LOGO1.png" alt="Logo">
+        <a href="https://example.com" target="_blank">
+          <img src="flags/LOGO1.png" alt="Logo">
+        </a>
       </div>
 
       <!-- ТЕКСТОВА ЧАСТИНА -->
