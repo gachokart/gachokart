@@ -205,7 +205,7 @@
       <div class="language-selector">
         <div class="custom-select" id="languageSelect">
           <div class="selected-option">
-            <img src="flags/en.png" alt="EN">
+            <img src="flags/gb.png" alt="EN">
             <span>English</span>
           </div>
           <div class="options">
@@ -265,9 +265,13 @@
       document.getElementById("analystText").textContent = "Analyst"; // завжди англійською
     }
 
-    // При першому завантаженні ставимо українську
+    // ✅ При першому завантаженні ставимо англійську (gb.png)
     window.addEventListener("load", () => {
       setLanguage("en");
+      selectedOption.innerHTML = `
+        <img src="flags/gb.png" alt="EN">
+        <span>English</span>
+      `;
     });
 
     selectedOption.addEventListener("click", () => {
@@ -291,7 +295,6 @@
   </script>
 </body>
 </html>
-
 
 
 
