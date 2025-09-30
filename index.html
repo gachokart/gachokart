@@ -175,17 +175,22 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .section a {
+      position: relative;
+      display: inline-block;
       font-family: 'Press Start 2P', cursive;
       font-size: 36px;
       letter-spacing: 1px;
       color: #ffffff;
       text-decoration: none;
-      transition: color 0.3s, text-shadow 0.3s;
+      transition: text-shadow 0.3s ease;
     }
-    .section:hover {
-      color: #ff0000;
-      text-shadow: 0 0 8px #ff0000, 0 0 12px #ff0000;
+    .section a:hover {
+      text-shadow: 0 0 5px #ff0000,
+                   0 0 10px #ff0000,
+                   0 0 20px #ff0000,
+                   0 0 40px #ff0000;
     }
   </style>
 </head>
@@ -233,10 +238,10 @@
     </header>
 
     <div class="sections">
-      <a class="section" id="gamesSection" href="https://gachokart1.com" target="_blank">Games</a>
-      <a class="section" id="dataSection" href="https://gachokart2.com" target="_blank">Data</a>
-      <a class="section" id="educationSection" href="https://gachokart3.com" target="_blank">Education</a>
-      <a class="section" id="contactSection" href="https://gachokart4.com" target="_blank">Contact Us</a>
+      <div class="section" id="gamesSection"><a href="https://gachokart1.com" target="_blank">Games</a></div>
+      <div class="section" id="dataSection"><a href="https://gachokart2.com" target="_blank">Data</a></div>
+      <div class="section" id="educationSection"><a href="https://gachokart3.com" target="_blank">Education</a></div>
+      <div class="section" id="contactSection"><a href="https://gachokart4.com" target="_blank">Contact Us</a></div>
     </div>
   </div>
 
@@ -277,10 +282,10 @@
     const allOptions = Array.from(options.querySelectorAll(".option"));
 
     function setLanguage(lang) {
-      document.getElementById("gamesSection").textContent = translations[lang].games;
-      document.getElementById("dataSection").textContent = translations[lang].data;
-      document.getElementById("educationSection").textContent = translations[lang].education;
-      document.getElementById("contactSection").textContent = translations[lang].contact;
+      document.getElementById("gamesSection").querySelector("a").textContent = translations[lang].games;
+      document.getElementById("dataSection").querySelector("a").textContent = translations[lang].data;
+      document.getElementById("educationSection").querySelector("a").textContent = translations[lang].education;
+      document.getElementById("contactSection").querySelector("a").textContent = translations[lang].contact;
       document.getElementById("analystText").textContent = "Analyst"; // завжди англійською
     }
 
@@ -319,6 +324,7 @@
   </script>
 </body>
 </html>
+
 
 
 
