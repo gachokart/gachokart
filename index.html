@@ -62,6 +62,9 @@
     /* ==== SITE CONTENT ==== */
     #mainContent {
       display: none;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
     }
     body.loaded {
       overflow: auto;
@@ -162,8 +165,13 @@
       margin-right: 8px;
     }
     /* ==== Sections ==== */
+    .sections {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
     .section {
-      height: 25vh;
+      flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -218,9 +226,12 @@
       </div>
     </header>
 
-    <div class="section" id="gamesSection">Games</div>
-    <div class="section" id="dataSection">Data</div>
-    <div class="section" id="educationSection">Education</div>
+    <div class="sections">
+      <div class="section" id="gamesSection">Games</div>
+      <div class="section" id="dataSection">Data</div>
+      <div class="section" id="educationSection">Education</div>
+      <div class="section" id="contactSection">Contact Us</div>
+    </div>
   </div>
 
   <script>
@@ -240,7 +251,7 @@
         clearInterval(interval);
         setTimeout(() => {
           loadingScreen.style.display = "none";
-          mainContent.style.display = "block";
+          mainContent.style.display = "flex";
           document.body.classList.add("loaded");
         }, 500);
       }
@@ -248,10 +259,10 @@
 
     /* ==== LANGUAGE SELECTOR ==== */
     const translations = {
-      ua: { games: "Ігри", data: "Дані", education: "Освіта" },
-      en: { games: "Games", data: "Data", education: "Education" },
-      pl: { games: "Gry", data: "Dane", education: "Edukacja" },
-      de: { games: "Spiele", data: "Daten", education: "Bildung" }
+      ua: { games: "Ігри", data: "Дані", education: "Освіта", contact: "Зв'язок" },
+      en: { games: "Games", data: "Data", education: "Education", contact: "Contact Us" },
+      pl: { games: "Gry", data: "Dane", education: "Edukacja", contact: "Kontakt" },
+      de: { games: "Spiele", data: "Daten", education: "Bildung", contact: "Kontakt" }
     };
 
     const languageSelect = document.getElementById("languageSelect");
@@ -262,10 +273,11 @@
       document.getElementById("gamesSection").textContent = translations[lang].games;
       document.getElementById("dataSection").textContent = translations[lang].data;
       document.getElementById("educationSection").textContent = translations[lang].education;
+      document.getElementById("contactSection").textContent = translations[lang].contact;
       document.getElementById("analystText").textContent = "Analyst"; // завжди англійською
     }
 
-    // ✅ При першому завантаженні ставимо англійську (gb.png)
+    // ✅ При першому завантаженні ставимо англійську
     window.addEventListener("load", () => {
       setLanguage("en");
       selectedOption.innerHTML = `
@@ -295,6 +307,7 @@
   </script>
 </body>
 </html>
+
 
 
 
