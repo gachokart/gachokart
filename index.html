@@ -257,52 +257,61 @@
       }
     }, 40);
 
-    /* ==== LANGUAGE SELECTOR ==== */
-    const translations = {
-      ua: { games: "Ігри", data: "Дані", education: "Освіта", contact: "Зв'язок" },
-      en: { games: "Games", data: "Data", education: "Education", contact: "Contact Us" },
-      pl: { games: "Gry", data: "Dane", education: "Edukacja", contact: "Kontakt" },
-      de: { games: "Spiele", data: "Daten", education: "Bildung", contact: "Kontakt" }
-    };
+   <script>
+  /* ==== LANGUAGE SELECTOR ==== */
+  const translations = {
+    ua: { games: "Ігри", data: "Дані", education: "Освіта", contact: "Зв'язок" },
+    en: { games: "Games", data: "Data", education: "Education", contact: "Contact Us" },
+    pl: { games: "Gry", data: "Dane", education: "Edukacja", contact: "Kontakt" },
+    de: { games: "Spiele", data: "Daten", education: "Bildung", contact: "Kontakt" }
+  };
 
-    const languageSelect = document.getElementById("languageSelect");
-    const selectedOption = languageSelect.querySelector(".selected-option");
-    const options = languageSelect.querySelector(".options");
+  const languageSelect = document.getElementById("languageSelect");
+  const selectedOption = languageSelect.querySelector(".selected-option");
+  const options = languageSelect.querySelector(".options");
+  const allOptions = Array.from(options.querySelectorAll(".option"));
 
-    function setLanguage(lang) {
-      document.getElementById("gamesSection").textContent = translations[lang].games;
-      document.getElementById("dataSection").textContent = translations[lang].data;
-      document.getElementById("educationSection").textContent = translations[lang].education;
-      document.getElementById("contactSection").textContent = translations[lang].contact;
-      document.getElementById("analystText").textContent = "Analyst"; // завжди англійською
+  function setLanguage(lang) {
+    document.getElementById("gamesSection").textContent = translations[lang].games;
+    document.getElementById("dataSection").textContent = translations[lang].data;
+    document.getElementById("educationSection").textContent = translations[lang].education;
+    document.getElementById("contactSection").textContent = translations[lang].contact;
+    document.getElementById("analystText").textContent = "Analyst"; // завжди англійською
+  }
+
+  function updateOptions(currentLang) {
+    allOptions.forEach(option => {
+      option.style.display = option.getAttribute("data-lang") === currentLang ? "none" : "flex";
+    });
+  }
+
+  // ✅ При першому завантаженні ставимо англійську
+  window.addEventListener("load", () => {
+    setLanguage("en");
+    selectedOption.innerHTML = `<img src="flags/gb.png" alt="EN"><span>English</span>`;
+    updateOptions("en");
+  });
+
+  selectedOption.addEventListener("click", () => {
+    options.style.display = options.style.display === "block" ? "none" : "block";
+  });
+
+  allOptions.forEach(option => {
+    option.addEventListener("click", () => {
+      const lang = option.getAttribute("data-lang");
+      selectedOption.innerHTML = option.innerHTML;
+      options.style.display = "none";
+      setLanguage(lang);
+      updateOptions(lang);
+    });
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!languageSelect.contains(e.target)) {
+      options.style.display = "none";
     }
+  });
 
-    // ✅ При першому завантаженні ставимо англійську
-    window.addEventListener("load", () => {
-      setLanguage("en");
-      selectedOption.innerHTML = `
-        <img src="flags/gb.png" alt="EN">
-        <span>English</span>
-      `;
-    });
-
-    selectedOption.addEventListener("click", () => {
-      options.style.display = options.style.display === "block" ? "none" : "block";
-    });
-
-    document.querySelectorAll(".option").forEach(option => {
-      option.addEventListener("click", () => {
-        const lang = option.getAttribute("data-lang");
-        selectedOption.innerHTML = option.innerHTML;
-        options.style.display = "none";
-        setLanguage(lang);
-      });
-    });
-
-    document.addEventListener("click", (e) => {
-      if (!languageSelect.contains(e.target)) {
-        options.style.display = "none";
-      }
     });
   </script>
 </body>
