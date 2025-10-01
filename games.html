@@ -1,88 +1,180 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Games — Blazkowicz Analyst</title>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Games</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+
   <style>
-    :root{
-      --black:#0b0b0b;
-      --red:#8b0000;
-      --white:#ffffff;
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: linear-gradient(to bottom, #000000, #600000);
+      font-family: 'Press Start 2P', cursive;
+      color: #ffffff;
     }
-    html,body{
-      height:100%;
-      margin:0;
-      font-family: 'Press Start 2P', monospace;
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-      background: linear-gradient(120deg, var(--black) 50%, var(--red) 50%);
-      background-size: cover;
-      color:var(--white);
+
+    header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-start;
+      gap: 20px;
+      padding: 20px;
+      position: relative;
     }
-    .wrap{
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      padding:2rem;
-      box-sizing:border-box;
+
+    /* ==== ЛОГОТИП ==== */
+    .logo img {
+      height: 80px;
+      width: auto;
+      display: block;
+      transition: 0.3s ease;
     }
-    .title-card{
-      display:inline-flex;
-      align-items:center;
-      gap:22px;
-      padding:28px 36px;
-      border-radius:18px;
-      background: rgba(0,0,0,0.35);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-      backdrop-filter: blur(4px);
-      border: 2px solid rgba(255,255,255,0.06);
+    .logo img:hover {
+      filter: drop-shadow(0 0 15px #ff0000) brightness(1.2);
+      transform: scale(1.05);
     }
-    .title-card img{
-      width:96px;
-      height:96px;
-      object-fit:contain;
-      filter: drop-shadow(0 6px 14px rgba(0,0,0,0.6));
+
+    /* ==== Заголовок Games ==== */
+    h1 {
+      font-size: 48px;
+      margin: 20px 0 0 20px;
+      text-shadow: 2px 2px #000;
+      color: #ff0000;
     }
-    h1{
-      margin:0;
-      font-size:48px;
-      line-height:1;
-      letter-spacing:2px;
-      color:var(--white);
-      text-shadow: 0 4px 18px rgba(0,0,0,0.6);
+
+    /* ==== Language Selector ==== */
+    .language-selector {
+      position: absolute;
+      top: 20px;
+      right: 20px;
     }
-    @media (max-width:640px){
-      .title-card{gap:12px;padding:18px}
-      .title-card img{width:64px;height:64px}
-      h1{font-size:28px}
+    .custom-select {
+      position: relative;
+      width: 180px;
+      cursor: pointer;
+      border: 2px solid #ff0000;
+      background-color: #000;
+      color: #fff;
+      font-size: 10px;
+      user-select: none;
     }
-    /* small link back to index */
-    .back-link{
-      display:block;
-      margin-top:18px;
-      font-size:11px;
-      opacity:0.85;
-      text-decoration:none;
-      color:var(--white);
+    .selected-option {
+      display: flex;
+      align-items: center;
+      padding: 5px 10px;
     }
-    .back-link:hover{opacity:1}
+    .selected-option img {
+      width: 20px;
+      height: 15px;
+      margin-right: 8px;
+    }
+    .options {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      background-color: #000;
+      border: 2px solid #ff0000;
+      z-index: 1000;
+    }
+    .option {
+      display: flex;
+      align-items: center;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    .option img {
+      width: 20px;
+      height: 15px;
+      margin-right: 8px;
+    }
+    .option:hover {
+      background-color: rgba(255, 0, 0, 0.5);
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="title-card">
-      <!-- ЗАМІНИТЬ ШЛЯХ ДО ЛОГО НА ВЛАСНИЙ, НАПРИКЛАД flags/logo.png -->
-      <img src="flags/logo1.png" alt="Blazkowicz logo" onerror="this.style.display='none'">
-      <div>
-        <h1>Games</h1>
-        <a class="back-link" href="/">← Back to index</a>
+  <header>
+    <!-- ЛОГОТИП -->
+    <div class="logo">
+      <a href="index.html">
+        <img src="flags/LOGO1.png" alt="Logo">
+      </a>
+    </div>
+  </header>
+
+  <!-- Заголовок Games -->
+  <h1 id="gamesTitle">Games</h1>
+
+  <!-- Language Selector -->
+  <div class="language-selector">
+    <div class="custom-select" id="languageSelect">
+      <div class="selected-option">
+        <img src="flags/gb.png" alt="EN">
+        <span>English</span>
+      </div>
+      <div class="options">
+        <div class="option" data-lang="ua"><img src="flags/ua.png" alt="UA"><span>Українська</span></div>
+        <div class="option" data-lang="en"><img src="flags/gb.png" alt="EN"><span>English</span></div>
+        <div class="option" data-lang="pl"><img src="flags/pl.png" alt="PL"><span>Polski</span></div>
+        <div class="option" data-lang="de"><img src="flags/de.png" alt="DE"><span>Deutsch</span></div>
       </div>
     </div>
   </div>
+
+  <script>
+    const translations = {
+      ua: { games: "Ігри" },
+      en: { games: "Games" },
+      pl: { games: "Gry" },
+      de: { games: "Spiele" }
+    };
+
+    const languageSelect = document.getElementById("languageSelect");
+    const selectedOption = languageSelect.querySelector(".selected-option");
+    const options = languageSelect.querySelector(".options");
+    const allOptions = Array.from(options.querySelectorAll(".option"));
+
+    function setLanguage(lang) {
+      document.getElementById("gamesTitle").textContent = translations[lang].games;
+    }
+
+    function updateOptions(currentLang) {
+      allOptions.forEach(option => {
+        option.style.display = option.getAttribute("data-lang") === currentLang ? "none" : "flex";
+      });
+    }
+
+    window.addEventListener("load", () => {
+      setLanguage("en");
+      selectedOption.innerHTML = `<img src="flags/gb.png" alt="EN"><span>English</span>`;
+      updateOptions("en");
+    });
+
+    selectedOption.addEventListener("click", () => {
+      options.style.display = options.style.display === "block" ? "none" : "block";
+    });
+
+    allOptions.forEach(option => {
+      option.addEventListener("click", () => {
+        const lang = option.getAttribute("data-lang");
+        selectedOption.innerHTML = option.innerHTML;
+        options.style.display = "none";
+        setLanguage(lang);
+        updateOptions(lang);
+      });
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!languageSelect.contains(e.target)) {
+        options.style.display = "none";
+      }
+    });
+  </script>
 </body>
 </html>
 
