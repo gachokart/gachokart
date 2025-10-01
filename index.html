@@ -18,6 +18,7 @@
       background: linear-gradient(to bottom, #000000, #600000);
       overflow: hidden;
     }
+
     /* ==== LOADING SCREEN ==== */
     #loadingScreen {
       position: fixed;
@@ -59,6 +60,7 @@
     @keyframes blink {
       50% { opacity: 0.5; }
     }
+
     /* ==== SITE CONTENT ==== */
     #mainContent {
       display: none;
@@ -69,6 +71,7 @@
     body.loaded {
       overflow: auto;
     }
+
     header {
       display: flex;
       align-items: flex-start;
@@ -77,6 +80,7 @@
       padding: 20px;
       position: relative;
     }
+
     /* ==== ЛОГОТИП ==== */
     .logo img {
       height: 100px;
@@ -88,6 +92,7 @@
       filter: drop-shadow(0 0 15px #ff0000) brightness(1.2);
       transform: scale(1.08);
     }
+
     .title-block {
       text-align: left;
     }
@@ -106,6 +111,7 @@
       color: #ffffff;
       text-shadow: 1px 1px #000;
     }
+
     /* ==== Language Selector ==== */
     .language-selector {
       position: absolute;
@@ -164,6 +170,7 @@
       height: 15px;
       margin-right: 8px;
     }
+
     /* ==== Sections ==== */
     .sections {
       flex-grow: 1;
@@ -207,7 +214,7 @@
     <header>
       <!-- ЛОГОТИП -->
       <div class="logo">
-        <a href="https://gachokart.com" target="_blank">
+        <a href="index.html">
           <img src="flags/LOGO1.png" alt="Logo">
         </a>
       </div>
@@ -236,10 +243,9 @@
     </header>
 
     <div class="sections">
-      <!-- ✅ Games веде на games.html і перекладається -->
       <div class="section" id="gamesSection"><a href="games.html">Games</a></div>
-      <div class="section" id="dataSection"><a href="https://gachokart2.com" target="_blank">Data</a></div>
-      <div class="section" id="educationSection"><a href="https://gachokart3.com" target="_blank">Education</a></div>
+      <div class="section" id="dataSection"><a href="data.html">Data</a></div>
+      <div class="section" id="educationSection"><a href="education.html">Education</a></div>
       <div class="section" id="contactSection"><a href="https://gachokart4.com" target="_blank">Contact Us</a></div>
     </div>
   </div>
@@ -267,7 +273,7 @@
       }
     }, 40);
 
-    /* ==== LANGUAGE SELECTOR ==== */
+    /* ==== LANGUAGE SELECTOR + TRANSLATION ==== */
     const translations = {
       ua: { games: "Ігри", data: "Дані", education: "Освіта", contact: "Зв'язок" },
       en: { games: "Games", data: "Data", education: "Education", contact: "Contact Us" },
@@ -294,7 +300,6 @@
       });
     }
 
-    // ✅ При першому завантаженні ставимо англійську
     window.addEventListener("load", () => {
       setLanguage("en");
       selectedOption.innerHTML = `<img src="flags/gb.png" alt="EN"><span>English</span>`;
@@ -323,8 +328,6 @@
   </script>
 </body>
 </html>
-
-
 
 
 
