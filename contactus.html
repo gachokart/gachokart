@@ -3,47 +3,137 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>About Us - Blazkowicz Analyst</title>
+  <title>Contact Us - Blazkowicz Analyst</title>
   <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="flags/LOGO.png" />
+
   <style>
-    body {
+    body, html {
       margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: linear-gradient(to bottom, #000000, #600000);
       font-family: 'MedievalSharp', cursive;
-      background: linear-gradient(135deg, #000000, #330000);
       color: #fff;
     }
+
     header {
-      text-align: center;
-      padding: 50px 0;
-      background-color: #110000;
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      padding: 20px;
+      position: relative;
     }
-    header h1 {
+
+    .logo img {
+      height: 100px;
+      width: auto;
+      display: block;
+      transition: 0.3s ease;
+    }
+    .logo img:hover {
+      filter: drop-shadow(0 0 15px #ff0000) brightness(1.2);
+      transform: scale(1.08);
+    }
+
+    .title-block h1 {
       font-family: 'Press Start 2P', cursive;
       font-size: 48px;
-      color: #ff0000;
       margin: 0;
-    }
-    nav {
-      text-align: center;
-      margin: 20px 0;
-    }
-    nav a {
-      color: #fff;
-      text-decoration: none;
-      margin: 0 15px;
-      font-family: 'Press Start 2P', cursive;
-      font-size: 16px;
-    }
-    nav a:hover {
+      letter-spacing: 2px;
       color: #ff0000;
+      text-shadow: 2px 2px #000;
     }
+    .title-block h2 {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 20px;
+      margin: 5px 0 0;
+      color: #ffffff;
+      text-shadow: 1px 1px #000;
+    }
+
+    .language-selector {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+    .custom-select {
+      position: relative;
+      width: 180px;
+      cursor: pointer;
+      border: 2px solid #ff0000;
+      background-color: #000;
+      color: #fff;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 10px;
+      user-select: none;
+    }
+    .selected-option, .option {
+      display: flex;
+      align-items: center;
+      padding: 5px 10px;
+    }
+    .selected-option img, .option img {
+      width: 20px;
+      height: 15px;
+      margin-right: 8px;
+    }
+    .options {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      background-color: #000;
+      border: 2px solid #ff0000;
+      z-index: 1000;
+    }
+    .option:hover {
+      background-color: rgba(255, 0, 0, 0.5);
+      cursor: pointer;
+    }
+
     main {
       max-width: 800px;
-      margin: 0 auto;
+      margin: 40px auto;
       padding: 20px;
-      line-height: 1.6;
+      background: rgba(0,0,0,0.5);
+      border: 2px solid #ff0000;
+      border-radius: 10px;
+      text-align: center;
     }
+
+    main h2 {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 28px;
+      color: #ff0000;
+      margin-bottom: 20px;
+    }
+
+    main p {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #fff;
+      margin-bottom: 20px;
+    }
+
+    main a.button {
+      display: inline-block;
+      padding: 10px 20px;
+      border: 2px solid #ff0000;
+      color: #fff;
+      text-decoration: none;
+      font-family: 'Press Start 2P', cursive;
+      transition: 0.3s ease;
+    }
+    main a.button:hover {
+      background-color: #ff0000;
+      color: #000;
+    }
+
     footer {
       text-align: center;
       padding: 20px;
@@ -55,22 +145,99 @@
 </head>
 <body>
   <header>
-    <h1>Blazkowicz Analyst</h1>
+    <div class="logo">
+      <a href="index.html"><img src="flags/LOGO1.png" alt="Logo"></a>
+    </div>
+    <div class="title-block">
+      <h1>Blazkowicz</h1>
+      <h2 id="analystText">Analyst</h2>
+    </div>
+
+    <div class="language-selector">
+      <div class="custom-select" id="languageSelect">
+        <div class="selected-option">
+          <img src="flags/gb.png" alt="EN">
+          <span>English</span>
+        </div>
+        <div class="options">
+          <div class="option" data-lang="ua"><img src="flags/ua.png" alt="UA"><span>Українська</span></div>
+          <div class="option" data-lang="en"><img src="flags/gb.png" alt="EN"><span>English</span></div>
+          <div class="option" data-lang="pl"><img src="flags/pl.png" alt="PL"><span>Polski</span></div>
+          <div class="option" data-lang="de"><img src="flags/de.png" alt="DE"><span>Deutsch</span></div>
+        </div>
+      </div>
+    </div>
   </header>
-  <nav>
-    <a href="index.html">Home</a>
-    <a href="games.html">Games</a>
-    <a href="contactus.html">Contact Us</a>
-    <a href="aboutus.html">About Us</a>
-  </nav>
+
   <main>
-    <h2>Про нас</h2>
-    <p>Ласкаво просимо на сторінку Blazkowicz Analyst! Тут ви знайдете аналітику, огляди та інсайти щодо ваших улюблених ігор та стратегій.</p>
-    <p>Ми прагнемо надати точні дані, зручний інтерфейс та цікаві матеріали для геймерів і аналітиків.</p>
+    <h2>Contact Us</h2>
+    <p>Якщо у вас є запитання або пропозиції, ви можете зв’язатися з нами за допомогою електронної пошти або через соціальні мережі.</p>
+    <p>Email: <a href="mailto:info@gachokart.com">info@gachokart.com</a></p>
+    <p>Telegram: <a href="https://t.me/gachokart" target="_blank">@gachokart</a></p>
+    <a href="index.html" class="button">Back to Home</a>
   </main>
+
   <footer>
     &copy; 2025 Blazkowicz Analyst. All rights reserved.
   </footer>
+
+  <script>
+    const translations = {
+      ua: { contactTitle: "Зв'язок", emailText: "Електронна пошта", telegramText: "Telegram", back: "Назад на головну" },
+      en: { contactTitle: "Contact Us", emailText: "Email", telegramText: "Telegram", back: "Back to Home" },
+      pl: { contactTitle: "Kontakt", emailText: "Email", telegramText: "Telegram", back: "Powrót" },
+      de: { contactTitle: "Kontakt", emailText: "Email", telegramText: "Telegram", back: "Zur Startseite" }
+    };
+
+    const languageSelect = document.getElementById("languageSelect");
+    const selectedOption = languageSelect.querySelector(".selected-option");
+    const options = languageSelect.querySelector(".options");
+    const allOptions = Array.from(options.querySelectorAll(".option"));
+
+    function setLanguage(lang) {
+      const mainTitle = document.querySelector("main h2");
+      const paragraphs = document.querySelectorAll("main p");
+      const backBtn = document.querySelector("main a.button");
+
+      mainTitle.textContent = translations[lang].contactTitle;
+      paragraphs[0].textContent = "Якщо у вас є запитання або пропозиції, ви можете зв’язатися з нами за допомогою електронної пошти або через соціальні мережі.";
+      paragraphs[1].innerHTML = translations[lang].emailText + ': <a href="mailto:info@gachokart.com">info@gachokart.com</a>';
+      paragraphs[2].innerHTML = translations[lang].telegramText + ': <a href="https://t.me/gachokart" target="_blank">@gachokart</a>';
+      backBtn.textContent = translations[lang].back;
+    }
+
+    function updateOptions(currentLang) {
+      allOptions.forEach(option => {
+        option.style.display = option.getAttribute("data-lang") === currentLang ? "none" : "flex";
+      });
+    }
+
+    window.addEventListener("load", () => {
+      setLanguage("en");
+      selectedOption.innerHTML = `<img src="flags/gb.png" alt="EN"><span>English</span>`;
+      updateOptions("en");
+    });
+
+    selectedOption.addEventListener("click", () => {
+      options.style.display = options.style.display === "block" ? "none" : "block";
+    });
+
+    allOptions.forEach(option => {
+      option.addEventListener("click", () => {
+        const lang = option.getAttribute("data-lang");
+        selectedOption.innerHTML = option.innerHTML;
+        options.style.display = "none";
+        setLanguage(lang);
+        updateOptions(lang);
+      });
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!languageSelect.contains(e.target)) {
+        options.style.display = "none";
+      }
+    });
+  </script>
 </body>
 </html>
 
