@@ -212,32 +212,18 @@
       });
     }
 
+    // Збереження та отримання мови через localStorage
     window.addEventListener("load", () => {
-      setLanguage("en");
-      selectedOption.innerHTML = `<img src="flags/gb.png" alt="EN"><span>English</span>`;
-      updateOptions("en");
+      const savedLang = localStorage.getItem("selectedLanguage") || "en";
+      setLanguage(savedLang);
+
+      const flagMap = { ua: "ua", en: "gb", pl: "pl", de: "de" };
+      const nameMap = { ua: "Українська", en: "English", pl: "Polski", de: "Deutsch" };
+      selectedOption.innerHTML = `<img src="flags/${flagMap[savedLang]}.png" alt="${savedLang.toUpperCase()}"><span>${nameMap[savedLang]}</span>`;
+
+      updateOptions(savedLang);
     });
 
     selectedOption.addEventListener("click", () => {
-      options.style.display = options.style.display === "block" ? "none" : "block";
-    });
 
-    allOptions.forEach(option => {
-      option.addEventListener("click", () => {
-        const lang = option.getAttribute("data-lang");
-        selectedOption.innerHTML = option.innerHTML;
-        options.style.display = "none";
-        setLanguage(lang);
-        updateOptions(lang);
-      });
-    });
-
-    document.addEventListener("click", (e) => {
-      if (!languageSelect.contains(e.target)) {
-        options.style.display = "none";
-      }
-    });
-  </script>
-</body>
-</html>
 
