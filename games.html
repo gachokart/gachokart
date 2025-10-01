@@ -1,1 +1,88 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Games — Blazkowicz Analyst</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --black:#0b0b0b;
+      --red:#8b0000;
+      --white:#ffffff;
+    }
+    html,body{
+      height:100%;
+      margin:0;
+      font-family: 'Press Start 2P', monospace;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      background: linear-gradient(120deg, var(--black) 50%, var(--red) 50%);
+      background-size: cover;
+      color:var(--white);
+    }
+    .wrap{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:2rem;
+      box-sizing:border-box;
+    }
+    .title-card{
+      display:inline-flex;
+      align-items:center;
+      gap:22px;
+      padding:28px 36px;
+      border-radius:18px;
+      background: rgba(0,0,0,0.35);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      border: 2px solid rgba(255,255,255,0.06);
+    }
+    .title-card img{
+      width:96px;
+      height:96px;
+      object-fit:contain;
+      filter: drop-shadow(0 6px 14px rgba(0,0,0,0.6));
+    }
+    h1{
+      margin:0;
+      font-size:48px;
+      line-height:1;
+      letter-spacing:2px;
+      color:var(--white);
+      text-shadow: 0 4px 18px rgba(0,0,0,0.6);
+    }
+    @media (max-width:640px){
+      .title-card{gap:12px;padding:18px}
+      .title-card img{width:64px;height:64px}
+      h1{font-size:28px}
+    }
+    /* small link back to index */
+    .back-link{
+      display:block;
+      margin-top:18px;
+      font-size:11px;
+      opacity:0.85;
+      text-decoration:none;
+      color:var(--white);
+    }
+    .back-link:hover{opacity:1}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="title-card">
+      <!-- ЗАМІНИТЬ ШЛЯХ ДО ЛОГО НА ВЛАСНИЙ, НАПРИКЛАД flags/logo.png -->
+      <img src="flags/logo1.png" alt="Blazkowicz logo" onerror="this.style.display='none'">
+      <div>
+        <h1>Games</h1>
+        <a class="back-link" href="/">← Back to index</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
 
