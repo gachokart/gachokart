@@ -40,10 +40,10 @@
     /* ==== Заголовок Games ==== */
     h1 {
       font-size: 48px;
-      margin: 40px 0 0 0;
+      margin: 40px 0 20px 0;
       text-shadow: 2px 2px #000;
-      color: #ffffff;   /* ✅ тепер білий */
-      text-align: center; /* ✅ по центру */
+      color: #ffffff;
+      text-align: center;
     }
 
     /* ==== Language Selector ==== */
@@ -96,6 +96,38 @@
     .option:hover {
       background-color: rgba(255, 0, 0, 0.5);
     }
+
+    /* ==== Контейнер ігрових колонок ==== */
+    .games-container {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin: 40px auto;
+      max-width: 900px;
+    }
+
+    .game-card {
+      background: rgba(0,0,0,0.6);
+      border: 2px solid #ff0000;
+      border-radius: 12px;
+      padding: 40px 20px;
+      flex: 1;
+      text-align: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .game-card:hover {
+      transform: translateY(-10px) scale(1.05);
+      box-shadow: 0 0 20px #ff0000;
+      cursor: pointer;
+    }
+
+    .game-card h2 {
+      font-size: 20px;
+      color: #ffffff;
+      text-shadow: 1px 1px #000;
+      margin: 0;
+    }
   </style>
 </head>
 <body>
@@ -110,6 +142,13 @@
 
   <!-- Заголовок Games -->
   <h1 id="gamesTitle">Games</h1>
+
+  <!-- Колонки з іграми -->
+  <div class="games-container">
+    <div class="game-card"><h2>Game 1</h2></div>
+    <div class="game-card"><h2>Game 2</h2></div>
+    <div class="game-card"><h2>Game 3</h2></div>
+  </div>
 
   <!-- Language Selector -->
   <div class="language-selector">
