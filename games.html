@@ -110,10 +110,17 @@
       margin-right: 8px;
     }
 
-    /* ==== Колонки ігор на всю ширину екрану ==== */
+    /* ==== Заголовок Games ==== */
+    #gamesTitle {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    /* ==== Колонки ігор на всю ширину і висоту екрану до заголовка ==== */
     .games-grid {
       display: flex;
       width: 100vw;
+      height: calc(100vh - 200px); /* висота header + заголовок */
       margin: 0;
       padding: 0;
       box-sizing: border-box;
@@ -128,7 +135,6 @@
       align-items: center;
       transition: transform 0.3s ease, box-shadow 0.3s ease;
       cursor: pointer;
-      height: 250px;
       text-align: center;
       margin: 0; /* без відступів між колонками */
     }
@@ -172,7 +178,7 @@
   </div>
 </header>
 
-<h1 style="text-align:center; margin-top: 20px;" id="gamesTitle">Games</h1>
+<h1 id="gamesTitle">Games</h1>
 
 <div class="games-grid">
   <a href="game1.html" class="game-column">
@@ -234,3 +240,4 @@
 
 </body>
 </html>
+
