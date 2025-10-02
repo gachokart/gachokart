@@ -1,161 +1,103 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Space Invaders — PixiJS</title>
-<style>
-  html, body { margin:0; padding:0; height:100%; background:#000; overflow:hidden; }
-  #game-container { width:100%; height:100%; display:flex; justify-content:center; align-items:center; }
-  .ui { position:fixed; left:16px; top:12px; color:#fff; font-family:monospace; z-index:10; }
-  .ui .score, .ui .lives { margin-bottom:6px; }
-  button { border:2px solid #ff0000; background:transparent; color:#fff; padding:6px 12px; cursor:pointer; font-family:monospace; margin-right:4px; }
-</style>
+  <meta charset="UTF-8" />
+  <title>Space Invaders</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: black;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      margin: auto;
+    }
+  </style>
 </head>
 <body>
-<div id="game-container"></div>
-<div class="ui">
-  <div class="score">Score: <span id="score">0</span></div>
-  <div class="lives">Lives: <span id="lives">3</span></div>
-  <button id="pauseBtn">Pause</button>
-  <button id="restartBtn">Restart</button>
-</div>
+  <script src="https://pixijs.download/release/pixi.min.js"></script>
+  <script>
+    const app = new PIXI.Application({
+      width: 800,
+      height: 600,
+      backgroundColor: 0x000000,
+    });
+    document.body.appendChild(app.view);
 
-<script src="https://pixijs.download/release/pixi.min.js"></script>
-<script>
-const app = new PIXI.Application({ width:640, height:720, backgroundColor:0x000000 });
-document.getElementById('game-container').appendChild(app.view);
+    // Гравець
+    const player = new PIXI.Graphics();
+    player.beginFill(0x00ff00);
+    player.drawRect(0, 0, 50, 20);
+    player.endFill();
+    player.x = app.screen.width / 2 - 25;
+    player.y = app.screen.height - 40;
+    app.stage.addChild(player);
 
-// Player
-const player = new PIXI.Graphics();
-player.beginFill(0xffffff);
-player.drawPolygon([-20,10, 0,-20, 20,10]);
-player.endFill();
-player.x = app.renderer.width/2;
-player.y = app.renderer.height - 50;
-app.stage.addChild(player);
+    // Прибульці
+    const aliens = [];
+    const alienRows = 3;
+    const alienCols = 8;
 
-// Player bullets
-const bullets = [];
-const BULLET_SPEED = 10;
-
-// Enemy setup
-const enemies = [];
-const enemyLayer = new PIXI.Container();
-app.stage.addChild(enemyLayer);
-const ENEMY_ROWS = 4;
-const ENEMY_COLS = 8;
-const ENEMY_H_SPACING = 60;
-const ENEMY_V_SPACING = 50;
-
-for(let r=0;r<ENEMY_ROWS;r++){
-  for(let c=0;c<ENEMY_COLS;c++){
-    const enemy = new PIXI.Graphics();
-    enemy.beginFill(0xffcc00);
-    enemy.drawRect(-18,-12,36,24);
-    enemy.endFill();
-    enemy.x = 60 + c*ENEMY_H_SPACING;
-    enemy.y = 60 + r*ENEMY_V_SPACING;
-    enemyLayer.addChild(enemy);
-    enemies.push(enemy);
-  }
-}
-
-// Enemy movement
-let enemyDir = 1;
-const ENEMY_SPEED = 1;
-
-// Input
-const keys = {};
-window.addEventListener('keydown', e => { keys[e.code]=true; if(e.code==='Space') e.preventDefault(); });
-window.addEventListener('keyup', e => { keys[e.code]=false; });
-
-// Score/Lives
-let score=0, lives=3;
-const scoreEl = document.getElementById('score');
-const livesEl = document.getElementById('lives');
-const pauseBtn = document.getElementById('pauseBtn');
-const restartBtn = document.getElementById('restartBtn');
-let paused=false;
-
-pauseBtn.onclick=()=>{ paused=!paused; pauseBtn.textContent = paused?'Resume':'Pause'; }
-restartBtn.onclick=()=>{ restartGame(); }
-
-function shoot(){
-  const b = new PIXI.Graphics();
-  b.beginFill(0x66ffff);
-  b.drawRect(-3,-10,6,12);
-  b.endFill();
-  b.x = player.x;
-  b.y = player.y-20;
-  bullets.push(b);
-  app.stage.addChild(b);
-}
-
-function rectIntersect(a,b){
-  return a.x-18 < b.x+18 && a.x+18 > b.x-18 && a.y-12 < b.y+12 && a.y+12 > b.y-12;
-}
-
-function restartGame(){
-  bullets.forEach(b=>app.stage.removeChild(b)); bullets.length=0;
-  enemies.forEach(e=>enemyLayer.removeChild(e));
-  enemies.length=0;
-  // recreate enemies
-  for(let r=0;r<ENEMY_ROWS;r++){
-    for(let c=0;c<ENEMY_COLS;c++){
-      const enemy = new PIXI.Graphics();
-      enemy.beginFill(0xffcc00);
-      enemy.drawRect(-18,-12,36,24);
-      enemy.endFill();
-      enemy.x = 60 + c*ENEMY_H_SPACING;
-      enemy.y = 60 + r*ENEMY_V_SPACING;
-      enemyLayer.addChild(enemy);
-      enemies.push(enemy);
-    }
-  }
-  score=0; lives=3; scoreEl.textContent=score; livesEl.textContent=lives;
-  player.x=app.renderer.width/2;
-  player.y=app.renderer.height-50;
-}
-
-function update(delta){
-  if(paused) return;
-  // Move player
-  if(keys['ArrowLeft']||keys['KeyA']) player.x -= 5;
-  if(keys['ArrowRight']||keys['KeyD']) player.x +=5;
-  if(keys['Space']) shoot();
-
-  // Clamp player
-  player.x = Math.max(20,Math.min(app.renderer.width-20,player.x));
-
-  // Update bullets
-  for(let i=bullets.length-1;i>=0;i--){
-    const b = bullets[i];
-    b.y -= BULLET_SPEED;
-    if(b.y < -10){ app.stage.removeChild(b); bullets.splice(i,1); continue; }
-    for(let j=enemies.length-1;j>=0;j--){
-      const e = enemies[j];
-      if(rectIntersect(b,e)){
-        app.stage.removeChild(b); bullets.splice(i,1);
-        enemyLayer.removeChild(e); enemies.splice(j,1);
-        score +=100; scoreEl.textContent=score;
-        break;
+    for (let row = 0; row < alienRows; row++) {
+      for (let col = 0; col < alienCols; col++) {
+        const alien = new PIXI.Graphics();
+        alien.beginFill(0xff0000);
+        alien.drawRect(0, 0, 40, 20);
+        alien.endFill();
+        alien.x = 80 + col * 60;
+        alien.y = 50 + row * 40;
+        app.stage.addChild(alien);
+        aliens.push(alien);
       }
     }
-  }
 
-  // Move enemies
-  let minX=Infinity,maxX=-Infinity;
-  enemies.forEach(e=>{ if(e.x<minX) minX=e.x; if(e.x>maxX) maxX=e.x; e.x += ENEMY_SPEED*enemyDir; });
-  if(maxX>app.renderer.width-20 || minX<20) enemyDir*=-1;
-  // Check if enemies reach player
-  enemies.forEach(e=>{ if(e.y+12>=player.y-10){ lives--; livesEl.textContent=lives; restartGame(); } });
-}
+    // Кулі
+    const bullets = [];
+    function shoot() {
+      const bullet = new PIXI.Graphics();
+      bullet.beginFill(0xffffff);
+      bullet.drawRect(0, 0, 4, 10);
+      bullet.endFill();
+      bullet.x = player.x + 23;
+      bullet.y = player.y;
+      app.stage.addChild(bullet);
+      bullets.push(bullet);
+    }
 
-app.ticker.add(update);
-</script>
+    // Керування
+    window.addEventListener("keydown", (e) => {
+      if (e.code === "ArrowLeft") player.x -= 10;
+      if (e.code === "ArrowRight") player.x += 10;
+      if (e.code === "Space") shoot();
+    });
+
+    // Ігровий цикл
+    app.ticker.add(() => {
+      bullets.forEach((bullet, index) => {
+        bullet.y -= 5;
+        if (bullet.y < 0) {
+          app.stage.removeChild(bullet);
+          bullets.splice(index, 1);
+        }
+
+        aliens.forEach((alien, aIndex) => {
+          if (
+            bullet.x > alien.x &&
+            bullet.x < alien.x + 40 &&
+            bullet.y < alien.y + 20 &&
+            bullet.y > alien.y
+          ) {
+            app.stage.removeChild(alien);
+            aliens.splice(aIndex, 1);
+            app.stage.removeChild(bullet);
+            bullets.splice(index, 1);
+          }
+        });
+      });
+    });
+  </script>
 </body>
 </html>
-
 
 
