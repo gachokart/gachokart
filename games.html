@@ -46,6 +46,37 @@
       text-align: center;
     }
 
+    /* ==== Колонки ігор ==== */
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      width: 100%;
+      height: calc(100vh - 140px); /* весь екран мінус header та заголовок */
+      box-sizing: border-box;
+      padding: 20px;
+    }
+
+    .game-column {
+      background: rgba(0,0,0,0.6);
+      border: 2px solid #ff0000;
+      border-radius: 12px;
+      color: #fff;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 24px;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+    }
+
+    .game-column:hover {
+      transform: translateY(-10px) scale(1.05);
+      box-shadow: 0 0 20px #ff0000;
+    }
+
     /* ==== Language Selector ==== */
     .language-selector {
       position: absolute;
@@ -96,38 +127,6 @@
     .option:hover {
       background-color: rgba(255, 0, 0, 0.5);
     }
-
-    /* ==== Контейнер ігрових колонок ==== */
-    .games-container {
-      display: flex;
-      justify-content: center;
-      gap: 40px;
-      margin: 40px auto;
-      max-width: 900px;
-    }
-
-    .game-card {
-      background: rgba(0,0,0,0.6);
-      border: 2px solid #ff0000;
-      border-radius: 12px;
-      padding: 40px 20px;
-      flex: 1;
-      text-align: center;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .game-card:hover {
-      transform: translateY(-10px) scale(1.05);
-      box-shadow: 0 0 20px #ff0000;
-      cursor: pointer;
-    }
-
-    .game-card h2 {
-      font-size: 20px;
-      color: #ffffff;
-      text-shadow: 1px 1px #000;
-      margin: 0;
-    }
   </style>
 </head>
 <body>
@@ -143,11 +142,11 @@
   <!-- Заголовок Games -->
   <h1 id="gamesTitle">Games</h1>
 
-  <!-- Колонки з іграми -->
-  <div class="games-container">
-    <div class="game-card"><h2>Game 1</h2></div>
-    <div class="game-card"><h2>Game 2</h2></div>
-    <div class="game-card"><h2>Game 3</h2></div>
+  <!-- Три великі колонки ігор -->
+  <div class="games-grid">
+    <div class="game-column">Game 1</div>
+    <div class="game-column">Game 2</div>
+    <div class="game-column">Game 3</div>
   </div>
 
   <!-- Language Selector -->
@@ -217,7 +216,6 @@
   </script>
 </body>
 </html>
-
 
 
 
