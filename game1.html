@@ -36,20 +36,15 @@
 
     // Прибульці
     const aliens = [];
-    const alienRows = 3;
-    const alienCols = 8;
-
-    for (let row = 0; row < alienRows; row++) {
-      for (let col = 0; col < alienCols; col++) {
-        const alien = new PIXI.Graphics();
-        alien.beginFill(0xff0000);
-        alien.drawRect(0, 0, 40, 20);
-        alien.endFill();
-        alien.x = 80 + col * 60;
-        alien.y = 50 + row * 40;
-        app.stage.addChild(alien);
-        aliens.push(alien);
-      }
+    for (let i = 0; i < 5; i++) {
+      const alien = new PIXI.Graphics();
+      alien.beginFill(0xff0000);
+      alien.drawRect(0, 0, 40, 20);
+      alien.endFill();
+      alien.x = 100 + i * 60;
+      alien.y = 100;
+      app.stage.addChild(alien);
+      aliens.push(alien);
     }
 
     // Кулі
@@ -99,5 +94,3 @@
   </script>
 </body>
 </html>
-
-
