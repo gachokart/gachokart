@@ -110,23 +110,52 @@
       margin-right: 8px;
     }
 
-    /* ==== Колонки ігор ==== */ .games-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%; height: calc(100vh - 140px); /* весь екран мінус header та заголовок */ box-sizing: border-box; padding: 20px; } .game-column { background: rgba(0,0,0,0.6); border: 2px solid #ff0000; border-radius: 12px; color: #fff; font-family: 'Press Start 2P', cursive; font-size: 24px; text-align: center; display: flex; justify-content: center; align-items: center; transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer; } .game-column:hover { transform: translateY(-10px) scale(1.05); box-shadow: 0 0 20px #ff0000; } /* ==== Language Selector ==== */ .language-selector { position: absolute; top: 20px; right: 20px; } .custom-select { position: relative; width: 180px; cursor: pointer; border: 2px solid #ff0000; background-color: #000; color: #fff; font-size: 10px; user-select: none; } .selected-option { display: flex; align-items: center; padding: 5px 10px; } .selected-option img { width: 20px; height: 15px; margin-right: 8px; } .options { display: none; position: absolute; top: 100%; left: 0; width: 100%; background-color: #000; border: 2px solid #ff0000; z-index: 1000; } .option { display: flex; align-items: center; padding: 5px 10px; cursor: pointer; } .option img { width: 20px; height: 15px; margin-right: 8px; } .option:hover { background-color: rgba(255, 0, 0, 0.5); } </style> </head> <body> <header>
+    /* ==== Колонки ігор на всю ширину екрану ==== */
+    .games-grid {
+      display: flex;
+      width: 100vw;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    .game-column {
+      flex: 1; /* рівна ширина для всіх колонок */
+      background: rgba(0,0,0,0.6);
+      border: 2px solid #ff0000;
+      border-radius: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+      height: 250px;
+      text-align: center;
+      margin: 0; /* без відступів між колонками */
+    }
+    .game-column:hover {
+      transform: translateY(-10px) scale(1.05);
+      box-shadow: 0 0 20px #ff0000;
+    }
+    .game-column img {
+      max-width: 80%;
+      max-height: 80%;
+    }
+  </style>
+</head>
+<body>
 
-
-  <!-- ЛОГОТИП -->
+<header>
   <div class="logo">
     <a href="https://gachokart.com" target="_blank">
       <img src="flags/LOGO1.png" alt="Logo">
     </a>
   </div>
 
-  <!-- ТЕКСТОВА ЧАСТИНА -->
   <div class="title-block">
     <h1>Blazkowicz</h1>
     <h2>Analyst</h2>
   </div>
 
-  <!-- Вибір мови -->
   <div class="language-selector">
     <div class="custom-select" id="languageSelect">
       <div class="selected-option">
@@ -205,4 +234,3 @@
 
 </body>
 </html>
-
