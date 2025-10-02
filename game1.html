@@ -1,220 +1,397 @@
-<!DOCTYPE html>
-<html lang="uk">
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Games</title>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
-
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Space Invaders — PixiJS</title>
   <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      background: linear-gradient(to bottom, #000000, #600000);
-      font-family: 'Press Start 2P', cursive;
-      color: #ffffff;
-    }
-
-    header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: flex-start;
-      gap: 20px;
-      padding: 20px;
-      position: relative;
-    }
-
-    /* ==== ЛОГОТИП ==== */
-    .logo img {
-      height: 80px;
-      width: auto;
-      display: block;
-      transition: 0.3s ease;
-    }
-    .logo img:hover {
-      filter: drop-shadow(0 0 15px #ff0000) brightness(1.2);
-      transform: scale(1.05);
-    }
-
-    /* ==== Заголовок Games ==== */
-    h1 {
-      font-size: 48px;
-      margin: 40px 0 20px 0;
-      text-shadow: 2px 2px #000;
-      color: #ffffff;
-      text-align: center;
-    }
-
-    /* ==== Language Selector ==== */
-    .language-selector {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-    }
-    .custom-select {
-      position: relative;
-      width: 180px;
-      cursor: pointer;
-      border: 2px solid #ff0000;
-      background-color: #000;
-      color: #fff;
-      font-size: 10px;
-      user-select: none;
-    }
-    .selected-option {
-      display: flex;
-      align-items: center;
-      padding: 5px 10px;
-    }
-    .selected-option img {
-      width: 20px;
-      height: 15px;
-      margin-right: 8px;
-    }
-    .options {
-      display: none;
-      position: absolute;
-      top: 100%;
-      left: 0;
-      width: 100%;
-      background-color: #000;
-      border: 2px solid #ff0000;
-      z-index: 1000;
-    }
-    .option {
-      display: flex;
-      align-items: center;
-      padding: 5px 10px;
-      cursor: pointer;
-    }
-    .option img {
-      width: 20px;
-      height: 15px;
-      margin-right: 8px;
-    }
-    .option:hover {
-      background-color: rgba(255, 0, 0, 0.5);
-    }
-
-    /* ==== Контейнер ігрових колонок ==== */
-    .games-container {
-      display: flex;
-      justify-content: center;
-      gap: 40px;
-      margin: 40px auto;
-      max-width: 900px;
-    }
-
-    .game-card {
-      background: rgba(0,0,0,0.6);
-      border: 2px solid #ff0000;
-      border-radius: 12px;
-      padding: 40px 20px;
-      flex: 1;
-      text-align: center;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .game-card:hover {
-      transform: translateY(-10px) scale(1.05);
-      box-shadow: 0 0 20px #ff0000;
-      cursor: pointer;
-    }
-
-    .game-card h2 {
-      font-size: 20px;
-      color: #ffffff;
-      text-shadow: 1px 1px #000;
-      margin: 0;
-    }
+    html,body{height:100%;margin:0;background:#000;background:linear-gradient(#000,#200);color:#fff;font-family:Inter,Arial,sans-serif}
+    #game-container{display:flex;align-items:center;justify-content:center;height:100%;}
+    .ui{position:fixed;left:16px;top:12px;z-index:10;font-family:monospace}
+    .ui .score{font-size:16px}
+    .ui .lives{margin-top:6px;font-size:14px}
+    .ui .msg{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.6);padding:18px;border:2px solid #ff0000;border-radius:8px;text-align:center}
+    button{appearance:none;border:2px solid #ff0000;background:transparent;color:#fff;padding:8px 12px;border-radius:6px;cursor:pointer;font-family:inherit}
+    a.small{color:#fff;text-decoration:underline;font-size:12px}
+    canvas{image-rendering:pixelated}
   </style>
 </head>
 <body>
-  <header>
-    <!-- ЛОГОТИП -->
-    <div class="logo">
-      <a href="https://gachokart.com" target="_blank">
-        <img src="flags/LOGO1.png" alt="Logo">
-      </a>
-    </div>
-  </header>
-
-  <!-- Заголовок Games -->
-  <h1 id="gamesTitle">Games</h1>
-
-  <!-- Колонки з іграми -->
-  <div class="games-container">
-    <div class="game-card"><h2>Game 1</h2></div>
-    <div class="game-card"><h2>Game 2</h2></div>
-    <div class="game-card"><h2>Game 3</h2></div>
+  <div id="game-container"></div>
+  <div class="ui">
+    <div class="score">Score: <span id="score">0</span></div>
+    <div class="lives">Lives: <span id="lives">3</span></div>
+    <div style="margin-top:8px"><button id="pauseBtn">Pause</button> <button id="restartBtn">Restart</button></div>
   </div>
 
-  <!-- Language Selector -->
-  <div class="language-selector">
-    <div class="custom-select" id="languageSelect">
-      <div class="selected-option">
-        <img src="flags/gb.png" alt="EN">
-        <span>English</span>
-      </div>
-      <div class="options">
-        <div class="option" data-lang="ua"><img src="flags/ua.png" alt="UA"><span>Українська</span></div>
-        <div class="option" data-lang="en"><img src="flags/gb.png" alt="EN"><span>English</span></div>
-        <div class="option" data-lang="pl"><img src="flags/pl.png" alt="PL"><span>Polski</span></div>
-        <div class="option" data-lang="de"><img src="flags/de.png" alt="DE"><span>Deutsch</span></div>
-      </div>
-    </div>
-  </div>
+  <div id="message" class="msg" style="display:none"></div>
 
+  <!-- PixiJS CDN -->
+  <script src="https://pixijs.download/release/pixi.min.js"></script>
   <script>
-    const translations = {
-      ua: { games: "Ігри" },
-      en: { games: "Games" },
-      pl: { games: "Gry" },
-      de: { games: "Spiele" }
-    };
+  // Simple Space Invaders-like game using PixiJS
+  // Single-file, no external assets: all shapes drawn with Graphics.
 
-    const languageSelect = document.getElementById("languageSelect");
-    const selectedOption = languageSelect.querySelector(".selected-option");
-    const options = languageSelect.querySelector(".options");
-    const allOptions = Array.from(options.querySelectorAll(".option"));
+  const app = new PIXI.Application({
+    width: 640,
+    height: 720,
+    backgroundAlpha: 0,
+    antialias: false,
+    resolution: window.devicePixelRatio || 1,
+    autoDensity: true
+  });
+  document.getElementById('game-container').appendChild(app.view);
 
-    function setLanguage(lang) {
-      document.getElementById("gamesTitle").textContent = translations[lang].games;
-    }
+  // Scale to fit window while maintaining aspect ratio
+  function resize() {
+    const parent = app.view.parentNode;
+    const w = parent.clientWidth;
+    const h = parent.clientHeight;
+    const scale = Math.min(w / app.renderer.width, h / app.renderer.height);
+    app.view.style.width = Math.floor(app.renderer.width * scale) + 'px';
+    app.view.style.height = Math.floor(app.renderer.height * scale) + 'px';
+  }
+  window.addEventListener('resize', resize);
+  resize();
 
-    function updateOptions(currentLang) {
-      allOptions.forEach(option => {
-        option.style.display = option.getAttribute("data-lang") === currentLang ? "none" : "flex";
-      });
-    }
+  // Game constants
+  const PLAYER_SPEED = 5;
+  const BULLET_SPEED = 10;
+  const ENEMY_ROWS = 4;
+  const ENEMY_COLS = 8;
+  const ENEMY_H_SPACING = 54;
+  const ENEMY_V_SPACING = 44;
+  const ENEMY_START_X = 60;
+  const ENEMY_START_Y = 80;
+  const ENEMY_MOVE_X = 10; // horizontal step per tick
+  const ENEMY_MOVE_Y = 18; // drop when changing direction
+  const ENEMY_BASE_SPEED = 0.6; // pixels per frame multiplier
 
-    window.addEventListener("load", () => {
-      setLanguage("en");
-      selectedOption.innerHTML = `<img src="flags/gb.png" alt="EN"><span>English</span>`;
-      updateOptions("en");
-    });
+  // State
+  let score = 0;
+  let lives = 3;
+  let level = 1;
+  let gameOver = false;
+  let paused = false;
 
-    selectedOption.addEventListener("click", () => {
-      options.style.display = options.style.display === "block" ? "none" : "block";
-    });
+  // Containers
+  const stage = new PIXI.Container();
+  app.stage.addChild(stage);
 
-    allOptions.forEach(option => {
-      option.addEventListener("click", () => {
-        const lang = option.getAttribute("data-lang");
-        selectedOption.innerHTML = option.innerHTML;
-        options.style.display = "none";
-        setLanguage(lang);
-        updateOptions(lang);
-      });
-    });
+  const playerLayer = new PIXI.Container();
+  const enemyLayer = new PIXI.Container();
+  const bulletLayer = new PIXI.Container();
+  const enemyBulletLayer = new PIXI.Container();
+  const uiLayer = new PIXI.Container();
 
-    document.addEventListener("click", (e) => {
-      if (!languageSelect.contains(e.target)) {
-        options.style.display = "none";
+  stage.addChild(enemyLayer, bulletLayer, enemyBulletLayer, playerLayer, uiLayer);
+
+  // Player
+  const player = new PIXI.Container();
+  player.x = app.renderer.width / 2;
+  player.y = app.renderer.height - 60;
+
+  const ship = new PIXI.Graphics();
+  ship.beginFill(0xffffff);
+  ship.drawPolygon([ -18,8, 0,-20, 18,8 ]);
+  ship.endFill();
+  player.addChild(ship);
+
+  playerLayer.addChild(player);
+
+  // Boundaries
+  const leftBound = 20;
+  const rightBound = app.renderer.width - 20;
+
+  // Input
+  const keys = {};
+  window.addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space') e.preventDefault(); });
+  window.addEventListener('keyup', e => { keys[e.code] = false; });
+
+  // Bullets arrays
+  const bullets = [];
+  const enemyBullets = [];
+
+  // Enemies grid
+  const enemies = [];
+  let enemyDirection = 1; // 1 -> right, -1 -> left
+  let enemySpeedMultiplier = 1;
+  let enemyMoveAccumulator = 0;
+
+  function createEnemies() {
+    enemyLayer.removeChildren();
+    enemies.length = 0;
+    const cols = ENEMY_COLS;
+    const rows = ENEMY_ROWS + (level - 1); // more rows as levels progress
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const e = new PIXI.Container();
+        e.x = ENEMY_START_X + c * ENEMY_H_SPACING;
+        e.y = ENEMY_START_Y + r * ENEMY_V_SPACING;
+        e.row = r;
+        e.col = c;
+        e.health = 1;
+        const g = new PIXI.Graphics();
+        const color = 0xffcc00 - (r * 0x002200);
+        g.beginFill(color & 0xffffff);
+        g.drawRect(-18, -12, 36, 24);
+        g.endFill();
+        // eyes
+        g.beginFill(0x000000);
+        g.drawRect(-8, -4, 5, 4);
+        g.drawRect(4, -4, 5, 4);
+        g.endFill();
+        e.addChild(g);
+        enemyLayer.addChild(e);
+        enemies.push(e);
       }
+    }
+  }
+
+  createEnemies();
+
+  // Score/lives UI elements in DOM
+  const scoreEl = document.getElementById('score');
+  const livesEl = document.getElementById('lives');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const restartBtn = document.getElementById('restartBtn');
+  const msgEl = document.getElementById('message');
+
+  pauseBtn.addEventListener('click', () => { paused = !paused; pauseBtn.textContent = paused ? 'Resume' : 'Pause'; });
+  restartBtn.addEventListener('click', () => restartGame());
+
+  function shootPlayer() {
+    if (gameOver || paused) return;
+    // Limit fire rate
+    const now = performance.now();
+    if (player.lastShot && now - player.lastShot < 300) return;
+    player.lastShot = now;
+
+    const b = new PIXI.Graphics();
+    b.beginFill(0x66ffff);
+    b.drawRect(-3, -10, 6, 12);
+    b.endFill();
+    b.x = player.x;
+    b.y = player.y - 22;
+    b.vy = -BULLET_SPEED;
+    bulletLayer.addChild(b);
+    bullets.push(b);
+  }
+
+  function enemyShoot(from) {
+    const b = new PIXI.Graphics();
+    b.beginFill(0xff6666);
+    b.drawRect(-3, -6, 6, 10);
+    b.endFill();
+    b.x = from.x;
+    b.y = from.y + 18;
+    b.vy = 3 + Math.random() * 2 + level * 0.2;
+    enemyBulletLayer.addChild(b);
+    enemyBullets.push(b);
+  }
+
+  // Simple collision helpers
+  function rectsIntersect(a, b) {
+    const ax = a.x, ay = a.y;
+    const aw = (a.width || 6), ah = (a.height || 12);
+    const bx = b.x, by = b.y;
+    const bw = (b.width || 18), bh = (b.height || 12);
+    return ax - aw/2 < bx + bw/2 && ax + aw/2 > bx - bw/2 && ay - ah/2 < by + bh/2 && ay + ah/2 > by - bh/2;
+  }
+
+  function update(delta) {
+    if (gameOver || paused) return;
+
+    // Player movement
+    if (keys['ArrowLeft'] || keys['KeyA']) player.x -= PLAYER_SPEED * delta;
+    if (keys['ArrowRight'] || keys['KeyD']) player.x += PLAYER_SPEED * delta;
+    if (keys['Space']) shootPlayer();
+
+    // clamp player
+    player.x = Math.max(leftBound, Math.min(rightBound, player.x));
+
+    // Update bullets
+    for (let i = bullets.length - 1; i >= 0; i--) {
+      const b = bullets[i];
+      b.y += b.vy * delta;
+      if (b.y < -20) { bulletLayer.removeChild(b); bullets.splice(i,1); continue; }
+
+      // Check collision with enemies
+      for (let j = enemies.length - 1; j >= 0; j--) {
+        const e = enemies[j];
+        // approximate sizes
+        if (rectsIntersect(b, {x:e.x,y:e.y,width:36,height:24})) {
+          // hit
+          bulletLayer.removeChild(b); bullets.splice(i,1);
+          // remove enemy
+          enemyLayer.removeChild(e);
+          enemies.splice(j,1);
+          score += 100;
+          scoreEl.textContent = score;
+          // speed up enemies slightly
+          enemySpeedMultiplier += 0.02;
+          break;
+        }
+      }
+    }
+
+    // Update enemy bullets
+    for (let i = enemyBullets.length - 1; i >= 0; i--) {
+      const b = enemyBullets[i];
+      b.y += b.vy * delta;
+      if (b.y > app.renderer.height + 20) { enemyBulletLayer.removeChild(b); enemyBullets.splice(i,1); continue; }
+      if (rectsIntersect(b, {x:player.x,y:player.y,width:36,height:24})) {
+        enemyBulletLayer.removeChild(b); enemyBullets.splice(i,1);
+        onPlayerHit();
+      }
+    }
+
+    // Enemy movement: move as group
+    if (enemies.length > 0) {
+      // compute group bounds
+      let minX = Infinity, maxX = -Infinity;
+      enemies.forEach(e => { minX = Math.min(minX, e.x); maxX = Math.max(maxX, e.x); });
+
+      // move horizontally
+      const moveAmount = ENEMY_BASE_SPEED * enemySpeedMultiplier * delta * (0.5 + level*0.1);
+      enemies.forEach(e => { e.x += moveAmount * enemyDirection; });
+
+      // if hit edge, reverse and drop
+      if ((enemyDirection === 1 && maxX > rightBound - 40) || (enemyDirection === -1 && minX < leftBound + 40)) {
+        enemyDirection *= -1;
+        enemies.forEach(e => { e.y += ENEMY_MOVE_Y; });
+      }
+
+      // random enemy shooting
+      if (Math.random() < 0.015 + level*0.005) {
+        // choose a random enemy from bottom-most in a column
+        const byCol = {};
+        enemies.forEach(e => { byCol[e.col] = byCol[e.col] ? (byCol[e.col].y < e.y ? e : byCol[e.col]) : e; });
+        const cols = Object.keys(byCol);
+        if (cols.length > 0) {
+          const pick = byCol[cols[Math.floor(Math.random()*cols.length)]];
+          if (pick) enemyShoot(pick);
+        }
+      }
+
+      // check if any enemy reached player line
+      for (let e of enemies) {
+        if (e.y + 12 >= player.y - 20) { // invasion!
+          onPlayerHit(true);
+          break;
+        }
+      }
+
+    } else {
+      // level cleared
+      levelUp();
+    }
+  }
+
+  function levelUp() {
+    level++;
+    enemySpeedMultiplier = 1;
+    createEnemies();
+    showMessage(`Level ${level} — Get Ready!`, 1200);
+  }
+
+  function onPlayerHit(invaded=false) {
+    lives--;
+    livesEl.textContent = lives;
+    if (lives <= 0) {
+      loseGame();
+      return;
+    }
+    // reset enemies a bit or drop bullets
+    // clear enemy bullets
+    enemyBullets.forEach(b => enemyBulletLayer.removeChild(b));
+    enemyBullets.length = 0;
+    // flash player
+    flash(player, 6);
+    if (invaded) {
+      // remove some enemies as penalty
+      for (let i=0;i<3 && enemies.length>0;i++) {
+        const e = enemies.pop(); enemyLayer.removeChild(e);
+      }
+    }
+  }
+
+  function loseGame() {
+    gameOver = true;
+    showMessage(`Game Over\nScore: ${score}\nClick Restart`, -1);
+  }
+
+  function restartGame() {
+    // reset state
+    score = 0; scoreEl.textContent = score;
+    lives = 3; livesEl.textContent = lives;
+    level = 1;
+    enemySpeedMultiplier = 1;
+    bullets.forEach(b=>bulletLayer.removeChild(b)); bullets.length=0;
+    enemyBullets.forEach(b=>enemyBulletLayer.removeChild(b)); enemyBullets.length=0;
+    enemies.forEach(e=>enemyLayer.removeChild(e)); enemies.length=0;
+    createEnemies();
+    player.x = app.renderer.width/2; player.y = app.renderer.height - 60;
+    gameOver = false; paused = false; pauseBtn.textContent = 'Pause';
+    hideMessage();
+  }
+
+  function flash(obj, times=4) {
+    let t = 0; const id = app.ticker.add(()=>{
+      obj.visible = !obj.visible; t++; if (t>times){ obj.visible=true; app.ticker.remove(id); }
     });
+  }
+
+  function showMessage(text, duration=2000) {
+    msgEl.style.display = 'block';
+    msgEl.innerHTML = text.replace(/\n/g,'<br>');
+    if (duration>0) setTimeout(()=>{ msgEl.style.display='none'; }, duration);
+  }
+  function hideMessage(){ msgEl.style.display='none'; }
+
+  // simple collision: bullets vs enemies already handled
+
+  // main loop
+  app.ticker.add((delta)=>{
+    // delta is frames (approx 1 at 60fps). We can use it for movement scaling
+    update(delta);
+  });
+
+  // touch controls (left/right and shoot)
+  let touchBase = null;
+  app.view.addEventListener('touchstart',(e)=>{
+    e.preventDefault();
+    const x = e.touches[0].clientX / (app.view.clientWidth / app.renderer.width);
+    // if touch near bottom -> shoot; else move toward x
+    if (e.touches[0].clientY > app.view.clientHeight * 0.6) {
+      shootPlayer();
+    } else {
+      touchBase = x;
+    }
+  },{passive:false});
+  app.view.addEventListener('touchmove',(e)=>{
+    e.preventDefault();
+    if (!touchBase) return;
+    const x = e.touches[0].clientX / (app.view.clientWidth / app.renderer.width);
+    player.x = x;
+  },{passive:false});
+  app.view.addEventListener('touchend',(e)=>{ touchBase=null; },{passive:false});
+
+  // mouse click to shoot
+  app.view.addEventListener('mousedown', (e)=>{ shootPlayer(); });
+
+  // Helpful hints
+  showMessage('Controls: ←/A, →/D, Space to shoot', 1800);
+
+  // keyboard cheat: press KeyR to restart
+  window.addEventListener('keydown', (e)=>{ if (e.code==='KeyR') restartGame(); });
+
+  // initial focus
+  app.view.setAttribute('tabindex', 0);
+  app.view.focus();
   </script>
 </body>
 </html>
+
 
