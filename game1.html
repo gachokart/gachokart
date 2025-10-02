@@ -2,95 +2,123 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8" />
-  <title>Space Invaders</title>
+  <title>Space Invaders (Canvas)</title>
   <style>
     body {
       margin: 0;
-      background-color: black;
+      background: black;
       overflow: hidden;
     }
     canvas {
       display: block;
       margin: auto;
+      background: #000;
     }
   </style>
 </head>
 <body>
-  <script src="https://pixijs.download/release/pixi.min.js"></script>
+  <canvas id="game" width="800" height="600"></canvas>
   <script>
-    const app = new PIXI.Application({
-      width: 800,
-      height: 600,
-      backgroundColor: 0x000000,
-    });
-    document.body.appendChild(app.view);
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
 
-    // Гравець
-    const player = new PIXI.Graphics();
-    player.beginFill(0x00ff00);
-    player.drawRect(0, 0, 50, 20);
-    player.endFill();
-    player.x = app.screen.width / 2 - 25;
-    player.y = app.screen.height - 40;
-    app.stage.addChild(player);
+    const player = {
+      x: canvas.width / 2 - 25,
+      y: canvas.height - 40,
+      width: 50,
+      height: 20,
+      color: "lime",
+      speed: 7
+    };
 
-    // Прибульці
-    const aliens = [];
-    for (let i = 0; i < 5; i++) {
-      const alien = new PIXI.Graphics();
-      alien.beginFill(0xff0000);
-      alien.drawRect(0, 0, 40, 20);
-      alien.endFill();
-      alien.x = 100 + i * 60;
-      alien.y = 100;
-      app.stage.addChild(alien);
-      aliens.push(alien);
-    }
-
-    // Кулі
     const bullets = [];
-    function shoot() {
-      const bullet = new PIXI.Graphics();
-      bullet.beginFill(0xffffff);
-      bullet.drawRect(0, 0, 4, 10);
-      bullet.endFill();
-      bullet.x = player.x + 23;
-      bullet.y = player.y;
-      app.stage.addChild(bullet);
-      bullets.push(bullet);
+    const aliens = [];
+
+    // Створення прибульців
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 8; col++) {
+        aliens.push({
+          x: 80 + col * 80,
+          y: 50 + row * 50,
+          width: 40,
+          height: 20,
+          color: "red"
+        });
+      }
     }
 
     // Керування
-    window.addEventListener("keydown", (e) => {
-      if (e.code === "ArrowLeft") player.x -= 10;
-      if (e.code === "ArrowRight") player.x += 10;
-      if (e.code === "Space") shoot();
-    });
+    const keys = {};
+    window.addEventListener("keydown", e => keys[e.code] = true);
+    window.addEventListener("keyup", e => keys[e.code] = false);
 
-    // Ігровий цикл
-    app.ticker.add(() => {
-      bullets.forEach((bullet, index) => {
-        bullet.y -= 5;
-        if (bullet.y < 0) {
-          app.stage.removeChild(bullet);
-          bullets.splice(index, 1);
-        }
+    function shoot() {
+      bullets.push({
+        x: player.x + player.width / 2 - 2,
+        y: player.y,
+        width: 4,
+        height: 10,
+        color: "white",
+        speed: 8
+      });
+    }
 
-        aliens.forEach((alien, aIndex) => {
+    let shootCooldown = 0;
+
+    function update() {
+      // Гравець
+      if (keys["ArrowLeft"]) player.x -= player.speed;
+      if (keys["ArrowRight"]) player.x += player.speed;
+      player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+
+      // Стрільба
+      if (keys["Space"] && shootCooldown <= 0) {
+        shoot();
+        shootCooldown = 15;
+      }
+      if (shootCooldown > 0) shootCooldown--;
+
+      // Кулі
+      bullets.forEach((b, i) => {
+        b.y -= b.speed;
+        if (b.y < 0) bullets.splice(i, 1);
+      });
+
+      // Перевірка зіткнень
+      bullets.forEach((b, bi) => {
+        aliens.forEach((a, ai) => {
           if (
-            bullet.x > alien.x &&
-            bullet.x < alien.x + 40 &&
-            bullet.y < alien.y + 20 &&
-            bullet.y > alien.y
+            b.x < a.x + a.width &&
+            b.x + b.width > a.x &&
+            b.y < a.y + a.height &&
+            b.y + b.height > a.y
           ) {
-            app.stage.removeChild(alien);
-            aliens.splice(aIndex, 1);
-            app.stage.removeChild(bullet);
-            bullets.splice(index, 1);
+            aliens.splice(ai, 1);
+            bullets.splice(bi, 1);
           }
         });
       });
-    });
+    }
+
+    function drawRect(obj) {
+      ctx.fillStyle = obj.color;
+      ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawRect(player);
+      bullets.forEach(drawRect);
+      aliens.forEach(drawRect);
+    }
+
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    loop();
   </script>
 </body>
 </html>
