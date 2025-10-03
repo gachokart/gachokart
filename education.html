@@ -37,19 +37,22 @@
       transform: scale(1.05);
     }
 
-    /* ==== Головний заголовок ==== */
-    .main-title {
-      text-align: center;
-      margin-top: 40px;
+    /* ==== Назва сайту ==== */
+    .title-block {
+      text-align: left;
     }
-    .main-title h1 {
-      font-size: 56px;
-      color: #fff;
-      text-shadow: 2px 2px 8px #000;
+    .title-block h1 {
+      font-size: 48px;
       margin: 0;
+      letter-spacing: 2px;
+      color: #ff0000;
+      text-shadow: 2px 2px #000;
     }
-    .main-title h1 span {
-      color: #ff0000; /* Analyst червоним */
+    .title-block h2 {
+      font-size: 20px;
+      margin: 5px 0 0;
+      color: #ffffff;
+      text-shadow: 1px 1px #000;
     }
 
     /* ==== Заголовок Education ==== */
@@ -121,12 +124,13 @@
         <img src="flags/LOGO1.png" alt="Logo">
       </a>
     </div>
+
+    <!-- Назва сайту -->
+    <div class="title-block">
+      <h1>Blazkowicz</h1>
+      <h2 id="analystText">Analyst</h2>
+    </div>
   </header>
-  
-  <div class="title-block">
-        <h1>Blazkowicz</h1>
-        <h2 id="analystText">Analyst</h2>
-      </div>
 
   <!-- Заголовок Education -->
   <h1 id="educationTitle">Education</h1>
@@ -198,4 +202,5 @@
   </script>
 </body>
 </html>
+
 
