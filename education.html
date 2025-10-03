@@ -37,13 +37,28 @@
       transform: scale(1.05);
     }
 
+    /* ==== Головний заголовок ==== */
+    .main-title {
+      text-align: center;
+      margin-top: 40px;
+    }
+    .main-title h1 {
+      font-size: 56px;
+      color: #fff;
+      text-shadow: 2px 2px 8px #000;
+      margin: 0;
+    }
+    .main-title h1 span {
+      color: #ff0000; /* Analyst червоним */
+    }
+
     /* ==== Заголовок Education ==== */
-    h1 {
+    #educationTitle {
       font-size: 48px;
       margin: 40px 0 0 0;
       text-shadow: 2px 2px #000;
-      color: #ffffff;   /* ✅ білий */
-      text-align: center; /* ✅ по центру */
+      color: #ffffff;
+      text-align: center;
     }
 
     /* ==== Language Selector ==== */
@@ -108,9 +123,9 @@
     </div>
   </header>
   
-  <div class="title-block">
-    <h1>Blazkowicz</h1>
-    <h2>Analyst</h2>
+  <!-- Заголовок Blazkowicz Analyst -->
+  <div class="main-title">
+    <h1>Blazkowicz <span>Analyst</span></h1>
   </div>
 
   <!-- Заголовок Education -->
@@ -183,3 +198,4 @@
   </script>
 </body>
 </html>
+
