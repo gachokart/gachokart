@@ -21,13 +21,11 @@
     header {
       display: flex;
       align-items: flex-start;
-      justify-content: flex-start;
       gap: 20px;
       padding: 20px;
       position: relative;
     }
 
-    /* ==== ЛОГОТИП ==== */
     .logo img {
       height: 100px;
       width: auto;
@@ -39,7 +37,6 @@
       transform: scale(1.08);
     }
 
-    /* ==== Назва ==== */
     .title-block h1 {
       font-size: 48px;
       margin: 0;
@@ -91,32 +88,31 @@
     }
     .option:hover {
       background-color: rgba(255, 0, 0, 0.5);
+      cursor: pointer;
     }
 
-    /* ==== Головний контент ==== */
-    main {
-      text-align: center;
-      margin-top: 150px;
-    }
-
-    .section-links {
+    /* ==== Sections Buttons ==== */
+    .sections {
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
       gap: 20px;
+      margin-top: 100px;
     }
-    .section-links a {
+    .section a {
+      position: relative;
+      display: inline-block;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 36px;
+      letter-spacing: 1px;
       color: #ffffff;
       text-decoration: none;
-      font-size: 18px;
-      border: 2px solid #ff0000;
-      padding: 10px 20px;
-      transition: 0.3s ease;
+      transition: text-shadow 0.3s ease, transform 0.3s ease;
     }
-    .section-links a:hover {
-      background-color: #ff0000;
-      color: #000;
-      box-shadow: 0 0 10px #ff0000;
+    .section a:hover {
+      text-shadow: 0 0 15px #ff0000;
+      transform: scale(1.08);
     }
 
     footer {
@@ -131,20 +127,16 @@
 </head>
 <body>
   <header>
-    <!-- ЛОГОТИП -->
     <div class="logo">
       <a href="https://gachokart.com" target="_blank">
         <img src="flags/LOGO1.png" alt="Logo">
       </a>
     </div>
-
-    <!-- Назва -->
     <div class="title-block">
       <h1>Blazkowicz</h1>
       <h2 id="analystText">Analyst</h2>
     </div>
 
-    <!-- Мовний селектор -->
     <div class="language-selector">
       <div class="custom-select" id="languageSelect">
         <div class="selected-option">
@@ -161,14 +153,12 @@
     </div>
   </header>
 
-  <main>
-    <div class="section-links">
-      <a href="data.html" id="dataLink">Data</a>
-      <a href="education.html" id="educationLink">Education</a>
-      <a href="games.html" id="gamesLink">Games</a>
-      <a href="contactus.html" id="contactLink">Contact Us</a>
-    </div>
-  </main>
+  <div class="sections">
+    <div class="section" id="gamesSection"><a href="games.html">Games</a></div>
+    <div class="section" id="dataSection"><a href="data.html">Data</a></div>
+    <div class="section" id="educationSection"><a href="education.html">Education</a></div>
+    <div class="section" id="contactSection"><a href="contactus.html">Contact Us</a></div>
+  </div>
 
   <footer>
     &copy; 2025 Blazkowicz Analyst. All rights reserved.
@@ -176,30 +166,10 @@
 
   <script>
     const translations = {
-      ua: {
-        data: "Дані",
-        education: "Освіта",
-        games: "Ігри",
-        contact: "Зв'язок"
-      },
-      en: {
-        data: "Data",
-        education: "Education",
-        games: "Games",
-        contact: "Contact Us"
-      },
-      pl: {
-        data: "Dane",
-        education: "Edukacja",
-        games: "Gry",
-        contact: "Kontakt"
-      },
-      de: {
-        data: "Daten",
-        education: "Bildung",
-        games: "Spiele",
-        contact: "Kontakt"
-      }
+      ua: { games: "Ігри", data: "Дані", education: "Освіта", contact: "Зв'язок" },
+      en: { games: "Games", data: "Data", education: "Education", contact: "Contact Us" },
+      pl: { games: "Gry", data: "Dane", education: "Edukacja", contact: "Kontakt" },
+      de: { games: "Spiele", data: "Daten", education: "Bildung", contact: "Kontakt" }
     };
 
     const languageSelect = document.getElementById("languageSelect");
@@ -208,11 +178,11 @@
     const allOptions = Array.from(options.querySelectorAll(".option"));
 
     function setLanguage(lang) {
-      const t = translations[lang];
-      document.getElementById("dataLink").textContent = t.data;
-      document.getElementById("educationLink").textContent = t.education;
-      document.getElementById("gamesLink").textContent = t.games;
-      document.getElementById("contactLink").textContent = t.contact;
+      document.getElementById("gamesSection").querySelector("a").textContent = translations[lang].games;
+      document.getElementById("dataSection").querySelector("a").textContent = translations[lang].data;
+      document.getElementById("educationSection").querySelector("a").textContent = translations[lang].education;
+      document.getElementById("contactSection").querySelector("a").textContent = translations[lang].contact;
+      document.getElementById("analystText").textContent = "Analyst"; // завжди англійською
     }
 
     function updateOptions(currentLang) {
@@ -222,18 +192,13 @@
     }
 
     window.addEventListener("load", () => {
-      const savedLang = localStorage.getItem("selectedLanguage");
-      const browserLang = navigator.language.slice(0, 2);
-      const defaultLang = ["ua", "en", "pl", "de"].includes(browserLang) ? browserLang : "en";
-      const lang = savedLang || defaultLang;
-
-      localStorage.setItem("selectedLanguage", lang);
-      setLanguage(lang);
+      const savedLang = localStorage.getItem("selectedLanguage") || "en";
+      setLanguage(savedLang);
 
       const flagMap = { ua: "ua", en: "gb", pl: "pl", de: "de" };
       const nameMap = { ua: "Українська", en: "English", pl: "Polski", de: "Deutsch" };
-      selectedOption.innerHTML = `<img src="flags/${flagMap[lang]}.png" alt="${lang.toUpperCase()}"><span>${nameMap[lang]}</span>`;
-      updateOptions(lang);
+      selectedOption.innerHTML = `<img src="flags/${flagMap[savedLang]}.png" alt="${savedLang.toUpperCase()}"><span>${nameMap[savedLang]}</span>`;
+      updateOptions(savedLang);
     });
 
     selectedOption.addEventListener("click", () => {
@@ -245,6 +210,7 @@
         const lang = option.getAttribute("data-lang");
         localStorage.setItem("selectedLanguage", lang);
         setLanguage(lang);
+
         const flagMap = { ua: "ua", en: "gb", pl: "pl", de: "de" };
         const nameMap = { ua: "Українська", en: "English", pl: "Polski", de: "Deutsch" };
         selectedOption.innerHTML = `<img src="flags/${flagMap[lang]}.png" alt="${lang.toUpperCase()}"><span>${nameMap[lang]}</span>`;
@@ -261,6 +227,7 @@
   </script>
 </body>
 </html>
+
 
 
 
