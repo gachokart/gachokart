@@ -11,9 +11,7 @@
       color: #eee;
       padding: 20px;
     }
-    h1, h2 {
-      text-align: center;
-    }
+    h1, h2 { text-align: center; }
     .teams {
       display: flex;
       justify-content: space-between;
@@ -26,9 +24,7 @@
       width: 48%;
       box-sizing: border-box;
     }
-    .team h2 {
-      margin-top: 0;
-    }
+    .team h2 { margin-top: 0; }
     select {
       width: 100%;
       padding: 8px;
@@ -63,82 +59,55 @@
   <div class="teams">
     <div class="team" id="my-team">
       <h2>Моя команда</h2>
-      <select class="slot my" data-team="my" data-slot="1">
-        <option value="">-- Оберіть героя --</option>
-      </select>
-      <select class="slot my" data-team="my" data-slot="2">
-        <option value="">-- Оберіть героя --</option>
-      </select>
-      <select class="slot my" data-team="my" data-slot="3">
-        <option value="">-- Оберіть героя --</option>
-      </select>
-      <select class="slot my" data-team="my" data-slot="4">
-        <option value="">-- Оберіть героя --</option>
-      </select>
-      <select class="slot my" data-team="my" data-slot="5">
-        <option value="">-- Оберіть героя --</option>
-      </select>
+      <select class="slot my" data-team="my" data-slot="1"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot my" data-team="my" data-slot="2"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot my" data-team="my" data-slot="3"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot my" data-team="my" data-slot="4"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot my" data-team="my" data-slot="5"><option value="">-- Оберіть героя --</option></select>
     </div>
 
     <div class="team" id="enemy-team">
       <h2>Суперник</h2>
-      <select class="slot enemy" data-team="enemy" data-slot="1">
-        <option value="">-- Оберіть героя --</option>
-      </select>
-      <select class="slot enemy" data-team="enemy" data-slot="2">
-        <option value="">-- Оберіть героя --</option>
-      </select>
-      <select class="slot enemy" data-team="enemy" data-slot="3">
-        <option value="">-- Оберіть героя --</option>
-      </select>
-      <select class="slot enemy" data-team="enemy" data-slot="4">
-        <option value="">-- Оберіть героя --</option>
-      </select>
-      <select class="slot enemy" data-team="enemy" data-slot="5">
-        <option value="">-- Оберіть героя --</option>
-      </select>
+      <select class="slot enemy" data-team="enemy" data-slot="1"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot enemy" data-team="enemy" data-slot="2"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot enemy" data-team="enemy" data-slot="3"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot enemy" data-team="enemy" data-slot="4"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot enemy" data-team="enemy" data-slot="5"><option value="">-- Оберіть героя --</option></select>
     </div>
   </div>
 
   <div class="results">
     <h2>Контрпіки для обраних героїв супротивника</h2>
-    <div id="counters-container">
-      <!-- тут виведуться контрпіки -->
-    </div>
+    <div id="counters-container"></div>
   </div>
 
   <script>
-    const heroes = [
-      "anti-mage", "axe", "bane", "bloodseeker", "crystal_maiden",
-      "drow_ranger", "earthshaker", "juggernaut", "mirana", "phantom_lancer",
-      "pudge", "razor", "sniper", "tidehunter", "viper", "windranger",
-      "lion", "lich", "nyx_assassin"
-      // … можеш додати всі інші
-    ];
+    let heroes = [];
+    let heroMap = {}; // hero_id → localized_name
 
-    // Контрпіки: ключ — герой супротивника, значення — масив героїв, які його контрять
-    const counterData = {
-      "anti-mage": ["Axe", "Huskar", "Meepo", "Phantom Assassin"],  // з Dotabuff «Disadvantage» :contentReference[oaicite:1]{index=1}
-      "axe": ["Phantom Lancer", "Viper", "Pugna"],
-      "bane": ["Juggernaut", "Anti-Mage"],
-      "bloodseeker": ["Puck", "Shadow Fiend"],
-      "crystal_maiden": ["Silencer", "Nyx Assassin"],
-      "drow_ranger": ["Phantom Lancer", "Bristleback"],
-      "earthshaker": ["Storm Spirit", "Sand King"],
-      "juggernaut": ["Slark", "Phantom Lancer"],
-      "mirana": ["Bounty Hunter", "Queen of Pain"],
-      "phantom_lancer": ["Axe", "Earthshaker", "Beastmaster"],
-      "pudge": ["Vengeful Spirit", "Silencer"],
-      "razor": ["Lina", "Windranger"],
-      "sniper": ["Storm Spirit", "Nyx Assassin"],
-      "tidehunter": ["Doom", "Ursa"],
-      "viper": ["Juggernaut", "Phantom Lancer"],
-      "windranger": ["Phantom Assassin", "Silencer"],
-      "lion": ["Beastmaster", "Monkey King"],
-      "lich": ["Templar Assassin", "Weaver"],
-      "nyx_assassin": ["Queen of Pain", "Silencer"]
-      // … доповни по мірі необхідності
-    };
+    async function fetchHeroes() {
+      const res = await fetch("https://api.opendota.com/api/heroes");
+      const data = await res.json();
+      heroes = data.map(h => h.localized_name).sort();
+      heroMap = Object.fromEntries(data.map(h => [h.id, h.localized_name]));
+      initHeroSelects();
+      attachEvents();
+    }
+
+    async function fetchCounters(heroName) {
+      // знаходимо hero_id по імені
+      const heroId = Object.keys(heroMap).find(id => heroMap[id] === heroName);
+      if (!heroId) return [];
+
+      const res = await fetch(`https://api.opendota.com/api/heroes/${heroId}/matchups`);
+      const data = await res.json();
+
+      // сортуємо за найгіршим winrate для героя (тобто кращі контри)
+      data.sort((a, b) => a.win_rate - b.win_rate);
+
+      // беремо топ-5 контрів
+      return data.slice(0, 5).map(d => heroMap[d.hero_id]);
+    }
 
     function initHeroSelects() {
       const selects = document.querySelectorAll("select.slot");
@@ -146,10 +115,7 @@
         heroes.forEach(h => {
           const opt = document.createElement("option");
           opt.value = h;
-          opt.text = h
-            .split("_")
-            .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-            .join(" ");
+          opt.text = h;
           sel.appendChild(opt);
         });
       });
@@ -161,46 +127,49 @@
       });
     }
 
-    function onHeroChange(evt) {
+    async function onHeroChange(evt) {
       const sel = evt.target;
-      const team = sel.getAttribute("data-team");  // "my" або "enemy"
+      const team = sel.getAttribute("data-team");
       const value = sel.value;
+
       if (!value) {
-        // очистити, якщо вибір скасовано
         showCounters();
         return;
       }
-      // перевірка: чи вже вибраний цей герой у тій самій команді
+
+      // перевірка на дубль у команді
       const sameTeamSelects = document.querySelectorAll(`select.slot.${team}`);
       sameTeamSelects.forEach(s => {
         if (s !== sel && s.value === value) {
-          // якщо вже є такий вибір, то очищаємо цей select і показуємо повідомлення
-          alert("Цей герой вже обраний у вашій команді!");
-          sel.value = "";  // скинути вибір
+          alert("Цей герой вже обраний у цій команді!");
+          sel.value = "";
         }
       });
+
       showCounters();
     }
 
-    function showCounters() {
+    async function showCounters() {
       const container = document.getElementById("counters-container");
       container.innerHTML = "";
 
-      // беремо героїв, обраних у команді Супротивника
       const enemyHeroes = Array.from(document.querySelectorAll("select.slot.enemy"))
         .map(s => s.value).filter(v => v);
 
-      // збираємо усі контрпіки до цих героїв
-      const counterSet = new Set();
-      enemyHeroes.forEach(h => {
-        const arr = counterData[h];
-        if (arr) {
-          arr.forEach(c => counterSet.add(c));
-        }
-      });
+      if (enemyHeroes.length === 0) {
+        container.textContent = "Контрпіки поки що недоступні або не обрано героїв супротивника.";
+        return;
+      }
+
+      let counterSet = new Set();
+
+      for (let h of enemyHeroes) {
+        const counters = await fetchCounters(h);
+        counters.forEach(c => counterSet.add(c));
+      }
 
       if (counterSet.size === 0) {
-        container.textContent = "Контрпіки поки що недоступні або не обрано героїв супротивника.";
+        container.textContent = "Не вдалося знайти контрпіки.";
       } else {
         counterSet.forEach(c => {
           const div = document.createElement("div");
@@ -211,14 +180,8 @@
       }
     }
 
-    function init() {
-      initHeroSelects();
-      attachEvents();
-    }
-
-    window.onload = init;
+    window.onload = fetchHeroes;
   </script>
-
 </body>
 </html>
 
