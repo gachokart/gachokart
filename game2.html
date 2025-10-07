@@ -82,6 +82,11 @@
       font-weight: bold;
       font-size: 18px;
     }
+    #strategy {
+      margin-top: 10px;
+      font-size: 17px;
+      color: #ccc;
+    }
   </style>
 </head>
 <body>
@@ -122,6 +127,7 @@
     <button id="go-button">Go</button>
     <span id="win-chance"></span>
   </div>
+  <div id="strategy"></div>
 
   <div class="results" id="results-section">
     <h2>Контрпіки для обраних героїв супротивника</h2>
@@ -168,18 +174,20 @@
         const enemyHeroes = Array.from(document.querySelectorAll(".slot.enemy"))
           .map(s => s.value).filter(v => v);
         const winEl = document.getElementById("win-chance");
+        const stratEl = document.getElementById("strategy");
         const resultsSection = document.getElementById("results-section");
 
         if (myHeroes.length === 5 && enemyHeroes.length === 5) {
           resultsSection.style.display = "none";
           winEl.textContent = "Обчислюємо...";
+          stratEl.textContent = "";
 
-          // Емуляція швидкого розрахунку шансів
           const chance = calcFastWinChance(myHeroes, enemyHeroes);
 
           setTimeout(() => {
             winEl.textContent = `Шанс на перемогу: ${chance.toFixed(1)}%`;
             winEl.style.color = chance > 55 ? "#4caf50" : chance < 45 ? "#f44336" : "#ffeb3b";
+            stratEl.textContent = `🔍 ${getStrategy(myHeroes)}`;
           }, 1500);
         } else {
           winEl.textContent = "Оберіть усіх 10 героїв!";
@@ -248,18 +256,46 @@
     }
 
     function calcFastWinChance(myHeroes, enemyHeroes) {
-      // Простий псевдорандомний алгоритм
-      // У майбутньому можна замінити на реальні статистичні дані
       let base = 50;
       for (let my of myHeroes) base += (my.charCodeAt(0) % 5 - 2);
       for (let en of enemyHeroes) base -= (en.charCodeAt(0) % 5 - 2);
       return Math.max(30, Math.min(70, base + (Math.random() * 6 - 3)));
     }
 
+    function getStrategy(heroes) {
+      const carry = ["Spectre", "Terrorblade", "Medusa", "Anti-Mage", "Faceless Void", "Naga Siren"];
+      const push = ["Lycan", "Nature's Prophet", "Shadow Shaman", "Death Prophet", "Broodmother"];
+      const fight = ["Magnus", "Phoenix", "Disruptor", "Tidehunter", "Enigma", "Kunkka"];
+      const heal = ["Dazzle", "Omniknight", "Treant Protector", "Warlock"];
+      const burst = ["Lina", "Lion", "Pugna", "Zeus", "Tinker"];
+
+      let score = { carry: 0, push: 0, fight: 0, heal: 0, burst: 0 };
+
+      for (let h of heroes) {
+        if (carry.includes(h)) score.carry++;
+        if (push.includes(h)) score.push++;
+        if (fight.includes(h)) score.fight++;
+        if (heal.includes(h)) score.heal++;
+        if (burst.includes(h)) score.burst++;
+      }
+
+      const max = Object.keys(score).reduce((a, b) => score[a] > score[b] ? a : b);
+
+      switch (max) {
+        case "carry": return "Перевага в лейті — розкачайтеся до 30 хвилини!";
+        case "push": return "Сильний пуш — завершуйте гру рано.";
+        case "fight": return "Потужна командна бійка — ініціюйте й грайте разом!";
+        case "heal": return "Стійкість — тримайте позиції та грайте від виживання.";
+        case "burst": return "Вибуховий урон — знищуйте ключові цілі швидко!";
+        default: return "Збалансована стратегія — все залежить від мікро.";
+      }
+    }
+
     window.onload = fetchHeroes;
   </script>
 </body>
 </html>
+
 
 
 
