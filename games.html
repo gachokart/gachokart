@@ -1,124 +1,142 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Games</title>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Games</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
 
-  <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      background: linear-gradient(to bottom, #000000, #600000);
-      font-family: 'Press Start 2P', cursive;
-      color: #fff;
-      overflow-x: hidden;
-    }
+<style>
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: linear-gradient(to bottom, #000000, #600000);
+  font-family: 'Press Start 2P', cursive;
+  color: #fff;
+  overflow-x: hidden;
+}
 
-    header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: flex-start;
-      gap: 20px;
-      padding: 20px;
-      position: relative;
-    }
+/* ==== HEADER ==== */
+header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 20px;
+  padding: 20px;
+  position: relative;
+}
 
-    .logo img {
-      height: 100px;
-      transition: 0.3s ease;
-    }
-    .logo img:hover {
-      filter: drop-shadow(0 0 15px #ff0000) brightness(1.2);
-      transform: scale(1.08);
-    }
+/* ==== ЛОГОТИП ==== */
+.logo img {
+  height: 100px;
+  width: auto;
+  display: block;
+  transition: 0.3s ease;
+}
+.logo img:hover {
+  filter: drop-shadow(0 0 15px #ff0000) brightness(1.2);
+  transform: scale(1.08);
+}
 
-    .title-block h1 {
-      font-size: 48px;
-      margin: 0;
-      color: #ff0000;
-      text-shadow: 2px 2px #000;
-    }
-    .title-block h2 {
-      font-size: 20px;
-      color: #fff;
-      text-shadow: 1px 1px #000;
-      margin-top: 5px;
-    }
+.title-block { text-align: left; }
+header h1 {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 48px;
+  margin: 0;
+  letter-spacing: 2px;
+  color: #ff0000;
+  text-shadow: 2px 2px #000;
+}
+header h2 {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 20px;
+  margin: 5px 0 0;
+  color: #ffffff;
+  text-shadow: 1px 1px #000;
+}
 
-    .language-selector {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-    }
-    .custom-select {
-      position: relative;
-      width: 180px;
-      cursor: pointer;
-      border: 2px solid #ff0000;
-      background-color: #000;
-      color: #fff;
-      font-size: 10px;
-      user-select: none;
-    }
-    .selected-option {
-      display: flex;
-      align-items: center;
-      padding: 5px 10px;
-    }
-    .selected-option img {
-      width: 20px;
-      height: 15px;
-      margin-right: 8px;
-    }
-    .options {
-      display: none;
-      position: absolute;
-      top: 100%;
-      left: 0;
-      width: 100%;
-      background-color: #000;
-      border: 2px solid #ff0000;
-      z-index: 1000;
-    }
-    .option {
-      display: flex;
-      align-items: center;
-      padding: 5px 10px;
-      cursor: pointer;
-    }
-    .option:hover {
-      background-color: rgba(255, 0, 0, 0.5);
-    }
+/* ==== LANGUAGE SELECTOR ==== */
+.language-selector {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+.custom-select {
+  position: relative;
+  width: 180px;
+  cursor: pointer;
+  border: 2px solid #ff0000;
+  background-color: #000;
+  color: #fff;
+  font-size: 10px;
+  font-family: 'Press Start 2P', cursive;
+  user-select: none;
+}
+.selected-option {
+  display: flex;
+  align-items: center;
+  padding: 5px 10px;
+}
+.selected-option img { width: 20px; height: 15px; margin-right: 8px; }
+.options {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background-color: #000;
+  border: 2px solid #ff0000;
+  z-index: 1000;
+}
+.option {
+  display: flex;
+  align-items: center;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 10px;
+}
+.option:hover { background-color: rgba(255, 0, 0, 0.5); }
+.option img { width: 20px; height: 15px; margin-right: 8px; }
 
-    #gamesTitle {
-      text-align: center;
-      margin: 20px 0;
-    }
+/* ==== GAMES TITLE ==== */
+#gamesTitle {
+  text-align: center;
+  margin: 20px 0;
+  font-size: 36px;
+}
 
-    .games-grid {
-      display: flex;
-      width: 100vw;
-      height: calc(100vh - 200px);
-    }
-    .game-column {
-      flex: 1;
-      border: 2px solid #ff0000;
-      border-radius: 12px;
-      background: rgba(0,0,0,0.6);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      text-align: center;
-    }
-    .game-column:hover {
-      transform: translateY(-10px) scale(1.05);
-      box-shadow: 0 0 20px #ff0000;
-    }
-  </style>
+/* ==== COLONNES ==== */
+.games-grid {
+  display: flex;
+  width: 100vw;
+  height: calc(100vh - 200px); /* header + title */
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+.game-column {
+  flex: 1;
+  background: rgba(0,0,0,0.6);
+  border: 2px solid #ff0000;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  text-align: center;
+  margin: 0;
+  font-size: 24px;
+  color: #fff;
+  text-decoration: none;
+}
+.game-column:hover {
+  transform: translateY(-10px) scale(1.05);
+  box-shadow: 0 0 20px #ff0000;
+}
+.game-column img { max-width: 80%; max-height: 80%; }
+</style>
 </head>
 <body>
 
@@ -128,7 +146,6 @@
       <img src="flags/LOGO1.png" alt="Logo">
     </a>
   </div>
-
   <div class="title-block">
     <h1>Blazkowicz</h1>
     <h2>Analyst</h2>
@@ -137,8 +154,7 @@
   <div class="language-selector">
     <div class="custom-select" id="languageSelect">
       <div class="selected-option">
-        <img src="flags/gb.png" alt="EN">
-        <span>English</span>
+        <img src="flags/gb.png" alt="EN"><span>English</span>
       </div>
       <div class="options">
         <div class="option" data-lang="ua"><img src="flags/ua.png" alt="UA"><span>Українська</span></div>
@@ -159,71 +175,58 @@
 </div>
 
 <script>
-  const translations = {
-    ua: { games: "Ігри" },
-    en: { games: "Games" },
-    pl: { games: "Gry" },
-    de: { games: "Spiele" }
-  };
+const translations = {
+  ua: { games: "Ігри" },
+  en: { games: "Games" },
+  pl: { games: "Gry" },
+  de: { games: "Spiele" }
+};
 
-  const flagSrc = {
-    ua: "flags/ua.png",
-    en: "flags/gb.png",
-    pl: "flags/pl.png",
-    de: "flags/de.png"
-  };
+const languageSelect = document.getElementById("languageSelect");
+const selectedOption = languageSelect.querySelector(".selected-option");
+const options = languageSelect.querySelector(".options");
+const allOptions = Array.from(options.querySelectorAll(".option"));
 
-  const langName = {
-    ua: "Українська",
-    en: "English",
-    pl: "Polski",
-    de: "Deutsch"
-  };
+function setLanguage(lang) {
+  document.getElementById("gamesTitle").textContent = translations[lang].games;
+  localStorage.setItem("selectedLanguage", lang);
+}
 
-  const languageSelect = document.getElementById("languageSelect");
-  const selectedOption = languageSelect.querySelector(".selected-option");
-  const options = languageSelect.querySelector(".options");
-  const allOptions = Array.from(options.querySelectorAll(".option"));
-
-  function setLanguage(lang) {
-    document.getElementById("gamesTitle").textContent = translations[lang].games;
-  }
-
-  function updateOptions(currentLang) {
-    allOptions.forEach(option => {
-      option.style.display = option.getAttribute("data-lang") === currentLang ? "none" : "flex";
-    });
-  }
-
-  window.addEventListener("load", () => {
-    const savedLang = localStorage.getItem("selectedLanguage") || "en";
-    setLanguage(savedLang);
-    selectedOption.innerHTML = `<img src="${flagSrc[savedLang]}" alt="${savedLang.toUpperCase()}"><span>${langName[savedLang]}</span>`;
-    updateOptions(savedLang);
-  });
-
-  selectedOption.addEventListener("click", () => {
-    options.style.display = options.style.display === "block" ? "none" : "block";
-  });
-
+function updateOptions(currentLang) {
   allOptions.forEach(option => {
-    option.addEventListener("click", () => {
-      const lang = option.getAttribute("data-lang");
-      selectedOption.innerHTML = option.innerHTML;
-      options.style.display = "none";
-      setLanguage(lang);
-      updateOptions(lang);
-      localStorage.setItem("selectedLanguage", lang); // 💾 збереження вибору
-    });
+    option.style.display = option.getAttribute("data-lang") === currentLang ? "none" : "flex";
   });
+}
 
-  document.addEventListener("click", (e) => {
-    if (!languageSelect.contains(e.target)) {
-      options.style.display = "none";
-    }
+window.addEventListener("load", () => {
+  const savedLang = localStorage.getItem("selectedLanguage") || navigator.language.slice(0,2);
+  const lang = ["ua","en","pl","de"].includes(savedLang) ? savedLang : "en";
+  setLanguage(lang);
+  const currentOption = options.querySelector(`[data-lang="${lang}"]`);
+  if(currentOption) selectedOption.innerHTML = currentOption.innerHTML;
+  updateOptions(lang);
+});
+
+selectedOption.addEventListener("click", () => {
+  options.style.display = options.style.display === "block" ? "none" : "block";
+});
+
+allOptions.forEach(option => {
+  option.addEventListener("click", () => {
+    const lang = option.getAttribute("data-lang");
+    selectedOption.innerHTML = option.innerHTML;
+    options.style.display = "none";
+    setLanguage(lang);
+    updateOptions(lang);
   });
+});
+
+document.addEventListener("click", e => {
+  if(!languageSelect.contains(e.target)) options.style.display = "none";
+});
 </script>
 
 </body>
 </html>
+
 
