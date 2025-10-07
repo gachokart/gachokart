@@ -3,138 +3,138 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dota 2 — Контрпіки з підказками ролей</title>
+  <title>Dota 2 — Моя команда vs Суперник</title>
   <style>
-    body { font-family: Arial; background: #1e1e1e; color: #eee; padding: 20px; }
-    .teams { display: flex; justify-content: space-between; flex-wrap: wrap; }
-    .team { background: #222; padding: 15px; border-radius: 8px; width: 48%; }
-    .role-label { font-size: 13px; color: #aaa; margin-top: 6px; }
-    select { width: 100%; padding: 8px; margin: 4px 0 12px 0; font-size: 14px;
-             background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; }
-    .results { margin-top: 30px; background: #222; padding: 20px; border-radius: 8px; text-align: center; }
-    .counter { display: inline-block; background: #444; padding: 5px 12px; margin: 5px; border-radius: 6px; color: #fff; }
-    .progress-bar { width: 100%; background-color: #333; border-radius: 8px; margin-top: 20px; overflow: hidden; }
-    .progress { height: 20px; background: linear-gradient(90deg, #4caf50, #81c784); width: 0%; text-align: center; color: #111; font-size: 12px; transition: width 0.3s ease; }
-    .winrate { margin-top: 15px; font-size: 20px; color: #ffd700; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #1e1e1e;
+      color: #eee;
+      padding: 20px;
+    }
+    h1, h2 { text-align: center; }
+    .teams {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    .team {
+      background: #222;
+      padding: 15px;
+      border-radius: 8px;
+      width: 48%;
+      box-sizing: border-box;
+    }
+    .role-label {
+      font-size: 13px;
+      color: #aaa;
+      margin-top: 6px;
+    }
+    select {
+      width: 100%;
+      padding: 8px;
+      margin: 4px 0 12px 0;
+      font-size: 14px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+      border-radius: 4px;
+    }
+    .results {
+      margin-top: 30px;
+      background: #222;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .counter {
+      display: inline-block;
+      background: #444;
+      padding: 5px 12px;
+      margin: 5px;
+      border-radius: 6px;
+      color: #fff;
+    }
+    .progress-container {
+      width: 100%;
+      background: #333;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 20px;
+      height: 25px;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #4caf50, #81c784);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
   </style>
 </head>
 <body>
-  <h1>Моя команда vs Суперник — Контрпіки + Підказки ролей</h1>
+
+  <h1>Моя команда vs Суперник — Контрпіки</h1>
 
   <div class="teams">
     <div class="team" id="my-team">
       <h2>Моя команда</h2>
       <div class="role-label">Carry</div>
-      <select class="slot my" data-team="my" data-slot="1" data-role="Carry"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot my" data-team="my"><option value="">-- Оберіть героя --</option></select>
       <div class="role-label">Mid</div>
-      <select class="slot my" data-team="my" data-slot="2" data-role="Mid"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot my" data-team="my"><option value="">-- Оберіть героя --</option></select>
       <div class="role-label">Offlane</div>
-      <select class="slot my" data-team="my" data-slot="3" data-role="Offlane"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot my" data-team="my"><option value="">-- Оберіть героя --</option></select>
       <div class="role-label">Support 4</div>
-      <select class="slot my" data-team="my" data-slot="4" data-role="Support"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot my" data-team="my"><option value="">-- Оберіть героя --</option></select>
       <div class="role-label">Support 5</div>
-      <select class="slot my" data-team="my" data-slot="5" data-role="Support"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot my" data-team="my"><option value="">-- Оберіть героя --</option></select>
     </div>
 
     <div class="team" id="enemy-team">
       <h2>Суперник</h2>
       <div class="role-label">Carry</div>
-      <select class="slot enemy" data-team="enemy" data-slot="1" data-role="Carry"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot enemy" data-team="enemy"><option value="">-- Оберіть героя --</option></select>
       <div class="role-label">Mid</div>
-      <select class="slot enemy" data-team="enemy" data-slot="2" data-role="Mid"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot enemy" data-team="enemy"><option value="">-- Оберіть героя --</option></select>
       <div class="role-label">Offlane</div>
-      <select class="slot enemy" data-team="enemy" data-slot="3" data-role="Offlane"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot enemy" data-team="enemy"><option value="">-- Оберіть героя --</option></select>
       <div class="role-label">Support 4</div>
-      <select class="slot enemy" data-team="enemy" data-slot="4" data-role="Support"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot enemy" data-team="enemy"><option value="">-- Оберіть героя --</option></select>
       <div class="role-label">Support 5</div>
-      <select class="slot enemy" data-team="enemy" data-slot="5" data-role="Support"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot enemy" data-team="enemy"><option value="">-- Оберіть героя --</option></select>
     </div>
   </div>
 
-  <div class="progress-bar">
-    <div class="progress" id="progress">0%</div>
+  <div class="progress-container">
+    <div class="progress-bar" id="progress-bar"></div>
   </div>
 
   <div class="results">
-    <h2>Контрпіки для героїв супротивника</h2>
+    <h2>Контрпіки для обраних героїв супротивника</h2>
     <div id="counters-container"></div>
-    <div class="winrate" id="winrate"></div>
+    <h3 id="win-chance"></h3>
   </div>
 
   <script>
     let heroes = [];
-    let heroInfo = {};  // heroName → { id, roles }
+    let heroMap = {}; // hero_id → localized_name
+    let nameToId = {}; // localized_name → id
 
     async function fetchHeroes() {
       const res = await fetch("https://api.opendota.com/api/heroes");
       const data = await res.json();
       heroes = data.map(h => h.localized_name).sort();
-      data.forEach(h => {
-        heroInfo[h.localized_name] = {
-          id: h.id,
-          roles: h.roles  // наприклад ["Carry","Nuker","Escape","Support"]
-        };
-      });
+      heroMap = Object.fromEntries(data.map(h => [h.id, h.localized_name]));
+      nameToId = Object.fromEntries(data.map(h => [h.localized_name, h.id]));
       initHeroSelects();
       attachEvents();
     }
 
-    async function fetchCounters(heroName) {
-      const info = heroInfo[heroName];
-      if (!info) return [];
-      const heroId = info.id;
-      const res = await fetch(`https://api.opendota.com/api/heroes/${heroId}/matchups`);
-      const data = await res.json();
-      data.forEach(d => d.win_rate = d.wins / d.games_played);
-      data.sort((a, b) => a.win_rate - b.win_rate);
-      return data.slice(0, 5).map(d => {
-        const matchHero = heroInfo && Object.keys(heroInfo).find(n => heroInfo[n].id == d.hero_id);
-        return matchHero;
-      }).filter(Boolean);
-    }
-
-    async function fetchWinChance(myHeroes, enemyHeroes) {
-      let totalScore = 0;
-      let totalMatchups = 0;
-      for (let my of myHeroes) {
-        const infoMy = heroInfo[my];
-        if (!infoMy) continue;
-        const res = await fetch(`https://api.opendota.com/api/heroes/${infoMy.id}/matchups`);
-        const data = await res.json();
-        for (let enemy of enemyHeroes) {
-          const infoEn = heroInfo[enemy];
-          if (!infoEn) continue;
-          const matchup = data.find(m => m.hero_id == infoEn.id);
-          if (matchup && matchup.games_played > 0) {
-            totalScore += matchup.wins / matchup.games_played;
-            totalMatchups++;
-          }
-        }
-      }
-      return totalMatchups ? (totalScore / totalMatchups) * 100 : null;
-    }
-
     function initHeroSelects() {
-      const selects = document.querySelectorAll("select.slot");
-      selects.forEach(sel => {
-        const slotRole = sel.dataset.role;  // “Carry”, “Mid”, “Offlane”, “Support”
-        // Поділ на рекомендовані та інші
-        const recommended = [];
-        const others = [];
+      document.querySelectorAll("select.slot").forEach(sel => {
         heroes.forEach(h => {
-          const info = heroInfo[h];
-          if (info && info.roles.includes(slotRole)) {
-            recommended.push(h);
-          } else {
-            others.push(h);
-          }
-        });
-        const ordered = [...recommended, ...others];
-        ordered.forEach(h => {
           const opt = document.createElement("option");
           opt.value = h;
-          // Додаємо позначку, якщо герой рекомендований для цієї ролі
-          opt.text = h + (heroInfo[h].roles.includes(slotRole) ? " (рекоменд.)" : "");
+          opt.text = h;
           sel.appendChild(opt);
         });
       });
@@ -142,83 +142,100 @@
 
     function attachEvents() {
       document.querySelectorAll("select.slot").forEach(sel => {
-        sel.addEventListener("change", onHeroChange);
+        sel.addEventListener("change", async e => {
+          updateSelectOptions();
+          updateProgressBar();
+          await showCounters();
+        });
       });
     }
 
     function updateSelectOptions() {
       const allSelected = Array.from(document.querySelectorAll("select.slot"))
         .map(s => s.value).filter(v => v);
+
       document.querySelectorAll("select.slot").forEach(sel => {
         const currentValue = sel.value;
         Array.from(sel.options).forEach(opt => {
           if (!opt.value) return;
-          if (opt.value === currentValue) {
-            opt.disabled = false;
-          } else {
-            opt.disabled = allSelected.includes(opt.value);
-          }
+          opt.disabled = (opt.value !== currentValue && allSelected.includes(opt.value));
         });
       });
-      updateProgress(allSelected.length);
     }
 
-    function updateProgress(selectedCount) {
-      const progress = document.getElementById("progress");
-      const percent = Math.round((selectedCount / 10) * 100);
-      progress.style.width = percent + "%";
-      progress.textContent = percent + "%";
+    function updateProgressBar() {
+      const filled = Array.from(document.querySelectorAll("select.slot"))
+        .filter(s => s.value).length;
+      const total = 10;
+      const percent = (filled / total) * 100;
+      document.getElementById("progress-bar").style.width = percent + "%";
     }
 
-    async function onHeroChange() {
-      updateSelectOptions();
-      await showCounters();
-      await checkWinChance();
+    async function fetchCounters(heroName) {
+      const heroId = nameToId[heroName];
+      if (!heroId) return [];
+      const res = await fetch(`https://api.opendota.com/api/heroes/${heroId}/matchups`);
+      const data = await res.json();
+      data.forEach(d => d.win_rate = d.wins / d.games_played);
+      data.sort((a, b) => a.win_rate - b.win_rate);
+      return data.slice(0, 10).map(d => heroMap[d.hero_id]);
     }
 
     async function showCounters() {
       const container = document.getElementById("counters-container");
+      const winEl = document.getElementById("win-chance");
       container.innerHTML = "";
-      const enemyHeroes = Array.from(document.querySelectorAll("select.slot.enemy"))
+      winEl.textContent = "";
+
+      const enemyHeroes = Array.from(document.querySelectorAll(".slot.enemy"))
         .map(s => s.value).filter(v => v);
+      const myHeroes = Array.from(document.querySelectorAll(".slot.my"))
+        .map(s => s.value).filter(v => v);
+
       if (enemyHeroes.length === 0) {
-        container.textContent = "Контрпіки поки недоступні.";
+        container.textContent = "Оберіть героїв супротивника для контрпіків.";
         return;
       }
-      const counterCounts = {};
+
+      // Контрпіки
+      let counterCounts = {};
       for (let h of enemyHeroes) {
         const counters = await fetchCounters(h);
-        counters.forEach(c => {
-          counterCounts[c] = (counterCounts[c] || 0) + 1;
-        });
+        counters.forEach(c => counterCounts[c] = (counterCounts[c] || 0) + 1);
       }
+
       const sorted = Object.entries(counterCounts).sort((a, b) => b[1] - a[1]);
-      if (!sorted.length) {
-        container.textContent = "Не вдалося знайти контрпіки.";
-      } else {
-        sorted.forEach(([c, n]) => {
-          const div = document.createElement("div");
-          div.classList.add("counter");
-          div.textContent = `${c} (×${n})`;
-          container.appendChild(div);
-        });
+      sorted.forEach(([name, count]) => {
+        const div = document.createElement("div");
+        div.className = "counter";
+        div.textContent = `${name} (×${count})`;
+        container.appendChild(div);
+      });
+
+      // Якщо всі герої обрані — рахуємо шанс перемоги
+      if (enemyHeroes.length === 5 && myHeroes.length === 5) {
+        const chance = await calcWinChance(myHeroes, enemyHeroes);
+        winEl.textContent = `Шанс на перемогу: ${chance.toFixed(1)}%`;
       }
     }
 
-    async function checkWinChance() {
-      const myHeroes = Array.from(document.querySelectorAll("select.slot.my"))
-        .map(s => s.value).filter(v => v);
-      const enemyHeroes = Array.from(document.querySelectorAll("select.slot.enemy"))
-        .map(s => s.value).filter(v => v);
-      if (myHeroes.length === 5 && enemyHeroes.length === 5) {
-        const wr = await fetchWinChance(myHeroes, enemyHeroes);
-        const el = document.getElementById("winrate");
-        if (wr !== null) {
-          el.textContent = `Шанс перемоги моєї команди: ${wr.toFixed(1)}%`;
-        } else {
-          el.textContent = "Не вдалося розрахувати шанс перемоги.";
+    async function calcWinChance(myHeroes, enemyHeroes) {
+      let total = 0;
+      let count = 0;
+      for (let my of myHeroes) {
+        const myId = nameToId[my];
+        const res = await fetch(`https://api.opendota.com/api/heroes/${myId}/matchups`);
+        const data = await res.json();
+        for (let e of enemyHeroes) {
+          const enemyId = nameToId[e];
+          const match = data.find(d => d.hero_id == enemyId);
+          if (match && match.games_played > 20) {
+            total += (match.wins / match.games_played) * 100;
+            count++;
+          }
         }
       }
+      return count ? total / count : 50;
     }
 
     window.onload = fetchHeroes;
