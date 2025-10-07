@@ -6,70 +6,16 @@
   <title>Blazkowicz Analyst</title>
   <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
-
-  <!-- Favicon -->
   <link rel="icon" type="image/png" href="flags/LOGO.png" />
-  
+
   <style>
     body, html {
       margin: 0;
       padding: 0;
       height: 100%;
       background: linear-gradient(to bottom, #000000, #600000);
-      overflow: hidden;
-    }
-
-    /* ==== LOADING SCREEN ==== */
-    #loadingScreen {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(to bottom, #000, #600000);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
       font-family: 'Press Start 2P', cursive;
-      color: #ff0000;
-      text-shadow: 2px 2px #000;
-      z-index: 9999;
-    }
-    #loadingText {
-      font-size: 20px;
-      margin-bottom: 20px;
-      animation: blink 1s infinite;
-    }
-    #progressBar {
-      width: 80%;
-      height: 30px;
-      border: 3px solid #ff0000;
-      background: #111;
-      position: relative;
-    }
-    #progressFill {
-      height: 100%;
-      width: 0%;
-      background: #ff0000;
-      transition: width 0.1s linear;
-    }
-    #progressPercent {
-      margin-top: 15px;
-      font-size: 18px;
-    }
-    @keyframes blink {
-      50% { opacity: 0.5; }
-    }
-
-    /* ==== SITE CONTENT ==== */
-    #mainContent {
-      display: none;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
-    body.loaded {
-      overflow: auto;
+      color: #ffffff;
     }
 
     header {
@@ -93,19 +39,14 @@
       transform: scale(1.08);
     }
 
-    .title-block {
-      text-align: left;
-    }
-    header h1 {
-      font-family: 'Press Start 2P', cursive;
+    /* ==== Назва ==== */
+    .title-block h1 {
       font-size: 48px;
       margin: 0;
-      letter-spacing: 2px;
       color: #ff0000;
       text-shadow: 2px 2px #000;
     }
-    header h2 {
-      font-family: 'Press Start 2P', cursive;
+    .title-block h2 {
       font-size: 20px;
       margin: 5px 0 0;
       color: #ffffff;
@@ -125,24 +66,18 @@
       border: 2px solid #ff0000;
       background-color: #000;
       color: #fff;
-      text-shadow: 1px 1px #000;
-      font-family: 'Press Start 2P', cursive;
       font-size: 10px;
       user-select: none;
     }
-    .selected-option {
+    .selected-option, .option {
       display: flex;
       align-items: center;
       padding: 5px 10px;
     }
-    .selected-option img {
+    .selected-option img, .option img {
       width: 20px;
       height: 15px;
       margin-right: 8px;
-    }
-    .selected-option span {
-      font-size: 10px;
-      white-space: nowrap;
     }
     .options {
       display: none;
@@ -154,132 +89,129 @@
       border: 2px solid #ff0000;
       z-index: 1000;
     }
-    .option {
-      display: flex;
-      align-items: center;
-      padding: 5px 10px;
-      cursor: pointer;
-      font-family: 'Press Start 2P', cursive;
-      font-size: 10px;
-    }
     .option:hover {
       background-color: rgba(255, 0, 0, 0.5);
     }
-    .option img {
-      width: 20px;
-      height: 15px;
-      margin-right: 8px;
+
+    /* ==== Головний контент ==== */
+    main {
+      text-align: center;
+      margin-top: 100px;
+    }
+    main h1 {
+      font-size: 48px;
+      color: #ff0000;
+      text-shadow: 2px 2px #000;
+      margin-bottom: 40px;
     }
 
-    /* ==== Sections ==== */
-    .sections {
-      flex-grow: 1;
+    .section-links {
       display: flex;
       flex-direction: column;
-    }
-    .section {
-      flex: 1;
-      display: flex;
       align-items: center;
-      justify-content: center;
+      gap: 20px;
     }
-    .section a {
-      position: relative;
-      display: inline-block;
-      font-family: 'Press Start 2P', cursive;
-      font-size: 36px;
-      letter-spacing: 1px;
+    .section-links a {
       color: #ffffff;
       text-decoration: none;
-      transition: text-shadow 0.3s ease, transform 0.3s ease;
+      font-size: 18px;
+      border: 2px solid #ff0000;
+      padding: 10px 20px;
+      transition: 0.3s ease;
     }
-    .section a:hover {
-      text-shadow: 0 0 15px #ff0000;
-      transform: scale(1.08);
+    .section-links a:hover {
+      background-color: #ff0000;
+      color: #000;
+      box-shadow: 0 0 10px #ff0000;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background-color: #110000;
+      color: #888;
+      font-size: 12px;
+      margin-top: 80px;
     }
   </style>
 </head>
 <body>
-  <!-- LOADING SCREEN -->
-  <div id="loadingScreen">
-    <div id="loadingText">LOADING...</div>
-    <div id="progressBar">
-      <div id="progressFill"></div>
+  <header>
+    <!-- ЛОГОТИП -->
+    <div class="logo">
+      <a href="https://gachokart.com" target="_blank">
+        <img src="flags/LOGO1.png" alt="Logo">
+      </a>
     </div>
-    <div id="progressPercent">0%</div>
-  </div>
 
-  <!-- MAIN SITE -->
-  <div id="mainContent">
-    <header>
-      <!-- ЛОГОТИП -->
-      <div class="logo">
-        <a href="https://gachokart.com" target="_blank">
-          <img src="flags/LOGO1.png" alt="Logo">
-        </a>
-      </div>
+    <!-- Назва -->
+    <div class="title-block">
+      <h1>Blazkowicz</h1>
+      <h2 id="analystText">Analyst</h2>
+    </div>
 
-      <!-- ТЕКСТОВА ЧАСТИНА -->
-      <div class="title-block">
-        <h1>Blazkowicz</h1>
-        <h2 id="analystText">Analyst</h2>
-      </div>
-
-      <!-- Вибір мови -->
-      <div class="language-selector">
-        <div class="custom-select" id="languageSelect">
-          <div class="selected-option">
-            <img src="flags/gb.png" alt="EN">
-            <span>English</span>
-          </div>
-          <div class="options">
-            <div class="option" data-lang="ua"><img src="flags/ua.png" alt="UA"><span>Українська</span></div>
-            <div class="option" data-lang="en"><img src="flags/gb.png" alt="EN"><span>English</span></div>
-            <div class="option" data-lang="pl"><img src="flags/pl.png" alt="PL"><span>Polski</span></div>
-            <div class="option" data-lang="de"><img src="flags/de.png" alt="DE"><span>Deutsch</span></div>
-          </div>
+    <!-- Мовний селектор -->
+    <div class="language-selector">
+      <div class="custom-select" id="languageSelect">
+        <div class="selected-option">
+          <img src="flags/gb.png" alt="EN">
+          <span>English</span>
+        </div>
+        <div class="options">
+          <div class="option" data-lang="ua"><img src="flags/ua.png" alt="UA"><span>Українська</span></div>
+          <div class="option" data-lang="en"><img src="flags/gb.png" alt="EN"><span>English</span></div>
+          <div class="option" data-lang="pl"><img src="flags/pl.png" alt="PL"><span>Polski</span></div>
+          <div class="option" data-lang="de"><img src="flags/de.png" alt="DE"><span>Deutsch</span></div>
         </div>
       </div>
-    </header>
-
-    <div class="sections">
-      <div class="section" id="gamesSection"><a href="games.html">Games</a></div>
-      <div class="section" id="dataSection"><a href="data.html">Data</a></div>
-      <div class="section" id="educationSection"><a href="education.html">Education</a></div>
-      <!-- Зміна посилання на локальну сторінку contactus.html -->
-      <div class="section" id="contactSection"><a href="contactus.html">Contact Us</a></div>
     </div>
-  </div>
+  </header>
+
+  <main>
+    <h1 id="welcomeTitle">Welcome to Blazkowicz Analyst</h1>
+
+    <div class="section-links">
+      <a href="data.html" id="dataLink">Data</a>
+      <a href="education.html" id="educationLink">Education</a>
+      <a href="games.html" id="gamesLink">Games</a>
+      <a href="contactus.html" id="contactLink">Contact Us</a>
+    </div>
+  </main>
+
+  <footer>
+    &copy; 2025 Blazkowicz Analyst. All rights reserved.
+  </footer>
 
   <script>
-    /* ==== LOADING SCRIPT ==== */
-    let progress = 0;
-    const fill = document.getElementById("progressFill");
-    const percent = document.getElementById("progressPercent");
-    const loadingScreen = document.getElementById("loadingScreen");
-    const mainContent = document.getElementById("mainContent");
-
-    const interval = setInterval(() => {
-      progress++;
-      fill.style.width = progress + "%";
-      percent.textContent = progress + "%";
-
-      if (progress >= 100) {
-        clearInterval(interval);
-        setTimeout(() => {
-          loadingScreen.style.display = "none";
-          mainContent.style.display = "flex";
-          document.body.classList.add("loaded");
-        }, 500);
-      }
-    }, 40);
-
-    /* ==== LANGUAGE SELECTOR + TRANSLATION ==== */
     const translations = {
-      ua: { games: "Ігри", data: "Дані", education: "Освіта", contact: "Зв'язок" },
-      en: { games: "Games", data: "Data", education: "Education", contact: "Contact Us" },
-      pl: { games: "Gry", data: "Dane", education: "Edukacja", contact: "Kontakt" },
-      de: { games: "Spiele", data: "Daten", education: "Bildung", contact: "Kontakt" }
+      ua: {
+        welcome: "Ласкаво просимо до Blazkowicz Analyst",
+        data: "Дані",
+        education: "Освіта",
+        games: "Ігри",
+        contact: "Зв'язок"
+      },
+      en: {
+        welcome: "Welcome to Blazkowicz Analyst",
+        data: "Data",
+        education: "Education",
+        games: "Games",
+        contact: "Contact Us"
+      },
+      pl: {
+        welcome: "Witamy w Blazkowicz Analyst",
+        data: "Dane",
+        education: "Edukacja",
+        games: "Gry",
+        contact: "Kontakt"
+      },
+      de: {
+        welcome: "Willkommen bei Blazkowicz Analyst",
+        data: "Daten",
+        education: "Bildung",
+        games: "Spiele",
+        contact: "Kontakt"
+      }
     };
 
     const languageSelect = document.getElementById("languageSelect");
@@ -288,11 +220,12 @@
     const allOptions = Array.from(options.querySelectorAll(".option"));
 
     function setLanguage(lang) {
-      document.getElementById("gamesSection").querySelector("a").textContent = translations[lang].games;
-      document.getElementById("dataSection").querySelector("a").textContent = translations[lang].data;
-      document.getElementById("educationSection").querySelector("a").textContent = translations[lang].education;
-      document.getElementById("contactSection").querySelector("a").textContent = translations[lang].contact;
-      document.getElementById("analystText").textContent = "Analyst"; // завжди англійською
+      const t = translations[lang];
+      document.getElementById("welcomeTitle").textContent = t.welcome;
+      document.getElementById("dataLink").textContent = t.data;
+      document.getElementById("educationLink").textContent = t.education;
+      document.getElementById("gamesLink").textContent = t.games;
+      document.getElementById("contactLink").textContent = t.contact;
     }
 
     function updateOptions(currentLang) {
@@ -302,9 +235,18 @@
     }
 
     window.addEventListener("load", () => {
-      setLanguage("en");
-      selectedOption.innerHTML = `<img src="flags/gb.png" alt="EN"><span>English</span>`;
-      updateOptions("en");
+      const savedLang = localStorage.getItem("selectedLanguage");
+      const browserLang = navigator.language.slice(0, 2);
+      const defaultLang = ["ua", "en", "pl", "de"].includes(browserLang) ? browserLang : "en";
+      const lang = savedLang || defaultLang;
+
+      localStorage.setItem("selectedLanguage", lang);
+      setLanguage(lang);
+
+      const flagMap = { ua: "ua", en: "gb", pl: "pl", de: "de" };
+      const nameMap = { ua: "Українська", en: "English", pl: "Polski", de: "Deutsch" };
+      selectedOption.innerHTML = `<img src="flags/${flagMap[lang]}.png" alt="${lang.toUpperCase()}"><span>${nameMap[lang]}</span>`;
+      updateOptions(lang);
     });
 
     selectedOption.addEventListener("click", () => {
@@ -314,10 +256,13 @@
     allOptions.forEach(option => {
       option.addEventListener("click", () => {
         const lang = option.getAttribute("data-lang");
-        selectedOption.innerHTML = option.innerHTML;
-        options.style.display = "none";
+        localStorage.setItem("selectedLanguage", lang);
         setLanguage(lang);
+        const flagMap = { ua: "ua", en: "gb", pl: "pl", de: "de" };
+        const nameMap = { ua: "Українська", en: "English", pl: "Polski", de: "Deutsch" };
+        selectedOption.innerHTML = `<img src="flags/${flagMap[lang]}.png" alt="${lang.toUpperCase()}"><span>${nameMap[lang]}</span>`;
         updateOptions(lang);
+        options.style.display = "none";
       });
     });
 
@@ -329,6 +274,7 @@
   </script>
 </body>
 </html>
+
 
 
 
