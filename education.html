@@ -25,7 +25,6 @@
       position: relative;
     }
 
-    /* ==== ЛОГОТИП ==== */
     .logo img {
       height: 80px;
       width: auto;
@@ -37,7 +36,6 @@
       transform: scale(1.05);
     }
 
-    /* ==== Назва сайту ==== */
     .title-block {
       text-align: left;
     }
@@ -55,7 +53,6 @@
       text-shadow: 1px 1px #000;
     }
 
-    /* ==== Заголовок Education ==== */
     #educationTitle {
       font-size: 48px;
       margin: 40px 0 0 0;
@@ -64,7 +61,6 @@
       text-align: center;
     }
 
-    /* ==== Language Selector ==== */
     .language-selector {
       position: absolute;
       top: 20px;
@@ -118,24 +114,20 @@
 </head>
 <body>
   <header>
-    <!-- ЛОГОТИП -->
     <div class="logo">
       <a href="https://gachokart.com" target="_blank">
         <img src="flags/LOGO1.png" alt="Logo">
       </a>
     </div>
 
-    <!-- Назва сайту -->
     <div class="title-block">
       <h1>Blazkowicz</h1>
       <h2 id="analystText">Analyst</h2>
     </div>
   </header>
 
-  <!-- Заголовок Education -->
   <h1 id="educationTitle">Education</h1>
 
-  <!-- Language Selector -->
   <div class="language-selector">
     <div class="custom-select" id="languageSelect">
       <div class="selected-option">
@@ -159,6 +151,20 @@
       de: { education: "Bildung" }
     };
 
+    const flagSrc = {
+      ua: "flags/ua.png",
+      en: "flags/gb.png",
+      pl: "flags/pl.png",
+      de: "flags/de.png"
+    };
+
+    const langName = {
+      ua: "Українська",
+      en: "English",
+      pl: "Polski",
+      de: "Deutsch"
+    };
+
     const languageSelect = document.getElementById("languageSelect");
     const selectedOption = languageSelect.querySelector(".selected-option");
     const options = languageSelect.querySelector(".options");
@@ -175,9 +181,10 @@
     }
 
     window.addEventListener("load", () => {
-      setLanguage("en");
-      selectedOption.innerHTML = `<img src="flags/gb.png" alt="EN"><span>English</span>`;
-      updateOptions("en");
+      const savedLang = localStorage.getItem("selectedLanguage") || "en";
+      setLanguage(savedLang);
+      selectedOption.innerHTML = `<img src="${flagSrc[savedLang]}" alt="${savedLang.toUpperCase()}"><span>${langName[savedLang]}</span>`;
+      updateOptions(savedLang);
     });
 
     selectedOption.addEventListener("click", () => {
@@ -191,6 +198,7 @@
         options.style.display = "none";
         setLanguage(lang);
         updateOptions(lang);
+        localStorage.setItem("selectedLanguage", lang); // 💾 Збереження вибору
       });
     });
 
@@ -202,5 +210,6 @@
   </script>
 </body>
 </html>
+
 
 
