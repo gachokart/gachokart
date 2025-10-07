@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dota 2 — Дві Команди та Контрпіки</title>
+  <title>Dota 2 — Ваше Проти Супротивника із Контрпіками</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #1a1a1a;
+      background: #1e1e1e;
       color: #eee;
       padding: 20px;
     }
@@ -54,158 +54,163 @@
       border-radius: 6px;
       color: #fff;
     }
-    .hero-icon {
-      width: 36px;
-      vertical-align: middle;
-      margin-right: 6px;
-    }
   </style>
 </head>
 <body>
 
-  <h1>Dota 2 — Дві Команди та Контрпіки</h1>
+  <h1>Моя команда vs Суперник — Контрпіки</h1>
 
   <div class="teams">
-    <div class="team" id="radiant-team">
-      <h2>Radiant</h2>
-      <!-- 5 слоти для героїв Radiant -->
-      <select class="slot radiant" data-team="radiant" data-slot="1">
+    <div class="team" id="my-team">
+      <h2>Моя команда</h2>
+      <select class="slot my" data-team="my" data-slot="1">
         <option value="">-- Оберіть героя --</option>
       </select>
-      <select class="slot radiant" data-team="radiant" data-slot="2">
+      <select class="slot my" data-team="my" data-slot="2">
         <option value="">-- Оберіть героя --</option>
       </select>
-      <select class="slot radiant" data-team="radiant" data-slot="3">
+      <select class="slot my" data-team="my" data-slot="3">
         <option value="">-- Оберіть героя --</option>
       </select>
-      <select class="slot radiant" data-team="radiant" data-slot="4">
+      <select class="slot my" data-team="my" data-slot="4">
         <option value="">-- Оберіть героя --</option>
       </select>
-      <select class="slot radiant" data-team="radiant" data-slot="5">
+      <select class="slot my" data-team="my" data-slot="5">
         <option value="">-- Оберіть героя --</option>
       </select>
     </div>
 
-    <div class="team" id="dire-team">
-      <h2>Dire</h2>
-      <!-- 5 слоти для героїв Dire -->
-      <select class="slot dire" data-team="dire" data-slot="1">
+    <div class="team" id="enemy-team">
+      <h2>Суперник</h2>
+      <select class="slot enemy" data-team="enemy" data-slot="1">
         <option value="">-- Оберіть героя --</option>
       </select>
-      <select class="slot dire" data-team="dire" data-slot="2">
+      <select class="slot enemy" data-team="enemy" data-slot="2">
         <option value="">-- Оберіть героя --</option>
       </select>
-      <select class="slot dire" data-team="dire" data-slot="3">
+      <select class="slot enemy" data-team="enemy" data-slot="3">
         <option value="">-- Оберіть героя --</option>
       </select>
-      <select class="slot dire" data-team="dire" data-slot="4">
+      <select class="slot enemy" data-team="enemy" data-slot="4">
         <option value="">-- Оберіть героя --</option>
       </select>
-      <select class="slot dire" data-team="dire" data-slot="5">
+      <select class="slot enemy" data-team="enemy" data-slot="5">
         <option value="">-- Оберіть героя --</option>
       </select>
     </div>
   </div>
 
   <div class="results">
-    <h2>Контрпіки для вибраних героїв</h2>
+    <h2>Контрпіки для обраних героїв супротивника</h2>
     <div id="counters-container">
-      <!-- тут будуть показані контрпіки -->
+      <!-- тут виведуться контрпіки -->
     </div>
   </div>
 
   <script>
-    // Список усіх героїв Dota 2 (назви, ключі) з відкритих джерел :contentReference[oaicite:1]{index=1}
     const heroes = [
-      "abaddon", "alchemist", "ancient_apparition", "anti-mage", "arc_warden",
-      "axe", "bane", "batrider", "beastmaster", "bloodseeker", "bounty_hunter",
-      "brewmaster", "bristleback", "broodmother", "centaur_warrunner",
-      "chaos_knight", "chen", "clinkz", "clockwerk", "crystal_maiden",
-      "dark_seer", "dark_willow", "dazzle", "death_prophet", "disruptor",
-      "doom", "dragon_knight", "earth_spirit", "earthshaker", "elder_titan",
-      "ember_spirit", "enchantress", "enigma", "faceless_void", "grimstroke",
-      "gyrocopter", "hoodwink", "huskar", "invoker", "io", "jakiro", "juggernaut",
-      "keeper_of_the_light", "kunkka", "legion_commander", "leshrac", "lich",
-      "lifestealer", "lina", "lion", "lone_druid", "luna", "lycan", "magnus",
-      "medusa", "meepo", "mirana", "monkey_king", "morphling", "naga_siren",
-      "nature's_prophet", "necrophos", "night_stalker", "nyx_assassin",
-      "ogre_magi", "omniknight", "oracle", "outworld_destroyer", "pangolier",
-      "phantom_assassin", "phantom_lancer", "phoenix", "primal_beast",
-      "puck", "pudge", "pugna", "queen_of_pain", "razor", "riki", "rubick",
-      "sand_king", "shadow_demon", "shadow_fiend", "shadow_shaman", "silencer",
-      "skywrath_mage", "slardar", "slark", "snapfire", "sniper", "spectre",
-      "spirit_breaker", "storm_spirit", "sven", "techies", "templar_assassin",
-      "terrorblade", "tidehunter", "timbersaw", "tinker", "tiny",
-      "treant_protector", "troll_warlord", "tusk", "underlord", "undying",
-      "ursa", "vengeful_spirit", "venomancer", "viper", "visage",
-      "void_spirit", "warlock", "weaver", "windranger", "winter_wyvern",
-      "witch_doctor", "wraith_king", "zeus"
+      "anti-mage", "axe", "bane", "bloodseeker", "crystal_maiden",
+      "drow_ranger", "earthshaker", "juggernaut", "mirana", "phantom_lancer",
+      "pudge", "razor", "sniper", "tidehunter", "viper", "windranger",
+      "lion", "lich", "nyx_assassin"
+      // … можеш додати всі інші
     ];
 
-    // Заготовка контрпіків (поки що пусто, треба наповнити)
+    // Контрпіки: ключ — герой супротивника, значення — масив героїв, які його контрять
     const counterData = {
-      // приклад:
-      "anti-mage": ["Axe", "Lion", "Nyx Assassin"],
+      "anti-mage": ["Axe", "Huskar", "Meepo", "Phantom Assassin"],  // з Dotabuff «Disadvantage» :contentReference[oaicite:1]{index=1}
       "axe": ["Phantom Lancer", "Viper", "Pugna"],
       "bane": ["Juggernaut", "Anti-Mage"],
-      // … інші герої з їхніми контрпіками
+      "bloodseeker": ["Puck", "Shadow Fiend"],
+      "crystal_maiden": ["Silencer", "Nyx Assassin"],
+      "drow_ranger": ["Phantom Lancer", "Bristleback"],
+      "earthshaker": ["Storm Spirit", "Sand King"],
+      "juggernaut": ["Slark", "Phantom Lancer"],
+      "mirana": ["Bounty Hunter", "Queen of Pain"],
+      "phantom_lancer": ["Axe", "Earthshaker", "Beastmaster"],
+      "pudge": ["Vengeful Spirit", "Silencer"],
+      "razor": ["Lina", "Windranger"],
+      "sniper": ["Storm Spirit", "Nyx Assassin"],
+      "tidehunter": ["Doom", "Ursa"],
+      "viper": ["Juggernaut", "Phantom Lancer"],
+      "windranger": ["Phantom Assassin", "Silencer"],
+      "lion": ["Beastmaster", "Monkey King"],
+      "lich": ["Templar Assassin", "Weaver"],
+      "nyx_assassin": ["Queen of Pain", "Silencer"]
+      // … доповни по мірі необхідності
     };
 
-    // Функція для ініціалізації селекторів із героями
     function initHeroSelects() {
       const selects = document.querySelectorAll("select.slot");
       selects.forEach(sel => {
         heroes.forEach(h => {
           const opt = document.createElement("option");
           opt.value = h;
-          // Відображення: робимо з підкреслень пробіли й великі літери
           opt.text = h
             .split("_")
-            .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+            .map(w => w.charAt(0).toUpperCase() + w.slice(1))
             .join(" ");
           sel.appendChild(opt);
         });
       });
     }
 
-    // Показ контрпіків усіх обраних героїв
+    function attachEvents() {
+      document.querySelectorAll("select.slot").forEach(sel => {
+        sel.addEventListener("change", onHeroChange);
+      });
+    }
+
+    function onHeroChange(evt) {
+      const sel = evt.target;
+      const team = sel.getAttribute("data-team");  // "my" або "enemy"
+      const value = sel.value;
+      if (!value) {
+        // очистити, якщо вибір скасовано
+        showCounters();
+        return;
+      }
+      // перевірка: чи вже вибраний цей герой у тій самій команді
+      const sameTeamSelects = document.querySelectorAll(`select.slot.${team}`);
+      sameTeamSelects.forEach(s => {
+        if (s !== sel && s.value === value) {
+          // якщо вже є такий вибір, то очищаємо цей select і показуємо повідомлення
+          alert("Цей герой вже обраний у вашій команді!");
+          sel.value = "";  // скинути вибір
+        }
+      });
+      showCounters();
+    }
+
     function showCounters() {
       const container = document.getElementById("counters-container");
       container.innerHTML = "";
 
-      const selectedHeroes = [];
-      document.querySelectorAll("select.slot").forEach(sel => {
-        if (sel.value) selectedHeroes.push(sel.value);
-      });
+      // беремо героїв, обраних у команді Супротивника
+      const enemyHeroes = Array.from(document.querySelectorAll("select.slot.enemy"))
+        .map(s => s.value).filter(v => v);
 
-      const countersSet = new Set();
-      selectedHeroes.forEach(heroKey => {
-        const arr = counterData[heroKey];
-        if (Array.isArray(arr)) {
-          arr.forEach(c => countersSet.add(c));
+      // збираємо усі контрпіки до цих героїв
+      const counterSet = new Set();
+      enemyHeroes.forEach(h => {
+        const arr = counterData[h];
+        if (arr) {
+          arr.forEach(c => counterSet.add(c));
         }
       });
 
-      if (countersSet.size === 0) {
-        container.textContent = "Контрпіки поки що не задані або не вибрано героїв.";
+      if (counterSet.size === 0) {
+        container.textContent = "Контрпіки поки що недоступні або не обрано героїв супротивника.";
       } else {
-        countersSet.forEach(c => {
-          const d = document.createElement("div");
-          d.classList.add("counter");
-          d.textContent = c;
-          container.appendChild(d);
+        counterSet.forEach(c => {
+          const div = document.createElement("div");
+          div.classList.add("counter");
+          div.textContent = c;
+          container.appendChild(div);
         });
       }
     }
 
-    // Додаємо слухачів на всі селектори
-    function attachEvents() {
-      document.querySelectorAll("select.slot").forEach(sel => {
-        sel.addEventListener("change", showCounters);
-      });
-    }
-
-    // Ініціалізація всього
     function init() {
       initHeroSelects();
       attachEvents();
