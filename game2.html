@@ -25,10 +25,15 @@
       box-sizing: border-box;
     }
     .team h2 { margin-top: 0; }
+    .role-label {
+      font-size: 13px;
+      color: #aaa;
+      margin-top: 6px;
+    }
     select {
       width: 100%;
       padding: 8px;
-      margin: 8px 0;
+      margin: 4px 0 12px 0;
       font-size: 14px;
       background: #333;
       color: #fff;
@@ -59,19 +64,29 @@
   <div class="teams">
     <div class="team" id="my-team">
       <h2>Моя команда</h2>
+      <div class="role-label">Carry</div>
       <select class="slot my" data-team="my" data-slot="1"><option value="">-- Оберіть героя --</option></select>
+      <div class="role-label">Mid</div>
       <select class="slot my" data-team="my" data-slot="2"><option value="">-- Оберіть героя --</option></select>
+      <div class="role-label">Offlane</div>
       <select class="slot my" data-team="my" data-slot="3"><option value="">-- Оберіть героя --</option></select>
+      <div class="role-label">Support 4</div>
       <select class="slot my" data-team="my" data-slot="4"><option value="">-- Оберіть героя --</option></select>
+      <div class="role-label">Support 5</div>
       <select class="slot my" data-team="my" data-slot="5"><option value="">-- Оберіть героя --</option></select>
     </div>
 
     <div class="team" id="enemy-team">
       <h2>Суперник</h2>
+      <div class="role-label">Carry</div>
       <select class="slot enemy" data-team="enemy" data-slot="1"><option value="">-- Оберіть героя --</option></select>
+      <div class="role-label">Mid</div>
       <select class="slot enemy" data-team="enemy" data-slot="2"><option value="">-- Оберіть героя --</option></select>
+      <div class="role-label">Offlane</div>
       <select class="slot enemy" data-team="enemy" data-slot="3"><option value="">-- Оберіть героя --</option></select>
+      <div class="role-label">Support 4</div>
       <select class="slot enemy" data-team="enemy" data-slot="4"><option value="">-- Оберіть героя --</option></select>
+      <div class="role-label">Support 5</div>
       <select class="slot enemy" data-team="enemy" data-slot="5"><option value="">-- Оберіть героя --</option></select>
     </div>
   </div>
@@ -132,9 +147,9 @@
       document.querySelectorAll("select.slot").forEach(sel => {
         const currentValue = sel.value;
         Array.from(sel.options).forEach(opt => {
-          if (!opt.value) return; // пропускаємо пустий
+          if (!opt.value) return;
           if (opt.value === currentValue) {
-            opt.disabled = false; // залишаємо вибраного
+            opt.disabled = false;
           } else {
             opt.disabled = allSelected.includes(opt.value);
           }
@@ -159,20 +174,25 @@
         return;
       }
 
-      let counterSet = new Set();
+      let counterCounts = {};
 
       for (let h of enemyHeroes) {
         const counters = await fetchCounters(h);
-        counters.forEach(c => counterSet.add(c));
+        counters.forEach(c => {
+          counterCounts[c] = (counterCounts[c] || 0) + 1;
+        });
       }
 
-      if (counterSet.size === 0) {
+      const sortedCounters = Object.entries(counterCounts)
+        .sort((a, b) => b[1] - a[1]);
+
+      if (sortedCounters.length === 0) {
         container.textContent = "Не вдалося знайти контрпіки.";
       } else {
-        counterSet.forEach(c => {
+        sortedCounters.forEach(([c, count]) => {
           const div = document.createElement("div");
           div.classList.add("counter");
-          div.textContent = c;
+          div.textContent = `${c} (×${count})`;
           container.appendChild(div);
         });
       }
@@ -182,6 +202,3 @@
   </script>
 </body>
 </html>
-
-
-
