@@ -96,13 +96,7 @@
     /* ==== Головний контент ==== */
     main {
       text-align: center;
-      margin-top: 100px;
-    }
-    main h1 {
-      font-size: 48px;
-      color: #ff0000;
-      text-shadow: 2px 2px #000;
-      margin-bottom: 40px;
+      margin-top: 150px;
     }
 
     .section-links {
@@ -168,8 +162,6 @@
   </header>
 
   <main>
-    <h1 id="welcomeTitle">Welcome to Blazkowicz Analyst</h1>
-
     <div class="section-links">
       <a href="data.html" id="dataLink">Data</a>
       <a href="education.html" id="educationLink">Education</a>
@@ -185,28 +177,24 @@
   <script>
     const translations = {
       ua: {
-        welcome: "Ласкаво просимо до Blazkowicz Analyst",
         data: "Дані",
         education: "Освіта",
         games: "Ігри",
         contact: "Зв'язок"
       },
       en: {
-        welcome: "Welcome to Blazkowicz Analyst",
         data: "Data",
         education: "Education",
         games: "Games",
         contact: "Contact Us"
       },
       pl: {
-        welcome: "Witamy w Blazkowicz Analyst",
         data: "Dane",
         education: "Edukacja",
         games: "Gry",
         contact: "Kontakt"
       },
       de: {
-        welcome: "Willkommen bei Blazkowicz Analyst",
         data: "Daten",
         education: "Bildung",
         games: "Spiele",
@@ -221,7 +209,6 @@
 
     function setLanguage(lang) {
       const t = translations[lang];
-      document.getElementById("welcomeTitle").textContent = t.welcome;
       document.getElementById("dataLink").textContent = t.data;
       document.getElementById("educationLink").textContent = t.education;
       document.getElementById("gamesLink").textContent = t.games;
