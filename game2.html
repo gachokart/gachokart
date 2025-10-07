@@ -60,15 +60,24 @@
   <div class="result" id="result"></div>
 
   <script>
-    // Список героїв (для прикладу)
-    const heroes = [
-      'Anti-Mage', 'Axe', 'Bane', 'Bloodseeker', 'Crystal Maiden',
-      'Drow Ranger', 'Earthshaker', 'Juggernaut', 'Mirana', 'Morphling'
-    ];
+    // Список героїв Dota 2 з ролями
+    const heroes = {
+      'Anti-Mage': 'Carry',
+      'Axe': 'Offlane',
+      'Bane': 'Support',
+      'Bloodseeker': 'Carry',
+      'Crystal Maiden': 'Support',
+      'Drow Ranger': 'Carry',
+      'Earthshaker': 'Support',
+      'Juggernaut': 'Carry',
+      'Mirana': 'Mid',
+      'Morphling': 'Carry',
+      // Додайте інших героїв за потреби
+    };
 
-    // Контрпіки (простий приклад)
+    // Контрпіки для кожного героя
     const counterPicks = {
-      'Anti-Mage': ['Axe', 'Bane'],
+      'Anti-Mage': ['Bane', 'Axe'],
       'Axe': ['Drow Ranger', 'Juggernaut'],
       'Bane': ['Morphling', 'Mirana'],
       'Bloodseeker': ['Crystal Maiden', 'Earthshaker'],
@@ -77,12 +86,14 @@
       'Earthshaker': ['Morphling', 'Juggernaut'],
       'Juggernaut': ['Bane', 'Drow Ranger'],
       'Mirana': ['Axe', 'Bloodseeker'],
-      'Morphling': ['Anti-Mage', 'Crystal Maiden']
+      'Morphling': ['Anti-Mage', 'Crystal Maiden'],
+      // Додайте контрпіки для інших героїв
     };
 
-    // Додавання героїв у селект
-    heroes.forEach(hero => {
-      document.querySelectorAll('select').forEach(select => {
+    // Додавання героїв у селекти
+    const selects = document.querySelectorAll('select');
+    Object.keys(heroes).forEach(hero => {
+      selects.forEach(select => {
         const option = document.createElement('option');
         option.value = hero;
         option.textContent = hero;
@@ -126,4 +137,5 @@
   </script>
 </body>
 </html>
+
 
