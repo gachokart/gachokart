@@ -95,17 +95,15 @@
     }
 
     async function fetchCounters(heroName) {
-      // знаходимо hero_id по імені
       const heroId = Object.keys(heroMap).find(id => heroMap[id] === heroName);
       if (!heroId) return [];
 
       const res = await fetch(`https://api.opendota.com/api/heroes/${heroId}/matchups`);
       const data = await res.json();
 
-      // сортуємо за найгіршим winrate для героя (тобто кращі контри)
+      data.forEach(d => d.win_rate = d.wins / d.games_played);
       data.sort((a, b) => a.win_rate - b.win_rate);
 
-      // беремо топ-5 контрів
       return data.slice(0, 5).map(d => heroMap[d.hero_id]);
     }
 
@@ -127,25 +125,25 @@
       });
     }
 
-    async function onHeroChange(evt) {
-      const sel = evt.target;
-      const team = sel.getAttribute("data-team");
-      const value = sel.value;
+    function updateSelectOptions() {
+      const allSelected = Array.from(document.querySelectorAll("select.slot"))
+        .map(s => s.value).filter(v => v);
 
-      if (!value) {
-        showCounters();
-        return;
-      }
-
-      // перевірка на дубль у команді
-      const sameTeamSelects = document.querySelectorAll(`select.slot.${team}`);
-      sameTeamSelects.forEach(s => {
-        if (s !== sel && s.value === value) {
-          alert("Цей герой вже обраний у цій команді!");
-          sel.value = "";
-        }
+      document.querySelectorAll("select.slot").forEach(sel => {
+        const currentValue = sel.value;
+        Array.from(sel.options).forEach(opt => {
+          if (!opt.value) return; // пропускаємо пустий
+          if (opt.value === currentValue) {
+            opt.disabled = false; // залишаємо вибраного
+          } else {
+            opt.disabled = allSelected.includes(opt.value);
+          }
+        });
       });
+    }
 
+    async function onHeroChange(evt) {
+      updateSelectOptions();
       showCounters();
     }
 
