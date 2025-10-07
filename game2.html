@@ -1,145 +1,114 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dota 2 Counter Pick Game</title>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-  <style>
-    body {
-      font-family: 'Press Start 2P', cursive;
-      background: #111;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
-    }
-    h1 { text-align: center; color: #f00; }
-    select, button {
-      font-family: 'Press Start 2P', cursive;
-      font-size: 14px;
-      margin: 5px;
-      padding: 5px;
-    }
-    .team { margin: 20px; }
-    .result { margin-top: 20px; color: #0f0; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dota 2 Контрпіки</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #1e1e1e;
+    color: #fff;
+    padding: 20px;
+  }
+  h1 {
+    text-align: center;
+  }
+  select {
+    margin: 20px 0;
+    padding: 10px;
+    font-size: 16px;
+  }
+  .hero-card {
+    display: flex;
+    align-items: center;
+    background: #2a2a2a;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    display: none; /* спочатку приховано */
+  }
+  .hero-card img {
+    width: 64px;
+    height: 36px;
+    margin-right: 10px;
+  }
+  .counters {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+  .counter {
+    background: #444;
+    padding: 5px 10px;
+    border-radius: 5px;
+  }
+</style>
 </head>
 <body>
-  <h1>Dota 2 Counter Pick Game</h1>
 
-  <div class="team">
-    <h2>Команда 1</h2>
-    <select id="team1-hero1">
-      <option value="">Вибрати героя</option>
-    </select>
-    <select id="team1-hero2">
-      <option value="">Вибрати героя</option>
-    </select>
-    <select id="team1-hero3">
-      <option value="">Вибрати героя</option>
-    </select>
+<h1>Dota 2 Контрпіки</h1>
+
+<label for="heroSelect">Виберіть героя:</label>
+<select id="heroSelect">
+  <option value="">-- Оберіть героя --</option>
+  <option value="antimage">Anti-Mage</option>
+  <option value="axe">Axe</option>
+  <option value="bane">Bane</option>
+  <!-- Додати інші герої -->
+</select>
+
+<!-- Герої -->
+<div id="antimage" class="hero-card">
+  <img src="https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/antimage.png" alt="Anti-Mage">
+  <div>
+    <strong>Anti-Mage</strong>
+    <div class="counters">
+      <div class="counter">Axe</div>
+      <div class="counter">Lion</div>
+      <div class="counter">Nyx Assassin</div>
+    </div>
   </div>
+</div>
 
-  <div class="team">
-    <h2>Команда 2</h2>
-    <select id="team2-hero1">
-      <option value="">Вибрати героя</option>
-    </select>
-    <select id="team2-hero2">
-      <option value="">Вибрати героя</option>
-    </select>
-    <select id="team2-hero3">
-      <option value="">Вибрати героя</option>
-    </select>
+<div id="axe" class="hero-card">
+  <img src="https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/axe.png" alt="Axe">
+  <div>
+    <strong>Axe</strong>
+    <div class="counters">
+      <div class="counter">Phantom Lancer</div>
+      <div class="counter">Viper</div>
+      <div class="counter">Pugna</div>
+    </div>
   </div>
+</div>
 
-  <button onclick="calculateCounters()">Показати контрпіки</button>
+<div id="bane" class="hero-card">
+  <img src="https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/bane.png" alt="Bane">
+  <div>
+    <strong>Bane</strong>
+    <div class="counters">
+      <div class="counter">Juggernaut</div>
+      <div class="counter">Anti-Mage</div>
+    </div>
+  </div>
+</div>
 
-  <div class="result" id="result"></div>
+<script>
+  const heroSelect = document.getElementById('heroSelect');
+  const heroCards = document.querySelectorAll('.hero-card');
 
-  <script>
-    // Список героїв Dota 2
-    const heroes = [
-      'Anti-Mage', 'Axe', 'Bane', 'Bloodseeker', 'Crystal Maiden',
-      'Drow Ranger', 'Earthshaker', 'Juggernaut', 'Mirana', 'Morphling',
-      'Naga Siren', 'Pudge', 'Riki', 'Shadow Fiend', 'Tinker',
-      'Ursa', 'Vengeful Spirit', 'Wraith King', 'Zeus'
-      // Додайте інших героїв за потреби
-    ];
-
-    // Контрпіки для кожного героя
-    const counterPicks = {
-      'Anti-Mage': ['Axe', 'Bane'],
-      'Axe': ['Drow Ranger', 'Juggernaut'],
-      'Bane': ['Morphling', 'Mirana'],
-      'Bloodseeker': ['Crystal Maiden', 'Earthshaker'],
-      'Crystal Maiden': ['Anti-Mage', 'Bloodseeker'],
-      'Drow Ranger': ['Axe', 'Bane'],
-      'Earthshaker': ['Morphling', 'Juggernaut'],
-      'Juggernaut': ['Bane', 'Drow Ranger'],
-      'Mirana': ['Axe', 'Bloodseeker'],
-      'Morphling': ['Anti-Mage', 'Crystal Maiden'],
-      'Naga Siren': ['Ursa', 'Riki'],
-      'Pudge': ['Tinker', 'Zeus'],
-      'Riki': ['Naga Siren', 'Ursa'],
-      'Shadow Fiend': ['Pudge', 'Zeus'],
-      'Tinker': ['Pudge', 'Shadow Fiend'],
-      'Ursa': ['Naga Siren', 'Riki'],
-      'Vengeful Spirit': ['Zeus', 'Tinker'],
-      'Wraith King': ['Anti-Mage', 'Juggernaut'],
-      'Zeus': ['Pudge', 'Shadow Fiend']
-      // Додайте контрпіки для інших героїв
-    };
-
-    // Додавання героїв у селекти
-    const selects = document.querySelectorAll('select');
-    heroes.forEach(hero => {
-      selects.forEach(select => {
-        const option = document.createElement('option');
-        option.value = hero;
-        option.textContent = hero;
-        select.appendChild(option);
-      });
+  heroSelect.addEventListener('change', () => {
+    const value = heroSelect.value;
+    heroCards.forEach(card => {
+      card.style.display = card.id === value ? 'flex' : 'none';
     });
+  });
+</script>
 
-    function calculateCounters() {
-      const team1 = [
-        document.getElementById('team1-hero1').value,
-        document.getElementById('team1-hero2').value,
-        document.getElementById('team1-hero3').value
-      ].filter(h => h);
-
-      const team2 = [
-        document.getElementById('team2-hero1').value,
-        document.getElementById('team2-hero2').value,
-        document.getElementById('team2-hero3').value
-      ].filter(h => h);
-
-      if (team1.length === 0 || team2.length === 0) {
-        alert('Виберіть героїв для обох команд!');
-        return;
-      }
-
-      let counters = [];
-      team1.forEach(hero => {
-        if (counterPicks[hero]) {
-          counters.push(...counterPicks[hero]);
-        }
-      });
-
-      // Виключаємо героїв з команди 2
-      counters = counters.filter(h => !team2.includes(h));
-
-      document.getElementById('result').innerHTML = `
-        <h3>Рекомендовані контрпіки для Команди 2:</h3>
-        ${[...new Set(counters)].join(', ')}
-      `;
-    }
-  </script>
 </body>
 </html>
+
 
 
 
