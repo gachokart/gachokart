@@ -54,19 +54,29 @@
       border-radius: 6px;
       color: #fff;
     }
-    .progress-container {
-      width: 100%;
-      background: #333;
-      border-radius: 10px;
-      overflow: hidden;
+    .action-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
       margin-top: 20px;
-      height: 25px;
+      gap: 15px;
     }
-    .progress-bar {
-      height: 100%;
-      background: linear-gradient(90deg, #4caf50, #81c784);
-      width: 0%;
-      transition: width 0.3s ease;
+    button {
+      background: #4caf50;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background: #66bb6a;
+    }
+    #win-chance {
+      font-weight: bold;
+      font-size: 18px;
     }
   </style>
 </head>
@@ -78,40 +88,40 @@
     <div class="team" id="my-team">
       <h2>Моя команда</h2>
       <div class="role-label">Carry</div>
-      <select class="slot my" data-team="my"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot my"><option value="">-- Оберіть героя --</option></select>
       <div class="role-label">Mid</div>
-      <select class="slot my" data-team="my"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot my"><option value="">-- Оберіть героя --</option></select>
       <div class="role-label">Offlane</div>
-      <select class="slot my" data-team="my"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot my"><option value="">-- Оберіть героя --</option></select>
       <div class="role-label">Support 4</div>
-      <select class="slot my" data-team="my"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot my"><option value="">-- Оберіть героя --</option></select>
       <div class="role-label">Support 5</div>
-      <select class="slot my" data-team="my"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot my"><option value="">-- Оберіть героя --</option></select>
     </div>
 
     <div class="team" id="enemy-team">
       <h2>Суперник</h2>
       <div class="role-label">Carry</div>
-      <select class="slot enemy" data-team="enemy"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot enemy"><option value="">-- Оберіть героя --</option></select>
       <div class="role-label">Mid</div>
-      <select class="slot enemy" data-team="enemy"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot enemy"><option value="">-- Оберіть героя --</option></select>
       <div class="role-label">Offlane</div>
-      <select class="slot enemy" data-team="enemy"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot enemy"><option value="">-- Оберіть героя --</option></select>
       <div class="role-label">Support 4</div>
-      <select class="slot enemy" data-team="enemy"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot enemy"><option value="">-- Оберіть героя --</option></select>
       <div class="role-label">Support 5</div>
-      <select class="slot enemy" data-team="enemy"><option value="">-- Оберіть героя --</option></select>
+      <select class="slot enemy"><option value="">-- Оберіть героя --</option></select>
     </div>
   </div>
 
-  <div class="progress-container">
-    <div class="progress-bar" id="progress-bar"></div>
+  <div class="action-bar">
+    <button id="go-button">Go</button>
+    <span id="win-chance"></span>
   </div>
 
   <div class="results">
     <h2>Контрпіки для обраних героїв супротивника</h2>
     <div id="counters-container"></div>
-    <h3 id="win-chance"></h3>
   </div>
 
   <script>
@@ -142,11 +152,26 @@
 
     function attachEvents() {
       document.querySelectorAll("select.slot").forEach(sel => {
-        sel.addEventListener("change", async e => {
+        sel.addEventListener("change", async () => {
           updateSelectOptions();
-          updateProgressBar();
           await showCounters();
         });
+      });
+
+      document.getElementById("go-button").addEventListener("click", async () => {
+        const myHeroes = Array.from(document.querySelectorAll(".slot.my"))
+          .map(s => s.value).filter(v => v);
+        const enemyHeroes = Array.from(document.querySelectorAll(".slot.enemy"))
+          .map(s => s.value).filter(v => v);
+        const winEl = document.getElementById("win-chance");
+
+        if (myHeroes.length === 5 && enemyHeroes.length === 5) {
+          winEl.textContent = "Обчислюємо...";
+          const chance = await calcWinChance(myHeroes, enemyHeroes);
+          winEl.textContent = `Шанс на перемогу: ${chance.toFixed(1)}%`;
+        } else {
+          winEl.textContent = "Оберіть усіх 10 героїв!";
+        }
       });
     }
 
@@ -163,14 +188,6 @@
       });
     }
 
-    function updateProgressBar() {
-      const filled = Array.from(document.querySelectorAll("select.slot"))
-        .filter(s => s.value).length;
-      const total = 10;
-      const percent = (filled / total) * 100;
-      document.getElementById("progress-bar").style.width = percent + "%";
-    }
-
     async function fetchCounters(heroName) {
       const heroId = nameToId[heroName];
       if (!heroId) return [];
@@ -183,13 +200,9 @@
 
     async function showCounters() {
       const container = document.getElementById("counters-container");
-      const winEl = document.getElementById("win-chance");
       container.innerHTML = "";
-      winEl.textContent = "";
 
       const enemyHeroes = Array.from(document.querySelectorAll(".slot.enemy"))
-        .map(s => s.value).filter(v => v);
-      const myHeroes = Array.from(document.querySelectorAll(".slot.my"))
         .map(s => s.value).filter(v => v);
 
       if (enemyHeroes.length === 0) {
@@ -197,7 +210,6 @@
         return;
       }
 
-      // Контрпіки
       let counterCounts = {};
       for (let h of enemyHeroes) {
         const counters = await fetchCounters(h);
@@ -211,12 +223,6 @@
         div.textContent = `${name} (×${count})`;
         container.appendChild(div);
       });
-
-      // Якщо всі герої обрані — рахуємо шанс перемоги
-      if (enemyHeroes.length === 5 && myHeroes.length === 5) {
-        const chance = await calcWinChance(myHeroes, enemyHeroes);
-        winEl.textContent = `Шанс на перемогу: ${chance.toFixed(1)}%`;
-      }
     }
 
     async function calcWinChance(myHeroes, enemyHeroes) {
