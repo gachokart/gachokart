@@ -53,6 +53,10 @@
       margin: 5px;
       border-radius: 6px;
       color: #fff;
+      transition: transform 0.2s;
+    }
+    .counter:hover {
+      transform: scale(1.05);
     }
     .action-bar {
       display: flex;
@@ -119,7 +123,7 @@
     <span id="win-chance"></span>
   </div>
 
-  <div class="results">
+  <div class="results" id="results-section">
     <h2>Контрпіки для обраних героїв супротивника</h2>
     <div id="counters-container"></div>
   </div>
@@ -164,8 +168,11 @@
         const enemyHeroes = Array.from(document.querySelectorAll(".slot.enemy"))
           .map(s => s.value).filter(v => v);
         const winEl = document.getElementById("win-chance");
+        const resultsSection = document.getElementById("results-section");
 
         if (myHeroes.length === 5 && enemyHeroes.length === 5) {
+          // При повному пік-сеті — ховаємо контрпіки
+          resultsSection.style.display = "none";
           winEl.textContent = "Обчислюємо...";
           const chance = await calcWinChance(myHeroes, enemyHeroes);
           winEl.textContent = `Шанс на перемогу: ${chance.toFixed(1)}%`;
@@ -200,10 +207,21 @@
 
     async function showCounters() {
       const container = document.getElementById("counters-container");
+      const resultsSection = document.getElementById("results-section");
       container.innerHTML = "";
 
+      const myHeroes = Array.from(document.querySelectorAll(".slot.my"))
+        .map(s => s.value).filter(v => v);
       const enemyHeroes = Array.from(document.querySelectorAll(".slot.enemy"))
         .map(s => s.value).filter(v => v);
+
+      // Показуємо контрпіки лише якщо пік ще не завершено
+      if (myHeroes.length === 5 && enemyHeroes.length === 5) {
+        resultsSection.style.display = "none";
+        return;
+      } else {
+        resultsSection.style.display = "block";
+      }
 
       if (enemyHeroes.length === 0) {
         container.textContent = "Оберіть героїв супротивника для контрпіків.";
