@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dota 2 — Ваше Проти Супротивника із Контрпіками</title>
+  <title>Dota 2 — Контрпіки та шанс на перемогу</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -55,11 +55,32 @@
       border-radius: 6px;
       color: #fff;
     }
+    .progress-bar {
+      width: 100%;
+      background-color: #333;
+      border-radius: 8px;
+      margin-top: 20px;
+      overflow: hidden;
+    }
+    .progress {
+      height: 20px;
+      background: linear-gradient(90deg, #4caf50, #81c784);
+      width: 0%;
+      text-align: center;
+      color: #111;
+      font-size: 12px;
+      transition: width 0.3s ease;
+    }
+    .winrate {
+      margin-top: 15px;
+      font-size: 20px;
+      color: #ffd700;
+    }
   </style>
 </head>
 <body>
 
-  <h1>Моя команда vs Суперник — Контрпіки</h1>
+  <h1>Моя команда vs Суперник — Контрпіки та шанс на перемогу</h1>
 
   <div class="teams">
     <div class="team" id="my-team">
@@ -91,9 +112,14 @@
     </div>
   </div>
 
+  <div class="progress-bar">
+    <div class="progress" id="progress">0%</div>
+  </div>
+
   <div class="results">
     <h2>Контрпіки для обраних героїв супротивника</h2>
     <div id="counters-container"></div>
+    <div class="winrate" id="winrate"></div>
   </div>
 
   <script>
@@ -112,14 +138,31 @@
     async function fetchCounters(heroName) {
       const heroId = Object.keys(heroMap).find(id => heroMap[id] === heroName);
       if (!heroId) return [];
-
       const res = await fetch(`https://api.opendota.com/api/heroes/${heroId}/matchups`);
       const data = await res.json();
-
       data.forEach(d => d.win_rate = d.wins / d.games_played);
       data.sort((a, b) => a.win_rate - b.win_rate);
-
       return data.slice(0, 5).map(d => heroMap[d.hero_id]);
+    }
+
+    async function fetchWinChance(myHeroes, enemyHeroes) {
+      let totalScore = 0;
+      let totalMatchups = 0;
+      for (let my of myHeroes) {
+        const myId = Object.keys(heroMap).find(id => heroMap[id] === my);
+        if (!myId) continue;
+        const res = await fetch(`https://api.opendota.com/api/heroes/${myId}/matchups`);
+        const data = await res.json();
+        for (let enemy of enemyHeroes) {
+          const enemyId = Object.keys(heroMap).find(id => heroMap[id] === enemy);
+          const matchup = data.find(m => m.hero_id == enemyId);
+          if (matchup) {
+            totalScore += matchup.wins / matchup.games_played;
+            totalMatchups++;
+          }
+        }
+      }
+      return totalMatchups ? (totalScore / totalMatchups) * 100 : null;
     }
 
     function initHeroSelects() {
@@ -155,46 +198,58 @@
           }
         });
       });
+
+      updateProgress(allSelected.length);
     }
 
-    async function onHeroChange(evt) {
+    function updateProgress(selectedCount) {
+      const progress = document.getElementById("progress");
+      const percent = Math.round((selectedCount / 10) * 100);
+      progress.style.width = percent + "%";
+      progress.textContent = percent + "%";
+    }
+
+    async function onHeroChange() {
       updateSelectOptions();
-      showCounters();
+      await showCounters();
+      await checkWinChance();
     }
 
     async function showCounters() {
       const container = document.getElementById("counters-container");
       container.innerHTML = "";
-
       const enemyHeroes = Array.from(document.querySelectorAll("select.slot.enemy"))
         .map(s => s.value).filter(v => v);
-
       if (enemyHeroes.length === 0) {
         container.textContent = "Контрпіки поки що недоступні або не обрано героїв супротивника.";
         return;
       }
-
       let counterCounts = {};
-
       for (let h of enemyHeroes) {
         const counters = await fetchCounters(h);
-        counters.forEach(c => {
-          counterCounts[c] = (counterCounts[c] || 0) + 1;
-        });
+        counters.forEach(c => counterCounts[c] = (counterCounts[c] || 0) + 1);
       }
+      const sorted = Object.entries(counterCounts).sort((a, b) => b[1] - a[1]);
+      if (!sorted.length) container.textContent = "Не вдалося знайти контрпіки.";
+      else sorted.forEach(([c, n]) => {
+        const div = document.createElement("div");
+        div.classList.add("counter");
+        div.textContent = `${c} (×${n})`;
+        container.appendChild(div);
+      });
+    }
 
-      const sortedCounters = Object.entries(counterCounts)
-        .sort((a, b) => b[1] - a[1]);
-
-      if (sortedCounters.length === 0) {
-        container.textContent = "Не вдалося знайти контрпіки.";
-      } else {
-        sortedCounters.forEach(([c, count]) => {
-          const div = document.createElement("div");
-          div.classList.add("counter");
-          div.textContent = `${c} (×${count})`;
-          container.appendChild(div);
-        });
+    async function checkWinChance() {
+      const myHeroes = Array.from(document.querySelectorAll("select.slot.my")).map(s => s.value).filter(v => v);
+      const enemyHeroes = Array.from(document.querySelectorAll("select.slot.enemy")).map(s => s.value).filter(v => v);
+      if (myHeroes.length === 5 && enemyHeroes.length === 5) {
+        const winrate = await fetchWinChance(myHeroes, enemyHeroes);
+        const text = document.getElementById("winrate");
+        if (winrate) {
+          text.textContent = `Шанс перемоги моєї команди: ${winrate.toFixed(1)}%`;
+        } else {
+          text.textContent = "Не вдалося розрахувати шанс перемоги.";
+        }
       }
     }
 
@@ -202,3 +257,4 @@
   </script>
 </body>
 </html>
+
