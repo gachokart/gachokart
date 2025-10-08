@@ -137,7 +137,7 @@
   {
     "id": 16,
     "name": "Legion Commander",
-    "roles": ["Melee", 'Carry", "Disabler", "Durable", "Initiator", "Nuker"],
+    "roles": ["Melee", "Carry", "Disabler", "Durable", "Initiator", "Nuker"],
     "winrate": 0.5265,
     "pickrate": 0.1630,
     "BestCounters": ["Anti-Mage", "Meepo", "Queen of Pain", "Bloodseeker", "Ember Spirit", "Venomancer", "Silencer", "Juggernaut", "Necrophos", "Phoenix"],
@@ -155,7 +155,7 @@
   {
     "id": 18,
     "name": "Nyx Assassin",
-    "roles": ["Melee", "Disabler", "Escape", "Initiator", Nuker"],
+    "roles": ["Melee", "Disabler", "Escape", "Initiator", "Nuker"],
     "winrate": 0.5260,
     "pickrate": 0.0537,
     "BestCounters": ["Medusa", "Outworld Destroyer", "Morphling", "Dawnbreaker", "Puck", "Mirana", "Phantom Assassin", "Keeper of the Light", "Sniper", "Weaver"],
@@ -331,7 +331,8 @@
     "pickrate": 0.0739,
     "BestCounters": ["Bloodseeker",	"Medusa",	"Windranger",	"Elder Titan",	"Sniper",	"Phantom Lancer",	"Wraith King"	,"Sand King"	,"Arc Warden",	"Phantom Assassin"],
     "commonCounters": ["Chen",	"Underlord",	"Bristleback"	,"Juggernaut",	"Meepo",	"Dazzle",	"Lone Druid",	"Templar Assassin",	"Lifestealer","Witch Doctor"]
-  },
+  }
+]
  
 
 
