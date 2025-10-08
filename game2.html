@@ -1,761 +1,229 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Dota2 Draft — Роль → Драфт → Результат (10 слотів)</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dota 2 — Моя команда vs Суперник</title>
   <style>
-    :root{
-      --bg:#0b0b0b; --panel:#171717; --muted:#9aa1a8; --accent:#4caf50; --glass: rgba(255,255,255,0.03);
-    }
-    *{box-sizing:border-box}
-    body{margin:0;padding:22px;font-family:Inter,Arial,Helvetica,sans-serif;background:linear-gradient(180deg,#070707,#121212);color:#e6eef3}
-    .screen{max-width:1200px;margin:0 auto}
-    header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
-    header h1{margin:0;font-size:20px}
-    .card{background:var(--panel);border-radius:10px;padding:14px;}
-    .muted{color:var(--muted);font-size:13px}
-    .roles{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:18px}
-    .role-btn{padding:10px 16px;border-radius:8px;background:var(--glass);color:var(--muted);cursor:pointer;border:1px solid rgba(255,255,255,0.03)}
-    .role-btn.active{background:linear-gradient(90deg,#2b7a3a,#178a6a);color:#fff;box-shadow:0 6px 18px rgba(23,138,106,0.16)}
-    .stage{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.03);font-size:13px}
-    /* draft layout */
-    .draft-grid{display:grid;grid-template-columns:1fr 420px 1fr;gap:16px;margin-top:16px;align-items:start}
-    .team-col{min-height:240px;padding:12px;border-radius:8px;background:linear-gradient(180deg,#121212,#171717);border:1px solid rgba(255,255,255,0.02)}
-    .team-title{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-    .slots{display:flex;flex-direction:column;gap:8px}
-    .slot{display:flex;align-items:center;gap:10px;padding:8px;background:rgba(255,255,255,0.02);border-radius:8px}
-    .slot.active{box-shadow:0 6px 18px rgba(0,0,0,0.6), inset 0 0 0 2px rgba(76,175,80,0.14)}
-    .hero-thumb{width:46px;height:26px;border-radius:4px;overflow:hidden;background:#0c0c0c}
-    .hero-thumb img{width:100%;height:100%;object-fit:cover}
-    .hero-name{flex:1}
-    .pick-btn{padding:6px 10px;border-radius:6px;border:none;background:linear-gradient(90deg,#2b7a3a,#178a6a);color:white;cursor:pointer}
-    .pick-btn.secondary{background:#2b2b2b;border:1px solid rgba(255,255,255,0.03)}
-    /* picker */
-    .picker{background:var(--panel);padding:12px;border-radius:8px;max-height:640px;overflow:auto}
-    .picker .filter-row{display:flex;gap:8px;margin-bottom:10px}
-    .hero-list{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-    .hero-item{display:flex;gap:8px;align-items:center;padding:6px;border-radius:6px;background:rgba(255,255,255,0.01);cursor:pointer}
-    .hero-item.disabled{opacity:0.35;pointer-events:none}
-    .hero-item img{width:40px;height:24px;object-fit:cover;border-radius:4px}
-    .tiny{font-size:12px;color:var(--muted)}
-    /* right panel */
-    .panel{padding:12px;border-radius:8px;background:linear-gradient(180deg,#0f1111,#131313);border:1px solid rgba(255,255,255,0.02)}
-    .suggestions{display:flex;flex-direction:column;gap:8px;margin-top:8px}
-    .suggestion{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);cursor:pointer}
-    .score{min-width:48px;text-align:right;font-weight:600}
-    .results{margin-top:12px;padding:12px;border-radius:8px;background:linear-gradient(180deg,#0f1410,#091213);border:1px solid rgba(255,255,255,0.02)}
-    footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
-    .flex{display:flex;gap:8px;align-items:center}
-    .center{display:flex;align-items:center;justify-content:center}
-    .btn{padding:8px 12px;border-radius:8px;background:var(--accent);border:none;color:#fff;cursor:pointer}
-    .btn.secondary{background:#2b2b2b;border:1px solid rgba(255,255,255,0.03)}
+    body { font-family: Arial, sans-serif; background: #1e1e1e; color: #eee; padding: 20px; }
+    h1, h2 { text-align: center; }
+    .teams { display: flex; justify-content: space-between; flex-wrap: wrap; }
+    .team { background: #222; padding: 15px; border-radius: 8px; width: 48%; box-sizing: border-box; }
+    .role-label { font-size: 13px; color: #aaa; margin-top: 6px; }
+    select { width: 100%; padding: 8px; margin: 4px 0 12px 0; font-size: 14px; background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; }
+    .results { margin-top: 30px; background: #222; padding: 20px; border-radius: 8px; text-align: center; }
+    .counter { display: inline-block; background: #444; padding: 5px 12px; margin: 5px; border-radius: 6px; color: #fff; transition: transform 0.2s; }
+    .counter:hover { transform: scale(1.05); }
+    .action-bar { display: flex; justify-content: center; align-items: center; margin-top: 20px; gap: 15px; }
+    button { background: #4caf50; border: none; color: white; padding: 10px 20px; border-radius: 6px; font-size: 16px; cursor: pointer; transition: background 0.3s ease; }
+    button:hover { background: #66bb6a; }
+    #win-chance { font-weight: bold; font-size: 18px; }
+    #strategy { margin-top: 10px; font-size: 17px; color: #ccc; }
   </style>
 </head>
 <body>
-  <div class="screen">
-    <header>
-      <h1>Dota 2 — Draft Simulator (ручно обираєш усіх 10)</h1>
-      <div style="margin-left:auto" class="muted">Джерело даних: OpenDota API</div>
-    </header>
 
-    <!-- Role select -->
-    <div id="role-screen" class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div class="tiny">КРОК 1</div>
-          <h2>Оберіть роль, за яку ви будете грати</h2>
-        </div>
-        <div class="stage">Початковий вибір ролі</div>
-      </div>
+<h1>Моя команда vs Суперник — Контрпіки</h1>
 
-      <div class="roles" id="roles-container"></div>
-
-      <div style="display:flex;justify-content:center;margin-top:16px;gap:12px">
-        <button id="start-draft" class="btn" disabled>Start Draft</button>
-        <button id="random-role" class="btn secondary">Випадкова роль</button>
-      </div>
-      <p class="tiny center" style="margin-top:12px">Після Start Draft — відкриється екран драфту. Натисни Pick у потрібному слоті (в своїй або ворожій команді), а потім вибери героя з правого списка.</p>
-    </div>
-
-    <!-- Draft -->
-    <div id="draft-screen" style="display:none">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
-        <div class="tiny">КРОК 2 — Драфт (вручну за обидві команди)</div>
-        <div class="stage" id="stage-indicator">Draft stage</div>
-      </div>
-
-      <div class="draft-grid">
-        <!-- My team -->
-        <div class="team-col card">
-          <div class="team-title"><strong>Моя команда</strong><div style="margin-left:auto" class="tiny">Роль: <span id="player-role-label">—</span></div></div>
-          <div class="slots" id="my-slots"></div>
-        </div>
-
-        <!-- picker center -->
-        <div>
-          <div class="picker card">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-              <div>
-                <div class="tiny">Hero picker</div>
-                <div style="font-weight:600" id="picker-context">Оберіть слот (Pick) зліва або справа</div>
-              </div>
-              <div style="display:flex;gap:8px;align-items:center">
-                <div class="tiny">Пошук</div>
-                <input id="hero-search" placeholder="Фільтр..." style="background:#0f0f0f;border-radius:6px;border:1px solid rgba(255,255,255,0.03);padding:6px;color:#fff" />
-              </div>
-            </div>
-
-            <div class="filter-row" style="margin-bottom:10px">
-              <select id="role-filter" style="flex:1;padding:8px;border-radius:6px;background:#0f0f0f;color:#fff;border:1px solid rgba(255,255,255,0.03)">
-                <option value="">Всі ролі</option>
-              </select>
-              <button id="clear-filter" class="btn secondary">Очистити</button>
-            </div>
-
-            <div class="hero-list" id="hero-list"></div>
-
-            <div style="margin-top:10px" class="tiny">Іконки героїв — OpenDota. Обраний герой виключається з списка.</div>
-          </div>
-
-          <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
-            <button id="reset-picks" class="btn secondary">Очистити всі піки</button>
-            <button id="finish-draft" class="btn">Завершити драфт</button>
-          </div>
-        </div>
-
-        <!-- enemy -->
-        <div class="team-col card">
-          <div class="team-title"><strong>Суперник</strong><div style="margin-left:auto" class="tiny">Ваші контрпіки оновлюються після вибору ворога</div></div>
-          <div class="slots" id="enemy-slots"></div>
-        </div>
-      </div>
-
-      <!-- Right panel (suggestions moved here for clarity) -->
-      <div style="display:flex;gap:16px;margin-top:14px">
-        <div style="flex:1" class="panel card">
-          <h3>Рекомендовані контрпіки для вашої ролі</h3>
-          <div class="tiny">Оновлюються динамічно після кожного вибору ворога. Базуються на даних OpenDota matchups.</div>
-          <div id="suggestions" class="suggestions"></div>
-
-          <div class="results" id="live-analysis">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <div class="tiny">Поточний аналіз</div>
-              <div class="tiny">Шанс (орієнтир)</div>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
-              <div style="flex:1">
-                <div id="analysis-text" class="tiny">Почніть вибирати піки — тут з'явиться аналіз.</div>
-              </div>
-              <div style="width:120px;text-align:right">
-                <div id="win-estimate" style="font-weight:700;font-size:20px">—</div>
-                <div class="tiny" style="color:var(--muted)">Приблизно</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div style="width:300px" class="panel card">
-          <h3>Поточний статус</h3>
-          <div class="tiny">Мої піки</div>
-          <div id="mini-my" style="margin-bottom:8px"></div>
-          <div class="tiny">Ворожі піки</div>
-          <div id="mini-enemy"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- results -->
-    <div id="results-screen" style="display:none;margin-top:14px">
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <h2>Результат драфту</h2>
-            <div class="tiny">Аналіз пік/контрпік та загальний шанс (симуляція)</div>
-          </div>
-          <div style="text-align:right">
-            <div style="font-size:22px;font-weight:700" id="final-win">—</div>
-            <div class="tiny" id="final-strategy">—</div>
-          </div>
-        </div>
-
-        <div style="display:flex;gap:12px;margin-top:12px">
-          <div style="flex:1" class="team-col card">
-            <strong>Моя команда</strong>
-            <div id="final-my" style="margin-top:8px"></div>
-          </div>
-          <div style="flex:1" class="team-col card">
-            <strong>Суперник</strong>
-            <div id="final-enemy" style="margin-top:8px"></div>
-          </div>
-        </div>
-
-        <div style="margin-top:12px">
-          <h3>Короткий аналіз</h3>
-          <div id="final-analysis" class="tiny"></div>
-        </div>
-
-        <div style="margin-top:12px" class="center">
-          <button id="restart" class="btn secondary">Почати спочатку</button>
-        </div>
-      </div>
-    </div>
-
-    <footer>Made with ❤️ — використовує OpenDota API для статистики матчапів. Якщо API недоступний — система працюватиме з локальними списками.</footer>
+<div class="teams">
+  <div class="team" id="my-team">
+    <h2>Моя команда</h2>
+    <div class="role-label">Carry</div>
+    <select class="slot my"><option value="">-- Оберіть героя --</option></select>
+    <div class="role-label">Mid</div>
+    <select class="slot my"><option value="">-- Оберіть героя --</option></select>
+    <div class="role-label">Offlane</div>
+    <select class="slot my"><option value="">-- Оберіть героя --</option></select>
+    <div class="role-label">Support 4</div>
+    <select class="slot my"><option value="">-- Оберіть героя --</option></select>
+    <div class="role-label">Support 5</div>
+    <select class="slot my"><option value="">-- Оберіть героя --</option></select>
   </div>
 
+  <div class="team" id="enemy-team">
+    <h2>Суперник</h2>
+    <div class="role-label">Carry</div>
+    <select class="slot enemy"><option value="">-- Оберіть героя --</option></select>
+    <div class="role-label">Mid</div>
+    <select class="slot enemy"><option value="">-- Оберіть героя --</option></select>
+    <div class="role-label">Offlane</div>
+    <select class="slot enemy"><option value="">-- Оберіть героя --</option></select>
+    <div class="role-label">Support 4</div>
+    <select class="slot enemy"><option value="">-- Оберіть героя --</option></select>
+    <div class="role-label">Support 5</div>
+    <select class="slot enemy"><option value="">-- Оберіть героя --</option></select>
+  </div>
+</div>
+
+<div class="action-bar">
+  <button id="go-button">Go</button>
+  <span id="win-chance"></span>
+</div>
+<div id="strategy"></div>
+
+<div class="results" id="results-section">
+  <h2>Контрпіки для обраних героїв супротивника</h2>
+  <div id="counters-container"></div>
+</div>
+
 <script>
-(async function(){
-
-/* ============================
-   Конфіг (рольові списки)
-   ============================ */
-
-const roleHeroes = {
-  Carry: ["Phantom Assassin","Juggernaut","Sven","Morphling","Faceless Void","Medusa","Spectre","Anti-Mage","Weaver","Lifestealer","Drow Ranger","Terrorblade"],
-  Mid: ["Invoker","Storm Spirit","Puck","Queen of Pain","Shadow Fiend","Ember Spirit","Tinker","Leshrac","Zeus","Death Prophet","Kunkka","Windranger"],
-  Offlane: ["Centaur Warrunner","Tidehunter","Mars","Beastmaster","Dark Seer","Timbersaw","Axe","Bristleback","Underlord","Doom","Magnus","Slardar"],
-  "Support 4": ["Rubick","Earth Spirit","Tusk","Mirana","Snapfire","Nyx Assassin","Phoenix","Clockwerk","Marci","Techies","Pudge","Spirit Breaker"],
-  "Support 5": ["Crystal Maiden","Lion","Witch Doctor","Dazzle","Omniknight","Warlock","Shadow Shaman","Lich","Oracle","Treant Protector","Bane","Disruptor"]
-};
-
-const roleKeys = Object.keys(roleHeroes);
-
-/* ============================
-   State
-   ============================ */
-
 let allHeroesApi = [];
-let heroByName = {};
 let heroShort = {};
-let picked = { my: Array(5).fill(null), enemy: Array(5).fill(null) };
-let playerRole = null;
-let activeSlot = null; // {team:'my'|'enemy', index}
-let matchupCache = {};
+let picked = { my: [], enemy: [] };
 
-/* ============================
-   UI refs
-   ============================ */
-
-const rolesContainer = document.getElementById('roles-container');
-const startBtn = document.getElementById('start-draft');
-const randomRoleBtn = document.getElementById('random-role');
-const playerRoleLabel = document.getElementById('player-role-label');
-
-const roleScreen = document.getElementById('role-screen');
-const draftScreen = document.getElementById('draft-screen');
-const resultsScreen = document.getElementById('results-screen');
-
-const mySlotsEl = document.getElementById('my-slots');
-const enemySlotsEl = document.getElementById('enemy-slots');
-const heroListEl = document.getElementById('hero-list');
-const roleFilter = document.getElementById('role-filter');
-const heroSearch = document.getElementById('hero-search');
-const clearFilterBtn = document.getElementById('clear-filter');
-const pickerContext = document.getElementById('picker-context');
-const suggestionsEl = document.getElementById('suggestions');
-const winEstimateEl = document.getElementById('win-estimate');
-const analysisText = document.getElementById('analysis-text');
-const miniMy = document.getElementById('mini-my');
-const miniEnemy = document.getElementById('mini-enemy');
-
-const resetPicksBtn = document.getElementById('reset-picks');
-const finishDraftBtn = document.getElementById('finish-draft');
-
-const finalMy = document.getElementById('final-my');
-const finalEnemy = document.getElementById('final-enemy');
-const finalWin = document.getElementById('final-win');
-const finalStrategy = document.getElementById('final-strategy');
-const finalAnalysis = document.getElementById('final-analysis');
-const restartBtn = document.getElementById('restart');
-
-/* ============================
-   Init roles UI
-   ============================ */
-
-function renderRoleButtons(){
-  rolesContainer.innerHTML = '';
-  roleKeys.forEach(r=>{
-    const b = document.createElement('button');
-    b.className = 'role-btn';
-    b.textContent = r;
-    b.onclick = ()=> {
-      document.querySelectorAll('.role-btn').forEach(x=>x.classList.remove('active'));
-      b.classList.add('active');
-      playerRole = r;
-      startBtn.disabled = false;
-      playerRoleLabel.textContent = r;
-      updateSuggestions();
-    };
-    rolesContainer.appendChild(b);
-  });
-  roleKeys.forEach(r=>{
-    const opt = document.createElement('option'); opt.value=r; opt.textContent=r; roleFilter.appendChild(opt);
-  });
-}
-renderRoleButtons();
-
-/* ============================
-   Load OpenDota heroes
-   ============================ */
-
-async function loadHeroList(){
-  try{
-    const res = await fetch('https://api.opendota.com/api/heroes');
-    const data = await res.json();
-    allHeroesApi = data.sort((a,b)=>a.localized_name.localeCompare(b.localized_name));
-    allHeroesApi.forEach(h=>{
-      heroByName[h.localized_name] = h;
-      heroShort[h.localized_name] = h.name.replace('npc_dota_hero_','');
-    });
-    populateHeroPicker();
-  }catch(e){
-    console.warn('OpenDota heroes failed, fallback to role list',e);
-    // fallback minimal
-    const fallback = new Set();
-    Object.values(roleHeroes).flat().forEach(n=>fallback.add(n));
-    allHeroesApi = Array.from(fallback).map((name,i)=>({
-      id: 10000+i, localized_name: name, name: 'npc_dota_hero_'+name.toLowerCase().replace(/\s+/g,'_')
-    }));
-    allHeroesApi.forEach(h=>{
-      heroByName[h.localized_name] = h;
-      heroShort[h.localized_name] = h.name.replace('npc_dota_hero_','');
-    });
-    populateHeroPicker();
-  }
+async function fetchHeroes() {
+  const res = await fetch("https://api.opendota.com/api/heroes");
+  const data = await res.json();
+  allHeroesApi = data;
+  data.forEach(h => heroShort[h.localized_name] = h.name.replace("npc_dota_hero_", ""));
+  initHeroSelects();
+  attachEvents();
 }
 
-/* ============================
-   Populate hero picker list
-   ============================ */
+function initHeroSelects() {
+  document.querySelectorAll("select.slot").forEach(sel => {
+    allHeroesApi.map(h => h.localized_name).sort().forEach(name => {
+      const opt = document.createElement("option");
+      opt.value = name;
+      opt.text = name;
+      sel.appendChild(opt);
+    });
+  });
+}
 
 function heroItemHtml(name){
   const short = heroShort[name] || '';
   const img = short ? `https://api.opendota.com/apps/dota2/images/heroes/${short}_full.png` : '';
-  return `<div style="display:flex;align-items:center;gap:8px;width:100%"><div style="width:44px;height:26px;border-radius:4px;overflow:hidden"><img src="${img}" alt=""></div><div style="flex:1"><div style="font-weight:600">${name}</div><div class="tiny" style="opacity:0.7">${getRolesForHero(name).join(', ')}</div></div><div class="tiny">pick</div></div>`;
+  return `<div style="display:flex;align-items:center;gap:8px;width:100%">
+            <div style="width:44px;height:26px;border-radius:4px;overflow:hidden">
+              <img src="${img}" alt="">
+            </div>
+            <div style="flex:1">
+              <div style="font-weight:600">${name}</div>
+            </div>
+          </div>`;
 }
 
-function getRolesForHero(name){
-  return roleKeys.filter(r=>roleHeroes[r].includes(name));
-}
-
-function populateHeroPicker(){
-  heroListEl.innerHTML = '';
-  const names = allHeroesApi.map(h=>h.localized_name);
-  names.forEach(n=>{
-    const div = document.createElement('div');
-    div.className = 'hero-item';
-    div.dataset.name = n;
-    div.innerHTML = heroItemHtml(n);
-    div.onclick = ()=> tryPickHero(n);
-    heroListEl.appendChild(div);
+function attachEvents() {
+  document.querySelectorAll("select.slot").forEach(sel => {
+    sel.addEventListener("change", () => {
+      updateSelectOptions();
+      showCounters();
+    });
   });
-  updateDisabledHeroes();
-}
 
-/* ============================
-   Slots rendering (both teams)
-   ============================ */
+  document.getElementById("go-button").addEventListener("click", () => {
+    const myHeroes = Array.from(document.querySelectorAll(".slot.my")).map(s=>s.value).filter(v=>v);
+    const enemyHeroes = Array.from(document.querySelectorAll(".slot.enemy")).map(s=>s.value).filter(v=>v);
+    const winEl = document.getElementById("win-chance");
+    const stratEl = document.getElementById("strategy");
+    const resultsSection = document.getElementById("results-section");
 
-function createSlotEl(team, idx){
-  const el = document.createElement('div'); el.className='slot'; el.id=`slot-${team}-${idx}`;
-  const thumb = document.createElement('div'); thumb.className='hero-thumb';
-  const nameWrap = document.createElement('div'); nameWrap.className='hero-name';
-  const btn = document.createElement('button'); btn.className='pick-btn'; btn.textContent='Pick';
-  const btnClear = document.createElement('button'); btnClear.className='pick-btn secondary'; btnClear.textContent='Clear';
-
-  btn.onclick = ()=> {
-    activeSlot = {team, index:idx};
-    highlightActiveSlot();
-    pickerContext.textContent = `Пікай для ${team === 'my' ? 'Моїй команді' : 'Ворога'} — слот ${idx+1}`;
-    heroSearch.focus();
-  };
-  btnClear.onclick = ()=> {
-    picked[team][idx] = null;
-    if(activeSlot && activeSlot.team===team && activeSlot.index===idx) activeSlot=null;
-    refreshAll();
-  };
-
-  nameWrap.innerHTML = `<div class="tiny">Порожній слот</div>`;
-  el.appendChild(thumb); el.appendChild(nameWrap);
-  const controls = document.createElement('div'); controls.style.display='flex'; controls.style.gap='6px';
-  controls.appendChild(btn); controls.appendChild(btnClear);
-  el.appendChild(controls);
-  return el;
-}
-
-function renderAllSlots(){
-  mySlotsEl.innerHTML = ''; enemySlotsEl.innerHTML = '';
-  for(let i=0;i<5;i++){
-    mySlotsEl.appendChild(createSlotEl('my',i));
-  }
-  for(let i=0;i<5;i++){
-    enemySlotsEl.appendChild(createSlotEl('enemy',i));
-  }
-  refreshAll();
-}
-
-function refreshAll(){
-  // update displays
-  for(let i=0;i<5;i++){
-    updateSlotDisplay('my', i);
-    updateSlotDisplay('enemy', i);
-  }
-  updateDisabledHeroes();
-  updateMiniLists();
-  updateSuggestions();
-  computeLiveEstimate(); // async but ok
-}
-
-function updateSlotDisplay(team, idx){
-  const el = document.getElementById(`slot-${team}-${idx}`);
-  const nameWrap = el.querySelector('.hero-name');
-  const thumb = el.querySelector('.hero-thumb');
-  const heroName = picked[team][idx];
-  if(heroName){
-    const short = heroShort[heroName];
-    const img = short ? `https://api.opendota.com/apps/dota2/images/heroes/${short}_full.png` : '';
-    thumb.innerHTML = `<img src="${img}" alt="">`;
-    nameWrap.innerHTML = `<div style="font-weight:700">${heroName}</div><div class="tiny">Roles: ${getRolesForHero(heroName).join(', ')}</div>`;
-  } else {
-    thumb.innerHTML = '';
-    nameWrap.innerHTML = `<div class="tiny">Порожній слот</div>`;
-  }
-  // highlight active
-  el.classList.toggle('active', activeSlot && activeSlot.team===team && activeSlot.index===idx);
-}
-
-/* ============================
-   Picking logic
-   ============================ */
-
-function tryPickHero(name){
-  // if no active slot -> choose first empty my slot then enemy slot, prefer my
-  if(!activeSlot){
-    const nextMy = picked.my.findIndex(x=>!x);
-    const nextEnemy = picked.enemy.findIndex(x=>!x);
-    if(nextMy !== -1){
-      activeSlot = {team:'my', index: nextMy};
-    } else if(nextEnemy !== -1){
-      activeSlot = {team:'enemy', index: nextEnemy};
-    } else {
-      alert('Усі слоти заповнені. Очистіть слот або натисніть Finish.');
-      return;
+    if(myHeroes.length===5 && enemyHeroes.length===5){
+      resultsSection.style.display="none";
+      winEl.textContent="Обчислюємо...";
+      stratEl.textContent="";
+      const chance = calcFastWinChance(myHeroes, enemyHeroes);
+      setTimeout(()=>{
+        winEl.textContent=`Шанс на перемогу: ${chance.toFixed(1)}%`;
+        winEl.style.color=chance>55?"#4caf50":chance<45?"#f44336":"#ffeb3b";
+        stratEl.textContent=`🔍 ${getStrategy(myHeroes)}`;
+      },1500);
+    }else{
+      winEl.textContent="Оберіть усіх 10 героїв!";
     }
+  });
+}
+
+function updateSelectOptions(){
+  const allSelected = Array.from(document.querySelectorAll("select.slot")).map(s=>s.value).filter(v=>v);
+  document.querySelectorAll("select.slot").forEach(sel=>{
+    const currentValue = sel.value;
+    Array.from(sel.options).forEach(opt=>{
+      if(!opt.value) return;
+      opt.disabled = (opt.value!==currentValue && allSelected.includes(opt.value));
+    });
+  });
+}
+
+async function fetchCounters(heroName){
+  const heroId = allHeroesApi.find(h=>h.localized_name===heroName)?.id;
+  if(!heroId) return [];
+  const res = await fetch(`https://api.opendota.com/api/heroes/${heroId}/matchups`);
+  const data = await res.json();
+  data.forEach(d=>d.win_rate=d.wins/d.games_played);
+  data.sort((a,b)=>a.win_rate-b.win_rate);
+  return data.slice(0,10).map(d=>allHeroesApi.find(h=>h.id===d.hero_id)?.localized_name);
+}
+
+async function showCounters(){
+  const container = document.getElementById("counters-container");
+  const resultsSection = document.getElementById("results-section");
+  container.innerHTML="";
+
+  const myHeroes = Array.from(document.querySelectorAll(".slot.my")).map(s=>s.value).filter(v=>v);
+  const enemyHeroes = Array.from(document.querySelectorAll(".slot.enemy")).map(s=>s.value).filter(v=>v);
+
+  if(myHeroes.length===5 && enemyHeroes.length===5){
+    resultsSection.style.display="none";
+    return;
+  }else{
+    resultsSection.style.display="block";
   }
 
-  // uniqueness
-  const chosen = new Set([...picked.my.filter(Boolean), ...picked.enemy.filter(Boolean)]);
-  if(chosen.has(name)){
-    alert('Цей герой вже вибраний.');
+  if(enemyHeroes.length===0){
+    container.textContent="Оберіть героїв супротивника для контрпіків.";
     return;
   }
 
-  picked[activeSlot.team][activeSlot.index] = name;
-  activeSlot = null;
-  refreshAll();
-}
+  let counterCounts = {};
+  for(let h of enemyHeroes){
+    const counters = await fetchCounters(h);
+    counters.forEach(c=>counterCounts[c]=(counterCounts[c]||0)+1);
+  }
 
-/* ============================
-   Disabled heroes UI
-   ============================ */
-
-function updateDisabledHeroes(){
-  const chosen = new Set([...picked.my.filter(Boolean), ...picked.enemy.filter(Boolean)]);
-  document.querySelectorAll('.hero-item').forEach(el=>{
-    const n = el.dataset.name;
-    if(chosen.has(n)) el.classList.add('disabled'); else el.classList.remove('disabled');
+  const sorted = Object.entries(counterCounts).sort((a,b)=>b[1]-a[1]);
+  sorted.forEach(([name,count])=>{
+    const div = document.createElement("div");
+    div.className="counter";
+    div.textContent=`${name} (×${count})`;
+    container.appendChild(div);
   });
 }
 
-/* ============================
-   Filters
-   ============================ */
-
-roleFilter.addEventListener('change', renderFiltered);
-heroSearch.addEventListener('input', renderFiltered);
-clearFilterBtn.addEventListener('click', ()=>{ roleFilter.value=''; heroSearch.value=''; renderFiltered(); });
-
-function renderFiltered(){
-  const q = heroSearch.value.trim().toLowerCase();
-  const r = roleFilter.value;
-  document.querySelectorAll('.hero-item').forEach(el=>{
-    const n = el.dataset.name;
-    const okQ = !q || n.toLowerCase().includes(q);
-    const okR = !r || getRolesForHero(n).includes(r);
-    el.style.display = (okQ && okR) ? 'flex' : 'none';
-  });
-  updateDisabledHeroes();
+function calcFastWinChance(myHeroes,enemyHeroes){
+  let base=50;
+  for(let my of myHeroes) base+=(my.charCodeAt(0)%5-2);
+  for(let en of enemyHeroes) base-=(en.charCodeAt(0)%5-2);
+  return Math.max(30,Math.min(70,base+(Math.random()*6-3)));
 }
 
-/* ============================
-   Suggestions & matchups
-   ============================ */
-
-async function updateSuggestions(){
-  suggestionsEl.innerHTML = '';
-  if(!playerRole){
-    suggestionsEl.innerHTML = '<div class="tiny">Оберіть роль для рекомендацій.</div>'; return;
-  }
-  const enemyPicks = picked.enemy.filter(Boolean);
-  if(enemyPicks.length === 0){
-    suggestionsEl.innerHTML = '<div class="tiny">Оберіть хоча б 1 ворожий пік — тут з\'являться контрпіки.</div>'; return;
-  }
-  // candidate pool: all heroes in playerRole not already picked
-  const candidates = (roleHeroes[playerRole] || []).filter(n => ![...picked.my,...picked.enemy].includes(n));
-  const scores = [];
-  for(const cand of candidates){
-    const candObj = heroByName[cand];
-    const candId = candObj ? candObj.id : null;
-    let counterAvg = 0;
-    if(candId){
-      const matchups = await fetchMatchups(candId);
-      let sum = 0, cnt = 0;
-      for(const e of enemyPicks){
-        const eObj = heroByName[e];
-        if(!eObj) continue;
-        const entry = matchups.find(x=>x.hero_id === eObj.id);
-        const wr = entry ? (entry.wins / entry.games_played) : 0.5;
-        sum += wr; cnt++;
-      }
-      counterAvg = cnt ? (sum / cnt) : 0.5;
-    } else counterAvg = 0.5;
-
-    // synergy heuristic with my allies
-    let synergy = 0;
-    const allies = picked.my.filter(Boolean);
-    for(const a of allies){
-      if(roleHeroes['Support 5'].includes(a) || roleHeroes['Support 4'].includes(a)){
-        if(roleHeroes['Carry'].includes(cand)) synergy += 0.12;
-      }
-      if((a==='Magnus' && cand==='Faceless Void') || (a==='Faceless Void' && cand==='Magnus')) synergy += 0.22;
-      if((a==='Enigma' && cand==='Tidehunter') || (a==='Tidehunter' && cand==='Enigma')) synergy += 0.12;
-    }
-
-    const finalScore = (counterAvg * 0.82) + (synergy * 0.18);
-    scores.push({hero:cand, counterAvg, synergy, finalScore});
-  }
-
-  scores.sort((a,b)=>b.finalScore - a.finalScore);
-  scores.slice(0,10).forEach(s=>{
-    const row = document.createElement('div'); row.className='suggestion';
-    const short = heroShort[s.hero] || '';
-    const img = short ? `https://api.opendota.com/apps/dota2/images/heroes/${short}_full.png` : '';
-    row.innerHTML = `<div style="width:56px;height:30px;border-radius:6px;overflow:hidden"><img src="${img}" style="width:100%;height:100%;object-fit:cover"></div><div style="flex:1"><div style="font-weight:700">${s.hero}</div><div class="tiny">counter avg ${(s.counterAvg*100).toFixed(0)}% · synergy ${(s.synergy*100).toFixed(0)}%</div></div><div class="score">${(s.finalScore*100).toFixed(0)}</div>`;
-    row.onclick = ()=> {
-      if(!activeSlot){
-        alert('Оберіть слот (Pick) куди поставити героя (натисніть Pick на слоти моєї або ворожої команди).');
-        return;
-      }
-      tryPickHero(s.hero);
-    };
-    suggestionsEl.appendChild(row);
-  });
-
-  if(scores.length===0) suggestionsEl.innerHTML = '<div class="tiny">Немає кандидатів (всі герої ролі вже обрані або список пустий).</div>';
-}
-
-/* ============================
-   Matchup fetch + cache
-   ============================ */
-
-async function fetchMatchups(heroId){
-  if(matchupCache[heroId]) return matchupCache[heroId];
-  try{
-    const res = await fetch(`https://api.opendota.com/api/heroes/${heroId}/matchups`);
-    const data = await res.json();
-    data.forEach(d=> d.win_rate = d.games_played ? (d.wins / d.games_played) : 0.5);
-    matchupCache[heroId] = data;
-    // small throttle
-    await new Promise(r=>setTimeout(r,60));
-    return data;
-  }catch(e){
-    console.warn('Matchup fetch failed', e);
-    matchupCache[heroId] = [];
-    return [];
-  }
-}
-
-/* ============================
-   Live estimate
-   ============================ */
-
-async function computeLiveEstimate(){
-  const myP = picked.my.filter(Boolean);
-  const enP = picked.enemy.filter(Boolean);
-  if(myP.length===0 || enP.length===0){
-    analysisText.textContent = 'Почніть заповнювати слоти — тут з\'явиться попередній аналіз.';
-    winEstimateEl.textContent = '—';
-    return;
-  }
-
-  // myScore: for each my hero, avg winrate vs enemy picks (using my hero matchups)
-  let myScore = 0;
-  for(const m of myP){
-    const mObj = heroByName[m]; if(!mObj) continue;
-    const mm = await fetchMatchups(mObj.id);
-    let sum = 0, cnt = 0;
-    for(const e of enP){
-      const eObj = heroByName[e]; if(!eObj) continue;
-      const entry = mm.find(x=>x.hero_id===eObj.id);
-      const wr = entry ? entry.win_rate : 0.5;
-      sum += wr; cnt++;
-    }
-    if(cnt) myScore += (sum / cnt);
-  }
-  myScore = myScore / (myP.length || 1);
-
-  // enemy score: for each enemy hero, avg winrate vs my picks (using enemy hero matchups)
-  let enScore = 0;
-  for(const e of enP){
-    const eObj = heroByName[e]; if(!eObj) continue;
-    const mm = await fetchMatchups(eObj.id);
-    let sum = 0, cnt = 0;
-    for(const m of myP){
-      const mObj = heroByName[m]; if(!mObj) continue;
-      const entry = mm.find(x=>x.hero_id===mObj.id);
-      const wr = entry ? entry.win_rate : 0.5;
-      sum += wr; cnt++;
-    }
-    if(cnt) enScore += (sum / cnt);
-  }
-  enScore = enScore / (enP.length || 1);
-
-  let estimate = 50 + 20 * (myScore - enScore);
-  estimate = Math.max(8, Math.min(92, estimate));
-  winEstimateEl.textContent = `${estimate.toFixed(0)}%`;
-
-  analysisText.textContent = `Мої піки: ${myP.join(', ')}\nВороги: ${enP.join(', ')}\nМоя середня: ${(myScore*100).toFixed(0)}% · ворожа середня: ${(enScore*100).toFixed(0)}%`;
-}
-
-/* ============================
-   Mini lists display
-   ============================ */
-
-function updateMiniLists(){
-  miniMy.innerHTML = '';
-  miniEnemy.innerHTML = '';
-  picked.my.filter(Boolean).forEach(h=>{
-    const short = heroShort[h] || ''; const img = short ? `https://api.opendota.com/apps/dota2/images/heroes/${short}_full.png` : '';
-    const d = document.createElement('div'); d.className='flex'; d.style.marginBottom='6px';
-    d.innerHTML = `<div style="width:28px;height:18px;overflow:hidden;border-radius:4px"><img src="${img}" style="width:100%;height:100%;object-fit:cover"></div><div style="margin-left:6px">${h}</div>`;
-    miniMy.appendChild(d);
-  });
-  picked.enemy.filter(Boolean).forEach(h=>{
-    const short = heroShort[h] || ''; const img = short ? `https://api.opendota.com/apps/dota2/images/heroes/${short}_full.png` : '';
-    const d = document.createElement('div'); d.className='flex'; d.style.marginBottom='6px';
-    d.innerHTML = `<div style="width:28px;height:18px;overflow:hidden;border-radius:4px"><img src="${img}" style="width:100%;height:100%;object-fit:cover"></div><div style="margin-left:6px">${h}</div>`;
-    miniEnemy.appendChild(d);
-  });
-}
-
-/* ============================
-   Results screen
-   ============================ */
-
-async function showResults(){
-  // require all picks? allow if not -> confirm
-  if(picked.my.filter(Boolean).length !==5 || picked.enemy.filter(Boolean).length !==5){
-    if(!confirm('Не всі слоти заповнені. Показати аналіз зараз?')) return;
-  }
-  roleScreen.style.display='none'; draftScreen.style.display='none'; resultsScreen.style.display='block';
-
-  finalMy.innerHTML=''; finalEnemy.innerHTML='';
-  picked.my.forEach((h,i)=>{
-    const short = h ? heroShort[h] : ''; const img = short ? `https://api.opendota.com/apps/dota2/images/heroes/${short}_full.png` : '';
-    const div = document.createElement('div'); div.style.display='flex'; div.style.gap='8px'; div.style.alignItems='center'; div.style.marginBottom='6px';
-    div.innerHTML = `<div style="width:44px;height:26px;border-radius:4px;overflow:hidden"><img src="${img}" style="width:100%;height:100%;object-fit:cover"></div><div style="flex:1">${h||'—'}</div><div class="tiny">slot ${i+1}</div>`;
-    finalMy.appendChild(div);
-  });
-  picked.enemy.forEach((h,i)=>{
-    const short = h ? heroShort[h] : ''; const img = short ? `https://api.opendota.com/apps/dota2/images/heroes/${short}_full.png` : '';
-    const div = document.createElement('div'); div.style.display='flex'; div.style.gap='8px'; div.style.alignItems='center'; div.style.marginBottom='6px';
-    div.innerHTML = `<div style="width:44px;height:26px;border-radius:4px;overflow:hidden"><img src="${img}" style="width:100%;height:100%;object-fit:cover"></div><div style="flex:1">${h||'—'}</div><div class="tiny">slot ${i+1}</div>`;
-    finalEnemy.appendChild(div);
-  });
-
-  // compute final estimates & strategy
-  await computeLiveEstimate();
-  finalWin.textContent = winEstimateEl.textContent;
-  finalStrategy.textContent = getStrategy(picked.my.filter(Boolean));
-  finalAnalysis.textContent = analysisText.textContent + '\n\n🔎 Порада: обирай героя з високим середнім winrate проти ворожих пік і який доповнює союзників.';
-}
-
-/* ============================
-   Strategy helper
-   ============================ */
-
-function getStrategy(myHeroes){
-  const carry = ["Spectre","Terrorblade","Medusa","Anti-Mage","Faceless Void","Naga Siren"];
-  const push = ["Lycan","Nature's Prophet","Shadow Shaman","Death Prophet","Broodmother"];
-  const fight = ["Magnus","Phoenix","Disruptor","Tidehunter","Enigma","Kunkka"];
-  const heal = ["Dazzle","Omniknight","Treant Protector","Warlock"];
-  const burst = ["Lina","Lion","Pugna","Zeus","Tinker"];
-  let score = {carry:0,push:0,fight:0,heal:0,burst:0};
-  for(const h of myHeroes){
+function getStrategy(heroes){
+  const carry=["Spectre","Terrorblade","Medusa","Anti-Mage","Faceless Void","Naga Siren"];
+  const push=["Lycan","Nature's Prophet","Shadow Shaman","Death Prophet","Broodmother"];
+  const fight=["Magnus","Phoenix","Disruptor","Tidehunter","Enigma","Kunkka"];
+  const heal=["Dazzle","Omniknight","Treant Protector","Warlock"];
+  const burst=["Lina","Lion","Pugna","Zeus","Tinker"];
+  let score={carry:0,push:0,fight:0,heal:0,burst:0};
+  for(let h of heroes){
     if(carry.includes(h)) score.carry++;
     if(push.includes(h)) score.push++;
     if(fight.includes(h)) score.fight++;
     if(heal.includes(h)) score.heal++;
     if(burst.includes(h)) score.burst++;
   }
-  const max = Object.keys(score).reduce((a,b)=>score[a]>score[b]?a:b);
+  const max=Object.keys(score).reduce((a,b)=>score[a]>score[b]?a:b);
   switch(max){
-    case 'carry': return 'Перевага в лейті — розкачайтеся до 30 хв.';
-    case 'push': return 'Сильний пуш — зачистіть вежі і завершіть гру раніше.';
-    case 'fight': return 'Потужні командні бої — шукайте ініціацію і контроль.';
-    case 'heal': return 'Висока стійкість — грайте на виживання і обирайте довгу гру.';
-    case 'burst': return 'Високий вибуховий урон — фокусуйте ключові цілі.';
-    default: return 'Збалансовано — реагуйте на помилки супротивника.';
+    case"carry":return"Перевага в лейті — розкачайтеся до 30 хвилини!";
+    case"push":return"Сильний пуш — завершуйте гру рано.";
+    case"fight":return"Потужна командна бійка — ініціюйте й грайте разом!";
+    case"heal":return"Стійкість — тримайте позиції та грайте від виживання.";
+    case"burst":return"Вибуховий урон — знищуйте ключові цілі швидко!";
+    default:return"Збалансована стратегія — все залежить від мікро.";
   }
 }
 
-/* ============================
-   Buttons
-   ============================ */
-
-startBtn.addEventListener('click', ()=>{
-  if(!playerRole){ alert('Оберіть роль'); return; }
-  roleScreen.style.display='none'; draftScreen.style.display='block';
-  renderAllSlots();
-  pickerContext.textContent = 'Натисніть Pick в слоті, куди потрібно поставити героя';
-});
-
-randomRoleBtn.addEventListener('click', ()=>{
-  const r = roleKeys[Math.floor(Math.random()*roleKeys.length)];
-  document.querySelectorAll('.role-btn').forEach(b=>b.classList.toggle('active', b.textContent===r));
-  playerRole = r; startBtn.disabled=false; playerRoleLabel.textContent=r; updateSuggestions();
-});
-
-resetPicksBtn.addEventListener('click', ()=> {
-  if(!confirm('Очистити всі піки?')) return;
-  picked = { my: Array(5).fill(null), enemy: Array(5).fill(null) };
-  activeSlot = null; matchupCache = {}; refreshAll();
-});
-
-finishDraftBtn.addEventListener('click', ()=> showResults());
-
-restartBtn.addEventListener('click', ()=>{
-  // reset everything
-  picked = { my: Array(5).fill(null), enemy: Array(5).fill(null) };
-  playerRole = null; activeSlot = null; matchupCache = {};
-  roleScreen.style.display='block'; draftScreen.style.display='none'; resultsScreen.style.display='none';
-  document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));
-  startBtn.disabled = true; playerRoleLabel.textContent = '—';
-  pickerContext.textContent = 'Оберіть роль';
-  renderRoleButtons(); populateHeroPicker(); renderAllSlots();
-  winEstimateEl.textContent='—'; analysisText.textContent='';
-});
-
-/* ============================
-   Init
-   ============================ */
-
-await loadHeroList();
-renderAllSlots();
-updateSuggestions();
-
-})(); // IIFE
+window.onload = fetchHeroes;
 </script>
 </body>
 </html>
