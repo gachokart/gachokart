@@ -24,15 +24,10 @@
       width: 48%;
       box-sizing: border-box;
     }
-    .role-label {
-      font-size: 13px;
-      color: #aaa;
-      margin-top: 6px;
-    }
     select {
       width: 100%;
       padding: 8px;
-      margin: 4px 0 12px 0;
+      margin: 6px 0 12px 0;
       font-size: 14px;
       background: #333;
       color: #fff;
@@ -75,18 +70,9 @@
       cursor: pointer;
       transition: background 0.3s ease;
     }
-    button:hover {
-      background: #66bb6a;
-    }
-    #win-chance {
-      font-weight: bold;
-      font-size: 18px;
-    }
-    #strategy {
-      margin-top: 10px;
-      font-size: 17px;
-      color: #ccc;
-    }
+    button:hover { background: #66bb6a; }
+    #win-chance { font-weight: bold; font-size: 18px; }
+    #strategy { margin-top: 10px; font-size: 17px; color: #ccc; }
   </style>
 </head>
 <body>
@@ -96,30 +82,12 @@
   <div class="teams">
     <div class="team" id="my-team">
       <h2>Моя команда</h2>
-      <div class="role-label">Carry</div>
-      <select class="slot my"><option value="">-- Оберіть героя --</option></select>
-      <div class="role-label">Mid</div>
-      <select class="slot my"><option value="">-- Оберіть героя --</option></select>
-      <div class="role-label">Offlane</div>
-      <select class="slot my"><option value="">-- Оберіть героя --</option></select>
-      <div class="role-label">Support 4</div>
-      <select class="slot my"><option value="">-- Оберіть героя --</option></select>
-      <div class="role-label">Support 5</div>
-      <select class="slot my"><option value="">-- Оберіть героя --</option></select>
+      <div id="my-slots"></div>
     </div>
 
     <div class="team" id="enemy-team">
       <h2>Суперник</h2>
-      <div class="role-label">Carry</div>
-      <select class="slot enemy"><option value="">-- Оберіть героя --</option></select>
-      <div class="role-label">Mid</div>
-      <select class="slot enemy"><option value="">-- Оберіть героя --</option></select>
-      <div class="role-label">Offlane</div>
-      <select class="slot enemy"><option value="">-- Оберіть героя --</option></select>
-      <div class="role-label">Support 4</div>
-      <select class="slot enemy"><option value="">-- Оберіть героя --</option></select>
-      <div class="role-label">Support 5</div>
-      <select class="slot enemy"><option value="">-- Оберіть героя --</option></select>
+      <div id="enemy-slots"></div>
     </div>
   </div>
 
@@ -135,9 +103,38 @@
   </div>
 
   <script>
+    // --- АКТУАЛЬНІ СПИСКИ ГЕРОЇВ ПО РОЛЯХ (META 2025) ---
+    const roleHeroes = {
+      Carry: [
+        "Phantom Assassin", "Juggernaut", "Sven", "Morphling",
+        "Faceless Void", "Medusa", "Spectre", "Anti-Mage",
+        "Weaver", "Lifestealer", "Drow Ranger", "Terrorblade"
+      ],
+      Mid: [
+        "Invoker", "Storm Spirit", "Puck", "Queen of Pain",
+        "Shadow Fiend", "Ember Spirit", "Tinker", "Leshrac",
+        "Zeus", "Death Prophet", "Kunkka", "Windranger"
+      ],
+      Offlane: [
+        "Centaur Warrunner", "Tidehunter", "Mars", "Beastmaster",
+        "Dark Seer", "Timbersaw", "Axe", "Bristleback",
+        "Underlord", "Doom", "Magnus", "Slardar"
+      ],
+      "Support 4": [
+        "Rubick", "Earth Spirit", "Tusk", "Mirana",
+        "Snapfire", "Nyx Assassin", "Phoenix", "Clockwerk",
+        "Marci", "Techies", "Pudge", "Spirit Breaker"
+      ],
+      "Support 5": [
+        "Crystal Maiden", "Lion", "Witch Doctor", "Dazzle",
+        "Omniknight", "Warlock", "Shadow Shaman", "Lich",
+        "Oracle", "Treant Protector", "Bane", "Disruptor"
+      ]
+    };
+
     let heroes = [];
-    let heroMap = {}; 
-    let nameToId = {}; 
+    let heroMap = {};
+    let nameToId = {};
 
     async function fetchHeroes() {
       const res = await fetch("https://api.opendota.com/api/heroes");
@@ -145,34 +142,59 @@
       heroes = data.map(h => h.localized_name).sort();
       heroMap = Object.fromEntries(data.map(h => [h.id, h.localized_name]));
       nameToId = Object.fromEntries(data.map(h => [h.localized_name, h.id]));
-      initHeroSelects();
+      initTeamSlots();
       attachEvents();
     }
 
-    function initHeroSelects() {
-      document.querySelectorAll("select.slot").forEach(sel => {
-        heroes.forEach(h => {
-          const opt = document.createElement("option");
-          opt.value = h;
-          opt.text = h;
-          sel.appendChild(opt);
-        });
+    function initTeamSlots() {
+      const mySlots = document.getElementById("my-slots");
+      const enemySlots = document.getElementById("enemy-slots");
+
+      for (let i = 0; i < 5; i++) {
+        mySlots.appendChild(createRoleHeroSelect("my"));
+        enemySlots.appendChild(createRoleHeroSelect("enemy"));
+      }
+    }
+
+    function createRoleHeroSelect(type) {
+      const container = document.createElement("div");
+
+      const roleSel = document.createElement("select");
+      roleSel.innerHTML = `<option value="">-- Оберіть роль --</option>` +
+        Object.keys(roleHeroes).map(r => `<option value="${r}">${r}</option>`).join("");
+
+      const heroSel = document.createElement("select");
+      heroSel.innerHTML = `<option value="">-- Спочатку оберіть роль --</option>`;
+      heroSel.className = `slot ${type}`;
+
+      roleSel.addEventListener("change", () => {
+        const role = roleSel.value;
+        heroSel.innerHTML = `<option value="">-- Оберіть героя --</option>`;
+        if (roleHeroes[role]) {
+          roleHeroes[role].forEach(h => {
+            const opt = document.createElement("option");
+            opt.value = h;
+            opt.textContent = h;
+            heroSel.appendChild(opt);
+          });
+        }
+        updateSelectOptions();
       });
+
+      heroSel.addEventListener("change", async () => {
+        updateSelectOptions();
+        await showCounters();
+      });
+
+      container.appendChild(roleSel);
+      container.appendChild(heroSel);
+      return container;
     }
 
     function attachEvents() {
-      document.querySelectorAll("select.slot").forEach(sel => {
-        sel.addEventListener("change", async () => {
-          updateSelectOptions();
-          await showCounters();
-        });
-      });
-
       document.getElementById("go-button").addEventListener("click", async () => {
-        const myHeroes = Array.from(document.querySelectorAll(".slot.my"))
-          .map(s => s.value).filter(v => v);
-        const enemyHeroes = Array.from(document.querySelectorAll(".slot.enemy"))
-          .map(s => s.value).filter(v => v);
+        const myHeroes = Array.from(document.querySelectorAll(".slot.my")).map(s => s.value).filter(v => v);
+        const enemyHeroes = Array.from(document.querySelectorAll(".slot.enemy")).map(s => s.value).filter(v => v);
         const winEl = document.getElementById("win-chance");
         const stratEl = document.getElementById("strategy");
         const resultsSection = document.getElementById("results-section");
@@ -223,10 +245,8 @@
       const resultsSection = document.getElementById("results-section");
       container.innerHTML = "";
 
-      const myHeroes = Array.from(document.querySelectorAll(".slot.my"))
-        .map(s => s.value).filter(v => v);
-      const enemyHeroes = Array.from(document.querySelectorAll(".slot.enemy"))
-        .map(s => s.value).filter(v => v);
+      const myHeroes = Array.from(document.querySelectorAll(".slot.my")).map(s => s.value).filter(v => v);
+      const enemyHeroes = Array.from(document.querySelectorAll(".slot.enemy")).map(s => s.value).filter(v => v);
 
       if (myHeroes.length === 5 && enemyHeroes.length === 5) {
         resultsSection.style.display = "none";
@@ -270,7 +290,6 @@
       const burst = ["Lina", "Lion", "Pugna", "Zeus", "Tinker"];
 
       let score = { carry: 0, push: 0, fight: 0, heal: 0, burst: 0 };
-
       for (let h of heroes) {
         if (carry.includes(h)) score.carry++;
         if (push.includes(h)) score.push++;
@@ -280,7 +299,6 @@
       }
 
       const max = Object.keys(score).reduce((a, b) => score[a] > score[b] ? a : b);
-
       switch (max) {
         case "carry": return "Перевага в лейті — розкачайтеся до 30 хвилини!";
         case "push": return "Сильний пуш — завершуйте гру рано.";
@@ -295,6 +313,7 @@
   </script>
 </body>
 </html>
+
 
 
 
