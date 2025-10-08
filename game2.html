@@ -345,21 +345,38 @@
   let heroByName = {};              // name->object
   let heroById = {};                // id->object
 
-  // ====== Локальні списки ролей (мінімальні; розширюй за потребою) ======
+  // ====== Fallback: великий локальний список героїв (буде використаний якщо API не відповість) ======
+  // Список з великою кількістю героїв Dota 2 (текстові імена). Якщо хочеш, можу оновити локалізації UA.
+  const ALL_HEROES_FALLBACK = [
+    "Abaddon","Alchemist","Ancient Apparition","Anti-Mage","Arc Warden","Axe","Bane","Batrider","Beastmaster","Bloodseeker",
+    "Bounty Hunter","Brewmaster","Bristleback","Broodmother","Centaur Warrunner","Chaos Knight","Chen","Clinkz","Clockwerk","Crystal Maiden",
+    "Dark Seer","Dark Willow","Dazzle","Death Prophet","Disruptor","Doom","Dragon Knight","Drow Ranger","Earth Spirit","Earthshaker",
+    "Elder Titan","Ember Spirit","Enchantress","Enigma","Faceless Void","Grimstroke","Gyrocopter","Huskar","Invoker","Io",
+    "Jakiro","Juggernaut","Keeper of the Light","Kunkka","Legion Commander","Leshrac","Lich","Lifestealer","Lina","Lion",
+    "Lone Druid","Luna","Lycan","Magnus","Marci","Mars","Medusa","Meepo","Mirana","Monkey King",
+    "Morphling","Naga Siren","Nature's Prophet","Necrophos","Night Stalker","Nyx Assassin","Ogre Magi","Omniknight","Oracle","Outworld Devourer",
+    "Pangolier","Phantom Assassin","Phantom Lancer","Phoenix","Puck","Pudge","Pugna","Queen of Pain","Razor","Riki",
+    "Rubick","Sand King","Shadow Demon","Shadow Fiend","Shadow Shaman","Silencer","Skywrath Mage","Slardar","Slark","Snapfire",
+    "Sniper","Spectre","Spirit Breaker","Storm Spirit","Sven","Techies","Templar Assassin","Terrorblade","Tidehunter","Timbersaw",
+    "Tinker","Tiny","Treant Protector","Troll Warlord","Tusk","Underlord","Undying","Ursa","Vengeful Spirit","Venomancer",
+    "Viper","Visage","Void Spirit","Warlock","Weaver","Windranger","Winter Wyvern","Witch Doctor","Wraith King","Zeus",
+    "Hoodwink","Dawnbreaker","Primal Beast","Muerta","Ringmaster"
+  ];
+
+  // ====== Локальні списки ролей (мінімальні; для показу ролі у чіпі, не для обмеження вибору) ======
   const LOCAL_ROLES = {
-    'Carry': ['Phantom Assassin','Faceless Void','Morphling','Shadow Fiend'],
-    'Mid':   ['Shadow Fiend','Puck','Viper','Morphling'],
-    'Offlane':['Axe','Viper','Earthshaker'],
-    'Support 4':['Earthshaker','Silencer'],
-    'Support 5':['Dazzle','Silencer']
+    'Carry': ['Phantom Assassin','Faceless Void','Morphling','Shadow Fiend','Spectre','Medusa','Anti-Mage','Terrorblade','Juggernaut'],
+    'Mid':   ['Invoker','Puck','Viper','Shadow Fiend','Queen of Pain','Storm Spirit','Tinker','Ember Spirit'],
+    'Offlane':['Axe','Tidehunter','Mars','Beastmaster','Dark Seer','Timbersaw','Underlord'],
+    'Support 4':['Rubick','Tusk','Mirana','Snapfire','Earth Spirit'],
+    'Support 5':['Crystal Maiden','Lion','Witch Doctor','Dazzle','Omniknight']
   };
   function getRolesForHero(name){
     const roles = [];
     for(const r of roleKeys){
-      const base = r === 'Support 4' ? 'Support' : r === 'Support 5' ? 'Support' : r;
       if(LOCAL_ROLES[r]?.includes(name)) roles.push(r);
-      // простий fallback: якщо ім'я містить Support у API-ролях, додати
     }
+    // important: if no local mapping — allow any hero (user wanted можливість обрати будь-якого героя)
     return roles.length ? roles : ['—'];
   }
 
@@ -384,48 +401,57 @@
     }
   }
 
-  // ====== Завантаження героїв з OpenDota з fallback ======
+  // ====== Завантаження героїв з OpenDota з fallback (VARIANT 2) ======
   async function loadHeroes(){
     try{
       const res = await fetch('https://api.opendota.com/api/heroes');
+      if(!res.ok) throw new Error('OpenDota returned ' + res.status);
       const data = await res.json();
-      allHeroesApi = data;
-      heroByName = Object.fromEntries(data.map(h => [h.localized_name, h]));
-      heroById = Object.fromEntries(data.map(h => [h.id, h]));
+      allHeroesApi = data.sort((a,b)=> a.localized_name.localeCompare(b.localized_name));
+      heroByName = Object.fromEntries(allHeroesApi.map(h => [h.localized_name, h]));
+      heroById = Object.fromEntries(allHeroesApi.map(h => [h.id, h]));
+      populateHeroSelectsFromApi();
+      console.info('Heroes loaded from OpenDota API:', allHeroesApi.length);
     }catch(e){
-      console.warn('Heroes API failed, using fallback', e);
-      const fb = [
-        { id:1, localized_name:'Shadow Fiend' },
-        { id:2, localized_name:'Earthshaker' },
-        { id:3, localized_name:'Phantom Assassin' },
-        { id:4, localized_name:'Axe' },
-        { id:5, localized_name:'Silencer' },
-        { id:6, localized_name:'Dazzle' },
-        { id:7, localized_name:'Puck' },
-        { id:8, localized_name:'Faceless Void' },
-        { id:9, localized_name:'Viper' },
-        { id:10, localized_name:'Morphling' }
-      ].map((h,i)=> ({...h, id:h.id ?? (10000+i)}));
-      allHeroesApi = fb;
-      heroByName = Object.fromEntries(fb.map(h => [h.localized_name, h]));
-      heroById = Object.fromEntries(fb.map(h => [h.id, h]));
-    }
-
-    // Заповнюємо селекти
-    for(const h of allHeroesApi){
-      const optA = document.createElement('option');
-      optA.value = h.localized_name;
-      optA.textContent = h.localized_name;
-      heroSelectMy.appendChild(optA);
-
-      const optB = document.createElement('option');
-      optB.value = h.localized_name;
-      optB.textContent = h.localized_name;
-      heroSelectEnemy.appendChild(optB);
+      console.warn('Heroes API failed, using local fallback list', e);
+      // build fallback objects with synthetic ids >=10000
+      allHeroesApi = ALL_HEROES_FALLBACK.map((name,i)=>({
+        id: 10000 + i,
+        localized_name: name,
+        name: 'npc_dota_hero_' + name.toLowerCase().replace(/[^a-z0-9]+/g,'_')
+      })).sort((a,b)=> a.localized_name.localeCompare(b.localized_name));
+      heroByName = Object.fromEntries(allHeroesApi.map(h => [h.localized_name, h]));
+      heroById = Object.fromEntries(allHeroesApi.map(h => [h.id, h]));
+      populateHeroSelectsFromApi();
+      console.info('Fallback heroes loaded:', allHeroesApi.length);
     }
   }
 
-  // ====== Відмальовка ролей і селектора ролей ======
+  function clearSelect(sel){
+    while(sel.firstChild) sel.removeChild(sel.firstChild);
+  }
+  function populateHeroSelectsFromApi(){
+    clearSelect(heroSelectMy);
+    clearSelect(heroSelectEnemy);
+    // add blank first option
+    const blankA = document.createElement('option'); blankA.value = ''; blankA.textContent = '-- Оберіть героя --'; heroSelectMy.appendChild(blankA);
+    const blankB = document.createElement('option'); blankB.value = ''; blankB.textContent = '-- Оберіть героя --'; heroSelectEnemy.appendChild(blankB);
+
+    const names = allHeroesApi.map(h=>h.localized_name).sort((a,b)=>a.localeCompare(b));
+    names.forEach(name => {
+      const optA = document.createElement('option');
+      optA.value = name;
+      optA.textContent = name;
+      heroSelectMy.appendChild(optA);
+
+      const optB = document.createElement('option');
+      optB.value = name;
+      optB.textContent = name;
+      heroSelectEnemy.appendChild(optB);
+    });
+  }
+
+  // ====== Рендер ролей UI ======
   function renderRoleButtons(){
     rolesContainer.innerHTML = '';
     roleFilter.innerHTML = '<option value="">Всі ролі</option>';
@@ -454,7 +480,7 @@
     };
   }
 
-  // ====== Рекомендації контрпіків ======
+  // ====== Рекомендації контрпіків (залишив логіку як у тебе) ======
   async function updateSuggestions(){
     suggestionsEl.innerHTML = '';
     if(!playerRole){
@@ -467,9 +493,10 @@
       return;
     }
 
+    // candidates: усі герої (але фільтр по ролям тут залишено — якщо хочеш, можна прибрати)
     const candidates = allHeroesApi
       .map(h => h.localized_name)
-      .filter(n => getRolesForHero(n).includes(playerRole))
+      .filter(n => getRolesForHero(n).includes(playerRole))   // <--- збережено твою початкову фільтрацію по ролі
       .filter(n => ![...picked.my, ...picked.enemy].includes(n));
 
     const scores = [];
@@ -516,7 +543,7 @@
     });
   }
 
-  // ====== Безпечний live estimate (старий метод для quick preview) ======
+  // ====== Quick live estimate (як у початковому коді) ======
   let estimateGeneration = 0;
   async function computeLiveEstimate(){
     const myP = picked.my.filter(Boolean);
@@ -563,7 +590,7 @@
     analysisText.textContent = `Мої піки: ${myP.join(', ')}\nВороги: ${enP.join(', ')}\nМоя середня: ${(myScore*100).toFixed(0)}% · ворожа середня: ${(enScore*100).toFixed(0)}%`;
   }
 
-  // ====== DraftEval інтеграція для фінальних відсотків ======
+  // ====== DraftEval adapters integration ======
   const adapters = {
     async getHeroMatchups(heroId){
       if(heroId >= 10000) return [];
@@ -578,7 +605,7 @@
     },
     async getLaneMatchup(){ return null; },
     getHeroDb(){
-      // Будуємо базу з API-назв: мінімальні теги/ролі через LOCAL_ROLES
+      // Build hero DB from API fallback names (tags are derived heuristically)
       const db = {};
       for(const h of allHeroesApi){
         const name = h.localized_name;
@@ -593,12 +620,11 @@
     }
   };
 
-  // Простий теговий маппер за іменами (демо; розширюй за потребою)
   function deriveTagsFromName(name){
     const n = name.toLowerCase();
     const tags = [];
     if(n.includes('void')) tags.push('Lockdown','Teamfight','Scaling','BKBPierce');
-    if(n.includes('assassin')) tags.push('Physical','Crit','Scaling');
+    if(n.includes('assassin') || n.includes('phantom') || n.includes('pa')) tags.push('Physical','Crit','Scaling');
     if(n.includes('viper')) tags.push('Magic','AntiRegen','LaneDominance');
     if(n.includes('axe')) tags.push('Initiation','Durable','AntiCarry','BKBPierce');
     if(n.includes('silencer')) tags.push('Silence','AntiCombo','Global');
@@ -607,7 +633,7 @@
     if(n.includes('puck')) tags.push('Elusive','Disables','Teamfight','Magic');
     if(n.includes('morphling')) tags.push('Adaptive','Burst','Scaling','MagicPhysical');
     if(n.includes('shadow fiend')) tags.push('Burst','WaveClear','Tower','ArmorShred');
-    return tags.length ? tags : ['Magic']; // базовий fallback
+    return tags.length ? tags : ['Magic'];
   }
 
   async function updateWinrate() {
@@ -630,7 +656,7 @@
     synergyBEl.textContent = `Синергія: ${(res.scores.B.synergy*100).toFixed(0)} · Контрпіки: ${(res.scores.B.counters*100).toFixed(0)} · Композиція: ${(res.scores.B.composition*100).toFixed(0)}`;
   }
 
-  // ====== Відмальовка команд ======
+  // ====== Render teams ======
   function renderTeam(container, arr, label){
     container.innerHTML = '';
     arr.forEach((name, idx) => {
@@ -661,7 +687,7 @@
     updateSuggestions();
   }
 
-  // ====== Події для селекторів додавання ======
+  // ====== Events for add buttons ======
   addHeroMyBtn.onclick = () => {
     const name = heroSelectMy.value;
     if(!name) return;
@@ -697,6 +723,7 @@
   </script>
 </body>
 </html>
+
 
 
 
