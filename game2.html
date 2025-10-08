@@ -495,9 +495,8 @@
 
     // candidates: усі герої (але фільтр по ролям тут залишено — якщо хочеш, можна прибрати)
     const candidates = allHeroesApi
-      .map(h => h.localized_name)
-      .filter(n => getRolesForHero(n).includes(playerRole))   // <--- збережено твою початкову фільтрацію по ролі
-      .filter(n => ![...picked.my, ...picked.enemy].includes(n));
+  .map(h => h.localized_name)
+  .filter(n => ![...picked.my, ...picked.enemy].includes(n));
 
     const scores = [];
     const CHUNK = 8;
