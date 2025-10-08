@@ -47,7 +47,7 @@
   {
     "id": 6,
     "name": "Abaddon",
-    "roles": ["Carry", "Ranged"],
+    "roles": ["Carry", "Melee"],
     "winrate": 0.5319,
     "pickrate": 0.0732,
     "BestCounters": ["Silencer", "Spectre", "Axe", "Bane", "Wraith King", "Bounty Hunter", "Arc Warden", "Troll Warlord", "Batrider", "Queen of Pain"],
