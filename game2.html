@@ -3,171 +3,123 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dota 2 Counter Picker</title>
+  <title>Dota 2 Counterpick Tool</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #111;
-      color: #eee;
+      background: #101010;
+      color: #f2f2f2;
       text-align: center;
-      margin: 0;
-      padding: 20px;
     }
-    h1 { color: #ffcc00; }
-    .container {
-      display: flex;
-      justify-content: center;
-      gap: 40px;
-      flex-wrap: wrap;
-      margin-bottom: 30px;
-    }
-    select {
-      width: 180px;
+    select, button {
+      margin: 5px;
       padding: 8px;
-      background: #222;
-      color: #fff;
-      border: 1px solid #555;
       border-radius: 8px;
-      margin: 5px 0;
-    }
-    button {
-      padding: 10px 20px;
-      background: #ffcc00;
-      color: #000;
       border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-      margin-top: 20px;
     }
-    button:hover {
-      background: #ffaa00;
+    .team {
+      display: inline-block;
+      margin: 20px;
+      padding: 10px;
+      background: #202020;
+      border-radius: 10px;
     }
     .results {
-      margin-top: 30px;
+      margin-top: 20px;
       font-size: 1.2em;
-    }
-    .hero-card {
-      display: inline-block;
-      background: #222;
-      border-radius: 10px;
-      padding: 10px 20px;
-      margin: 10px;
-      box-shadow: 0 0 10px #000;
     }
   </style>
 </head>
 <body>
-  <h1>Dota 2 Counter Picker</h1>
-  <div class="container">
-    <div>
-      <h2>Моя команда (4 герої)</h2>
-      <div id="myTeam"></div>
-    </div>
-    <div>
-      <h2>Команда противника (5 героїв)</h2>
-      <div id="enemyTeam"></div>
-    </div>
+  <h1>Dota 2 Counterpick Tool</h1>
+
+  <div class="team">
+    <h2>Моя команда (4 герої)</h2>
+    <div id="myTeam"></div>
   </div>
 
-  <button id="goButton">Go</button>
-  <div id="results" class="results"></div>
+  <div class="team">
+    <h2>Суперник (5 героїв)</h2>
+    <div id="enemyTeam"></div>
+  </div>
+
+  <br>
+  <button id="goBtn">Go</button>
+
+  <div class="results" id="results"></div>
 
   <script>
     let heroes = [];
-    let myTeamSelects = [];
-    let enemyTeamSelects = [];
 
-    // Завантаження heroes.json
-    fetch('heroes.json')
-      .then(res => res.json())
-      .then(data => {
-        heroes = data;
-        createSelectors();
-      });
+    async function loadHeroes() {
+      const res = await fetch('heroes.json');
+      heroes = await res.json();
 
-    function createSelectors() {
-      const myDiv = document.getElementById('myTeam');
-      const enemyDiv = document.getElementById('enemyTeam');
-      const heroNames = heroes.map(h => h.name);
+      const myTeamDiv = document.getElementById('myTeam');
+      const enemyTeamDiv = document.getElementById('enemyTeam');
 
       for (let i = 0; i < 4; i++) {
-        const select = createHeroSelect(heroNames, `my${i}`);
-        myDiv.appendChild(select);
-        myTeamSelects.push(select);
+        const sel = document.createElement('select');
+        sel.innerHTML = '<option value="">--Вибери героя--</option>' +
+          heroes.map(h => `<option value="${h.name}">${h.name}</option>`).join('');
+        myTeamDiv.appendChild(sel);
       }
 
       for (let i = 0; i < 5; i++) {
-        const select = createHeroSelect(heroNames, `enemy${i}`);
-        enemyDiv.appendChild(select);
-        enemyTeamSelects.push(select);
+        const sel = document.createElement('select');
+        sel.innerHTML = '<option value="">--Вибери героя--</option>' +
+          heroes.map(h => `<option value="${h.name}">${h.name}</option>`).join('');
+        enemyTeamDiv.appendChild(sel);
       }
     }
 
-    function createHeroSelect(heroNames, id) {
-      const select = document.createElement('select');
-      select.id = id;
-      const emptyOption = document.createElement('option');
-      emptyOption.value = '';
-      emptyOption.text = '— Обери героя —';
-      select.appendChild(emptyOption);
-      heroNames.forEach(name => {
-        const option = document.createElement('option');
-        option.value = name;
-        option.text = name;
-        select.appendChild(option);
+    function calculateBestHeroes(myTeam, enemyTeam) {
+      const remaining = heroes.filter(h => !myTeam.includes(h.name) && !enemyTeam.includes(h.name));
+
+      remaining.forEach(hero => {
+        let synergy = 0;
+        let counter = 0;
+
+        myTeam.forEach(my => {
+          const mate = heroes.find(h => h.name === my);
+          if (mate && mate.synergy) {
+            synergy += mate.synergy[hero.name] || 0;
+          }
+        });
+
+        enemyTeam.forEach(enemy => {
+          const foe = heroes.find(h => h.name === enemy);
+          if (foe && foe.counteredBy) {
+            counter += foe.counteredBy[hero.name] || 0;
+          }
+        });
+
+        hero.score = synergy + counter;
       });
-      return select;
+
+      return remaining.sort((a, b) => b.score - a.score).slice(0, 3);
     }
 
-    document.getElementById('goButton').addEventListener('click', () => {
-      const myHeroes = myTeamSelects.map(s => s.value).filter(Boolean);
-      const enemyHeroes = enemyTeamSelects.map(s => s.value).filter(Boolean);
+    document.getElementById('goBtn').addEventListener('click', () => {
+      const myTeam = Array.from(document.querySelectorAll('#myTeam select')).map(s => s.value).filter(Boolean);
+      const enemyTeam = Array.from(document.querySelectorAll('#enemyTeam select')).map(s => s.value).filter(Boolean);
 
-      if (myHeroes.length < 4 || enemyHeroes.length < 5) {
-        alert("Вибери 4 героїв у свою команду і 5 у команду противника!");
+      if (myTeam.length !== 4 || enemyTeam.length !== 5) {
+        alert('Вибери 4 героїв у свою команду і 5 у команду противника!');
         return;
       }
 
-      const bestPicks = getBestCounters(myHeroes, enemyHeroes);
-      showResults(bestPicks);
+      const best = calculateBestHeroes(myTeam, enemyTeam);
+      const resDiv = document.getElementById('results');
+      resDiv.innerHTML = '<h3>Топ-3 герої для твого піку:</h3>' +
+        best.map(h => `<div>${h.name} (оцінка: ${h.score.toFixed(2)})</div>`).join('');
     });
 
-    function getBestCounters(myHeroes, enemyHeroes) {
-      const mySet = new Set(myHeroes);
-      const counterScores = {};
-
-      heroes.forEach(hero => {
-        if (mySet.has(hero.name) || enemyHeroes.includes(hero.name)) return;
-
-        let score = 0;
-        enemyHeroes.forEach(enemy => {
-          const enemyData = heroes.find(h => h.name === enemy);
-          if (enemyData && enemyData.counters?.includes(hero.name)) score += 2;
-          if (hero.counters?.includes(enemy)) score++;
-        });
-        counterScores[hero.name] = score;
-      });
-
-      return Object.entries(counterScores)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 3)
-        .map(([name]) => name);
-    }
-
-    function showResults(bestPicks) {
-      const resultsDiv = document.getElementById('results');
-      resultsDiv.innerHTML = "<h2>🔹 Найкращі герої для піку:</h2>";
-      bestPicks.forEach(name => {
-        const card = document.createElement('div');
-        card.className = 'hero-card';
-        card.textContent = name;
-        resultsDiv.appendChild(card);
-      });
-    }
+    loadHeroes();
   </script>
 </body>
 </html>
+
 
 
 
