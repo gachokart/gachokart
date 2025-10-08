@@ -1,1292 +1,702 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Dota2 Draft — Роль → Драфт → Результат (10 слотів)</title>
+  <meta charset="UTF-8">
+  <title>Dota 2 Draft Assistant</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root{
-      --bg:#0b0b0b; --panel:#171717; --muted:#9aa1a8; --accent:#4caf50; --glass: rgba(255,255,255,0.03);
+    :root {
+      --bg: #f7f7f9;
+      --panel: #fff;
+      --border: #ddd;
+      --accent: #16a34a;
+      --text: #222;
+      --muted: #666;
     }
-    *{box-sizing:border-box}
-    body{margin:0;padding:22px;font-family:Inter,Arial,Helvetica,sans-serif;background:linear-gradient(180deg,#070707,#121212);color:#e6eef3}
-    .screen{max-width:1200px;margin:0 auto}
-    header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
-    header h1{margin:0;font-size:20px}
-    .card{background:var(--panel);border-radius:10px;padding:14px;}
-    .muted{color:var(--muted);font-size:13px}
-    .roles{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:18px}
-    .role-btn{padding:10px 16px;border-radius:8px;background:var(--glass);color:var(--muted);cursor:pointer;border:1px solid rgba(255,255,255,0.03)}
-    .role-btn.active{background:linear-gradient(90deg,#2b7a3a,#178a6a);color:#fff;box-shadow:0 6px 18px rgba(23,138,106,0.16)}
-    .stage{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.03);font-size:13px}
-    /* draft layout */
-    .draft-grid{display:grid;grid-template-columns:1fr 420px 1fr;gap:16px;margin-top:16px;align-items:start}
-    .team-col{min-height:240px;padding:12px;border-radius:8px;background:linear-gradient(180deg,#121212,#171717);border:1px solid rgba(255,255,255,0.02)}
-    .team-title{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-    .slots{display:flex;flex-direction:column;gap:8px}
-    .slot{display:flex;align-items:center;gap:10px;padding:8px;background:rgba(255,255,255,0.02);border-radius:8px}
-    .slot.active{box-shadow:0 6px 18px rgba(0,0,0,0.6), inset 0 0 0 2px rgba(76,175,80,0.14)}
-    .hero-thumb{width:46px;height:26px;border-radius:4px;overflow:hidden;background:#0c0c0c}
-    .hero-thumb img{width:100%;height:100%;object-fit:cover}
-    .hero-name{flex:1}
-    .pick-btn{padding:6px 10px;border-radius:6px;border:none;background:linear-gradient(90deg,#2b7a3a,#178a6a);color:white;cursor:pointer}
-    .pick-btn.secondary{background:#2b2b2b;border:1px solid rgba(255,255,255,0.03)}
-    /* picker */
-    .picker{background:var(--panel);padding:12px;border-radius:8px;max-height:640px;overflow:auto}
-    .picker .filter-row{display:flex;gap:8px;margin-bottom:10px}
-    .hero-list{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-    .hero-item{display:flex;gap:8px;align-items:center;padding:6px;border-radius:6px;background:rgba(255,255,255,0.01);cursor:pointer}
-    .hero-item.disabled{opacity:0.35;pointer-events:none}
-    .hero-item img{width:40px;height:24px;object-fit:cover;border-radius:4px}
-    .tiny{font-size:12px;color:var(--muted)}
-    /* right panel */
-    .panel{padding:12px;border-radius:8px;background:linear-gradient(180deg,#0f1111,#131313);border:1px solid rgba(255,255,255,0.02)}
-    .suggestions{display:flex;flex-direction:column;gap:8px;margin-top:8px}
-    .suggestion{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);cursor:pointer}
-    .score{min-width:48px;text-align:right;font-weight:600}
-    .results{margin-top:12px;padding:12px;border-radius:8px;background:linear-gradient(180deg,#0f1410,#091213);border:1px solid rgba(255,255,255,0.02)}
-    footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
-    .flex{display:flex;gap:8px;align-items:center}
-    .center{display:flex;align-items:center;justify-content:center}
-    .btn{padding:8px 12px;border-radius:8px;background:var(--accent);border:none;color:#fff;cursor:pointer}
-    .btn.secondary{background:#2b2b2b;border:1px solid rgba(255,255,255,0.03)}
+    body { font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); margin: 0; }
+    #app { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+    h1 { margin: 0 0 12px; }
+    h3 { margin: 0 0 8px; }
+    .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin: 12px 0; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .team { border: 1px dashed var(--border); border-radius: 8px; padding: 10px; }
+    .slotRow { display: flex; gap: 8px; flex-wrap: wrap; min-height: 44px; }
+    .chip { display: inline-flex; gap: 6px; align-items: center; background: #f9fafb; border: 1px solid var(--border); border-radius: 999px; padding: 6px 10px; }
+    .chip .rm { cursor: pointer; color: #b00; font-weight: 700; }
+    .role-btn { margin: 2px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 999px; background:#fff; cursor:pointer; }
+    .role-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .suggestion { padding: 6px 8px; border-bottom: 1px solid var(--border); font-size: 13px; display:flex; justify-content:space-between; gap:8px; }
+    .tiny { font-size: 12px; color: var(--muted); }
+    .analysis-block { margin-top: 6px; font-size: 13px; color: #444; background: #f8f8f8; border: 1px solid #ddd; padding: 6px 8px; border-radius: 6px; }
+    .picker { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    select, button { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); background:#fff; cursor: pointer; }
+    button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    pre { white-space: pre-wrap; }
   </style>
 </head>
 <body>
-  <div class="screen">
-    <header>
-      <h1>Dota 2 — Draft Simulator (ручно обираєш усіх 10)</h1>
-      <div style="margin-left:auto" class="muted">Джерело даних: OpenDota API</div>
-    </header>
+  <div id="app">
+    <h1>Dota 2 Draft Assistant</h1>
 
-    <!-- Role select -->
-    <div id="role-screen" class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div class="tiny">КРОК 1</div>
-          <h2>Оберіть роль, за яку ви будете грати</h2>
-        </div>
-        <div class="stage">Початковий вибір ролі</div>
+    <!-- Панель вибору ролі -->
+    <div class="panel">
+      <h3>Оберіть свою роль</h3>
+      <div id="rolesContainer"></div>
+      <div class="picker">
+        <select id="roleFilter"></select>
+        <button id="startBtn" class="primary" disabled>Почати драфт</button>
+        <div class="tiny">Ваша роль: <span id="playerRoleLabel">—</span></div>
       </div>
-
-      <div class="roles" id="roles-container"></div>
-
-      <div style="display:flex;justify-content:center;margin-top:16px;gap:12px">
-        <button id="start-draft" class="btn" disabled>Start Draft</button>
-        <button id="random-role" class="btn secondary">Випадкова роль</button>
-      </div>
-      <p class="tiny center" style="margin-top:12px">Після Start Draft — відкриється екран драфту. Натисни Pick у потрібному слоті (в своїй або ворожій команді), а потім вибери героя з правого списка.</p>
     </div>
 
-    <!-- Draft -->
-    <div id="draft-screen" style="display:none">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
-        <div class="tiny">КРОК 2 — Драфт (вручну за обидві команди)</div>
-        <div class="stage" id="stage-indicator">Draft stage</div>
-      </div>
-
-      <div class="draft-grid">
-        <!-- My team -->
-        <div class="team-col card">
-          <div class="team-title"><strong>Моя команда</strong><div style="margin-left:auto" class="tiny">Роль: <span id="player-role-label">—</span></div></div>
-          <div class="slots" id="my-slots"></div>
-        </div>
-
-        <!-- picker center -->
-        <div>
-          <div class="picker card">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-              <div>
-                <div class="tiny">Hero picker</div>
-                <div style="font-weight:600" id="picker-context">Оберіть слот (Pick) зліва або справа</div>
-              </div>
-              <div style="display:flex;gap:8px;align-items:center">
-                <div class="tiny">Пошук</div>
-                <input id="hero-search" placeholder="Фільтр..." style="background:#0f0f0f;border-radius:6px;border:1px solid rgba(255,255,255,0.03);padding:6px;color:#fff" />
-              </div>
-            </div>
-
-            <div class="filter-row" style="margin-bottom:10px">
-              <select id="role-filter" style="flex:1;padding:8px;border-radius:6px;background:#0f0f0f;color:#fff;border:1px solid rgba(255,255,255,0.03)">
-                <option value="">Всі ролі</option>
-              </select>
-              <button id="clear-filter" class="btn secondary">Очистити</button>
-            </div>
-
-            <div class="hero-list" id="hero-list"></div>
-
-            <div style="margin-top:10px" class="tiny">Іконки героїв — OpenDota. Обраний герой виключається з списка.</div>
-          </div>
-
-          <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
-            <button id="reset-picks" class="btn secondary">Очистити всі піки</button>
-            <button id="finish-draft" class="btn">Завершити драфт</button>
+    <!-- Основний драфт -->
+    <div class="panel">
+      <div class="grid2">
+        <div class="team">
+          <h3>Моя команда</h3>
+          <div id="myTeam" class="slotRow"></div>
+          <div>Winrate: <span id="winrateA">—</span></div>
+          <div id="synergyA" class="analysis-block"></div>
+          <div class="picker" style="margin-top:8px;">
+            <select id="heroSelectMy"></select>
+            <button id="addHeroMy">Додати</button>
+            <button id="clearMy">Очистити</button>
           </div>
         </div>
-
-        <!-- enemy -->
-        <div class="team-col card">
-          <div class="team-title"><strong>Суперник</strong><div style="margin-left:auto" class="tiny">Ваші контрпіки оновлюються після вибору ворога</div></div>
-          <div class="slots" id="enemy-slots"></div>
-        </div>
-      </div>
-
-      <!-- Right panel (suggestions moved here for clarity) -->
-      <div style="display:flex;gap:16px;margin-top:14px">
-        <div style="flex:1" class="panel card">
-          <h3>Рекомендовані контрпіки для вашої ролі</h3>
-          <div class="tiny">Оновлюються динамічно після кожного вибору ворога. Базуються на даних OpenDota matchups.</div>
-          <div id="suggestions" class="suggestions"></div>
-
-          <div class="results" id="live-analysis">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <div class="tiny">Поточний аналіз</div>
-              <div class="tiny">Шанс (орієнтир)</div>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
-              <div style="flex:1">
-                <div id="analysis-text" class="tiny">Почніть вибирати піки — тут з'явиться аналіз.</div>
-              </div>
-              <div style="width:120px;text-align:right">
-                <div id="win-estimate" style="font-weight:700;font-size:20px">—</div>
-                <div class="tiny" style="color:var(--muted)">Приблизно</div>
-              </div>
-            </div>
+        <div class="team">
+          <h3>Ворожа команда</h3>
+          <div id="enemyTeam" class="slotRow"></div>
+          <div>Winrate: <span id="winrateB">—</span></div>
+          <div id="synergyB" class="analysis-block"></div>
+          <div class="picker" style="margin-top:8px;">
+            <select id="heroSelectEnemy"></select>
+            <button id="addHeroEnemy">Додати</button>
+            <button id="clearEnemy">Очистити</button>
           </div>
-        </div>
-
-        <div style="width:300px" class="panel card">
-          <h3>Поточний статус</h3>
-          <div class="tiny">Мої піки</div>
-          <div id="mini-my" style="margin-bottom:8px"></div>
-          <div class="tiny">Ворожі піки</div>
-          <div id="mini-enemy"></div>
         </div>
       </div>
     </div>
 
-    <!-- results -->
-    <div id="results-screen" style="display:none;margin-top:14px">
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <h2>Результат драфту</h2>
-            <div class="tiny">Аналіз пік/контрпік та загальний шанс (симуляція)</div>
-          </div>
-          <div style="text-align:right">
-            <div style="font-size:22px;font-weight:700" id="final-win">—</div>
-            <div class="tiny" id="final-strategy">—</div>
-          </div>
-        </div>
-
-        <div style="display:flex;gap:12px;margin-top:12px">
-          <div style="flex:1" class="team-col card">
-            <strong>Моя команда</strong>
-            <div id="final-my" style="margin-top:8px"></div>
-          </div>
-          <div style="flex:1" class="team-col card">
-            <strong>Суперник</strong>
-            <div id="final-enemy" style="margin-top:8px"></div>
-          </div>
-        </div>
-
-        <div style="margin-top:12px">
-          <h3>Короткий аналіз</h3>
-          <div id="final-analysis" class="tiny"></div>
-        </div>
-
-        <div style="margin-top:12px" class="center">
-          <button id="restart" class="btn secondary">Почати спочатку</button>
-        </div>
-      </div>
+    <!-- Рекомендації контрпіків -->
+    <div class="panel">
+      <h3>Рекомендовані контрпіки</h3>
+      <div id="suggestionsEl"></div>
     </div>
 
-    <footer>Made with ❤️ — використовує OpenDota API для статистики матчапів. Якщо API недоступний — система працюватиме з локальними списками.</footer>
+    <!-- Живий аналіз -->
+    <div class="panel">
+      <h3>Аналіз драфту</h3>
+      <div id="winEstimate" style="font-weight:700; font-size:18px;">—</div>
+      <pre id="analysisText"></pre>
+    </div>
   </div>
-  
-<script>
-(async function(){
 
-/* ============================
-   Конфіг (рольові списки)
-   ============================ */
+  <!-- === DraftEval module (advanced synergy + counters + composition) === -->
+  <script>
+  (function(){
+    const DraftEval = {};
+    const CFG = {
+      WEIGHTS: { counters: 0.38, synergy: 0.34, composition: 0.18, lanes: 0.10 },
+      SUB: {
+        synergy: { combos: 0.35, timing: 0.25, roles: 0.20, coverage: 0.20 },
+        composition: { damageMix: 0.28, control: 0.28, sustainSave: 0.22, pushRosh: 0.22 },
+        lanes: { offlaneVsCarry: 0.40, midVsMid: 0.35, pos4pos5: 0.25 }
+      },
+      LOGODDS: { minGames: 200, maxGames: 5000, baseShrink: 0.45 },
+      DECAY: { halfLifeDays: 21 },
+      PROB_CLAMP: { min: 0.08, max: 0.92 }
+    };
+    const clamp = (x,a,b)=>Math.max(a,Math.min(b,x));
+    const sigmoid = x => 1/(1+Math.exp(-x));
+    const decayWeight = (days, halfLife)=> Math.pow(0.5, days/halfLife);
+    const logit = p => { p = clamp(p,1e-6,1-1e-6); return Math.log(p/(1-p)); };
+    const invLogit = l => sigmoid(l);
 
-const roleHeroes = {
-  Carry: ["Phantom Assassin","Juggernaut","Sven","Morphling","Faceless Void","Medusa","Spectre","Anti-Mage","Weaver","Lifestealer","Drow Ranger","Terrorblade"],
-  Mid: ["Invoker","Storm Spirit","Puck","Queen of Pain","Shadow Fiend","Ember Spirit","Tinker","Leshrac","Zeus","Death Prophet","Kunkka","Windranger"],
-  Offlane: ["Centaur Warrunner","Tidehunter","Mars","Beastmaster","Dark Seer","Timbersaw","Axe","Bristleback","Underlord","Doom","Magnus","Slardar"],
-  "Support 4": ["Rubick","Earth Spirit","Tusk","Mirana","Snapfire","Nyx Assassin","Phoenix","Clockwerk","Marci","Techies","Pudge","Spirit Breaker"],
-  "Support 5": ["Crystal Maiden","Lion","Witch Doctor","Dazzle","Omniknight","Warlock","Shadow Shaman","Lich","Oracle","Treant Protector","Bane","Disruptor"]
-};
+    // Lightweight hero DB (fallback; реальний пул прийде з API-адаптера)
+    const HERO_DB = {
+      1:{name:'Shadow Fiend',roles:['Mid','Carry'],tags:['Burst','WaveClear','Tower','ArmorShred']},
+      2:{name:'Earthshaker',roles:['Support','Offlane'],tags:['Initiation','Teamfight','StunChain']},
+      3:{name:'Phantom Assassin',roles:['Carry'],tags:['Physical','Crit','Scaling']},
+      4:{name:'Axe',roles:['Offlane'],tags:['Initiation','Durable','AntiCarry','BKBPierce']},
+      5:{name:'Silencer',roles:['Support'],tags:['Silence','AntiCombo','Global']},
+      6:{name:'Dazzle',roles:['Support'],tags:['Save','Sustain','Armor','SoftDispel']},
+      7:{name:'Puck',roles:['Mid'],tags:['Elusive','Disables','Teamfight','Magic']},
+      8:{name:'Faceless Void',roles:['Carry'],tags:['Teamfight','Lockdown','Scaling','BKBPierce']},
+      9:{name:'Viper',roles:['Mid','Offlane'],tags:['AntiRegen','LaneDominance','Magic']},
+      10:{name:'Morphling',roles:['Carry','Mid'],tags:['Adaptive','Burst','Scaling','MagicPhysical']}
+    };
+    const KNOWN_COMBOS = [
+      { heroes:[2,8], score:+0.28, reason:'Chrono + Echo Slam' },
+      { heroes:[6,3], score:+0.16, reason:'Dazzle save + PA crit' },
+      { heroes:[7,2], score:+0.14, reason:'Dream Coil + Fissure' },
+      { heroes:[1,2], score:+0.12, reason:'SF razes setup' }
+    ];
+    const TIMING = {
+      early: ['LaneDominance','AntiRegen','Durable'],
+      mid: ['Teamfight','Initiation','Silence','Save','WaveClear','Push','Tower'],
+      late: ['Scaling','Crit','Adaptive','Lockdown']
+    };
+    const TAG_COUNTERS = [
+      { a:'Silence', b:'Elusive', impact:+0.15 },
+      { a:'AntiCarry', b:'Scaling', impact:+0.12 },
+      { a:'ArmorShred', b:'Physical', impact:+0.08 },
+      { a:'BKBPierce', b:'Teamfight', impact:+0.10 }
+    ];
 
-const roleKeys = Object.keys(roleHeroes);
+    const DefaultAdapters = {
+      async getHeroMatchups(heroId){ return []; },
+      async getLaneMatchup(){ return null; },
+      getHeroDb(){ return HERO_DB; }
+    };
 
-/* ============================
-   State
-   ============================ */
+    async function countersComponent(teamA, teamB, adapters, options){
+      const patchDate = options?.patchDate ? new Date(options.patchDate) : new Date();
+      let total = 0, pairs = 0, details = [];
+      for(const a of teamA){
+        const matchups = await adapters.getHeroMatchups(a);
+        const map = new Map(matchups.map(m => [m.opponentId, m]));
+        for(const b of teamB){
+          const m = map.get(b);
+          let contrib = 0, conf = 0, dw = 1;
+          if(m && m.games>0){
+            const wr = m.wins / m.games;
+            const lo = logit(wr);
+            const g = clamp((m.games - CFG.LOGODDS.minGames)/(CFG.LOGODDS.maxGames - CFG.LOGODDS.minGames),0,1);
+            conf = (1-CFG.LOGODDS.baseShrink)*g + CFG.LOGODDS.baseShrink*0.5;
+            const last = m.lastUpdate ? new Date(m.lastUpdate) : patchDate;
+            const days = Math.max(0,(patchDate - last)/(1000*3600*24));
+            dw = decayWeight(days, CFG.DECAY.halfLifeDays);
+            contrib = lo * conf * dw;
+          }
+          total += contrib; pairs++;
+          details.push({ a, b, contrib, conf, decay:dw });
+        }
+      }
+      const score = pairs ? (total/pairs) : 0;
+      return { score, details };
+    }
 
-let allHeroesApi = [];
-let heroByName = {};
-let heroShort = {};
-let picked = { my: Array(5).fill(null), enemy: Array(5).fill(null) };
-let playerRole = null;
-let activeSlot = null; // {team:'my'|'enemy', index}
-let matchupCache = {};
+    function synergyComponent(team, heroDb){
+      const ids = team.slice();
+      const tagsByHero = ids.map(id => heroDb[id]?.tags || []);
+      const allTags = new Set(tagsByHero.flat());
 
-/* ============================
-   UI refs
-   ============================ */
+      let comboScore = 0;
+      for(const c of KNOWN_COMBOS){
+        if(c.heroes.every(h=>ids.includes(h))) comboScore += c.score;
+      }
+      const countTiming = (bucket)=> tagsByHero.reduce((acc,t)=> acc + t.filter(x=>TIMING[bucket].includes(x)).length,0);
+      const e = countTiming('early'), m = countTiming('mid'), l = countTiming('late');
+      const totalTL = e+m+l || 1;
+      const balance = 1 - Math.abs((l/totalTL) - (m/totalTL));
+      const timingScore = 0.18*(e/totalTL) + 0.42*(m/totalTL) + 0.40*(l/totalTL) + 0.15*balance;
 
-const rolesContainer = document.getElementById('roles-container');
-const startBtn = document.getElementById('start-draft');
-const randomRoleBtn = document.getElementById('random-role');
-const playerRoleLabel = document.getElementById('player-role-label');
+      const roles = ids.map(id => heroDb[id]?.roles || []);
+      const ideal = ['Carry','Mid','Offlane','Support','Support'];
+      const used = new Set(); let matched=0;
+      for(const r of ideal){
+        const idx = roles.findIndex((rs,i)=> !used.has(i) && rs.includes(r));
+        if(idx!==-1){ used.add(idx); matched++; }
+      }
+      const roleScore = matched/ideal.length;
 
-const roleScreen = document.getElementById('role-screen');
-const draftScreen = document.getElementById('draft-screen');
-const resultsScreen = document.getElementById('results-screen');
+      const coverage = {
+        damageMix: (allTags.has('Magic') && allTags.has('Physical')) || allTags.has('MagicPhysical') ? 1 : 0,
+        control: (allTags.has('StunChain') || allTags.has('Lockdown') || allTags.has('Disables')) ? 1 : 0,
+        sustainSave: (allTags.has('Save') || allTags.has('Sustain') || allTags.has('SoftDispel')) ? 1 : 0,
+        pushRosh: (allTags.has('Push') || allTags.has('Tower')) ? 1 : 0
+      };
+      const coverageScore = 0.28*coverage.damageMix + 0.28*coverage.control + 0.22*coverage.sustainSave + 0.22*coverage.pushRosh;
 
-const mySlotsEl = document.getElementById('my-slots');
-const enemySlotsEl = document.getElementById('enemy-slots');
-const heroListEl = document.getElementById('hero-list');
-const roleFilter = document.getElementById('role-filter');
-const heroSearch = document.getElementById('hero-search');
-const clearFilterBtn = document.getElementById('clear-filter');
-const pickerContext = document.getElementById('picker-context');
-const suggestionsEl = document.getElementById('suggestions');
-const winEstimateEl = document.getElementById('win-estimate');
-const analysisText = document.getElementById('analysis-text');
-const miniMy = document.getElementById('mini-my');
-const miniEnemy = document.getElementById('mini-enemy');
+      let score =
+        CFG.SUB.synergy.combos   * comboScore +
+        CFG.SUB.synergy.timing   * timingScore +
+        CFG.SUB.synergy.roles    * roleScore +
+        CFG.SUB.synergy.coverage * coverageScore;
 
-const resetPicksBtn = document.getElementById('reset-picks');
-const finishDraftBtn = document.getElementById('finish-draft');
+      return {
+        score,
+        details: { comboScore, timingScore, roleScore, coverageScore, timing:{e,m,l} }
+      };
+    }
 
-const finalMy = document.getElementById('final-my');
-const finalEnemy = document.getElementById('final-enemy');
-const finalWin = document.getElementById('final-win');
-const finalStrategy = document.getElementById('final-strategy');
-const finalAnalysis = document.getElementById('final-analysis');
-const restartBtn = document.getElementById('restart');
+    function tagCounters(teamA, teamB, heroDb){
+      let s=0;
+      const tagsA = new Set(teamA.flatMap(id => heroDb[id]?.tags || []));
+      const tagsB = new Set(teamB.flatMap(id => heroDb[id]?.tags || []));
+      for(const rule of TAG_COUNTERS){
+        if(tagsA.has(rule.a) && tagsB.has(rule.b)) s += rule.impact;
+      }
+      return { score:s };
+    }
 
-/* ============================
-   Init roles UI
-   ============================ */
+    function compositionComponent(team, heroDb){
+      const tags = team.flatMap(id => heroDb[id]?.tags || []);
+      const countTag = t => tags.filter(x=>x===t).length;
+      const manyMagic = countTag('Magic') >= 3;
+      const manyPhysical = countTag('Physical') >= 3;
+      const redundancyPenalty = (manyMagic ? 0.10 : 0) + (manyPhysical ? 0.10 : 0);
+      const controlLevel = Math.min(1, (countTag('StunChain')*0.5 + countTag('Lockdown')*0.5 + countTag('Disables')*0.35));
+      const saveLevel = Math.min(1, (countTag('Save')*0.6 + countTag('Sustain')*0.4 + countTag('SoftDispel')*0.4));
+      const pushLevel = Math.min(1, (countTag('Push')*0.6 + countTag('Tower')*0.5 + countTag('ArmorShred')*0.3));
+      const damageMix = (tags.includes('MagicPhysical') || (tags.includes('Magic') && tags.includes('Physical'))) ? 1 : 0;
+      const dmScore = 1*damageMix - redundancyPenalty;
 
-function renderRoleButtons(){
-  rolesContainer.innerHTML = '';
-  roleKeys.forEach(r=>{
-    const b = document.createElement('button');
-    b.className = 'role-btn';
-    b.textContent = r;
-    b.onclick = ()=> {
-      document.querySelectorAll('.role-btn').forEach(x=>x.classList.remove('active'));
-      b.classList.add('active');
-      playerRole = r;
-      startBtn.disabled = false;
-      playerRoleLabel.textContent = r;
+      const score =
+        CFG.SUB.composition.damageMix   * dmScore +
+        CFG.SUB.composition.control     * controlLevel +
+        CFG.SUB.composition.sustainSave * saveLevel +
+        CFG.SUB.composition.pushRosh    * pushLevel;
+
+      return { score, details:{ dmScore, controlLevel, saveLevel, pushLevel, redundancyPenalty } };
+    }
+
+    async function lanesComponent(){ return { score:0, details:[] }; }
+
+    function aggregateToProbability(parts){
+      const z =
+        CFG.WEIGHTS.counters    * parts.counters.score +
+        CFG.WEIGHTS.synergy     * parts.synergy.score +
+        CFG.WEIGHTS.composition * parts.composition.score +
+        CFG.WEIGHTS.lanes       * (parts.lanes?.score || 0);
+      let p = invLogit(z);
+      p = clamp(p, CFG.PROB_CLAMP.min, CFG.PROB_CLAMP.max);
+      return p;
+    }
+
+    DraftEval.evaluate = async function(teamA, teamB, adapters=DefaultAdapters, options={}){
+      const heroDb = adapters.getHeroDb();
+
+      const countersA = await countersComponent(teamA, teamB, adapters, options);
+      const countersB = await countersComponent(teamB, teamA, adapters, options);
+
+      const synergyA = synergyComponent(teamA, heroDb);
+      const synergyB = synergyComponent(teamB, heroDb);
+
+      const tagCtrA = tagCounters(teamA, teamB, heroDb);
+      const tagCtrB = tagCounters(teamB, teamA, heroDb);
+      synergyA.score += 0.12 * tagCtrA.score;
+      synergyB.score += 0.12 * tagCtrB.score;
+
+      const compA = compositionComponent(teamA, heroDb);
+      const compB = compositionComponent(teamB, heroDb);
+
+      const lanesA = await lanesComponent(teamA, teamB);
+      const lanesB = await lanesComponent(teamB, teamA);
+
+      const probA = aggregateToProbability({ counters:countersA, synergy:synergyA, composition:compA, lanes:lanesA });
+      const probB = aggregateToProbability({ counters:countersB, synergy:synergyB, composition:compB, lanes:lanesB });
+
+      const sum = probA + probB;
+      let winProbA = probA / sum;
+      let winProbB = probB / sum;
+      const clampProb = x => clamp(x, CFG.PROB_CLAMP.min, CFG.PROB_CLAMP.max);
+      winProbA = clampProb(winProbA);
+      winProbB = clampProb(winProbB);
+
+      return {
+        winProbA, winProbB,
+        scores: {
+          A: { counters: countersA.score, synergy: synergyA.score, composition: compA.score, lanes: lanesA.score },
+          B: { counters: countersB.score, synergy: synergyB.score, composition: compB.score, lanes: lanesB.score }
+        },
+        breakdown: {
+          A: { counters: countersA.details, synergy: synergyA.details, composition: compA.details, lanes: lanesA.details },
+          B: { counters: countersB.details, synergy: synergyB.details, composition: compB.details, lanes: lanesB.details }
+        }
+      };
+    };
+
+    window.DraftEval = DraftEval;
+  })();
+  </script>
+  <!-- === End DraftEval module === -->
+
+  <script>
+  // ====== Глобальні змінні UI/стану ======
+  const rolesContainer = document.getElementById('rolesContainer');
+  const roleFilter = document.getElementById('roleFilter');
+  const startBtn = document.getElementById('startBtn');
+  const playerRoleLabel = document.getElementById('playerRoleLabel');
+
+  const myTeamEl = document.getElementById('myTeam');
+  const enemyTeamEl = document.getElementById('enemyTeam');
+  const heroSelectMy = document.getElementById('heroSelectMy');
+  const heroSelectEnemy = document.getElementById('heroSelectEnemy');
+  const addHeroMyBtn = document.getElementById('addHeroMy');
+  const addHeroEnemyBtn = document.getElementById('addHeroEnemy');
+  const clearMyBtn = document.getElementById('clearMy');
+  const clearEnemyBtn = document.getElementById('clearEnemy');
+
+  const suggestionsEl = document.getElementById('suggestionsEl');
+  const winEstimateEl = document.getElementById('winEstimate');
+  const analysisText = document.getElementById('analysisText');
+  const winrateAEl = document.getElementById('winrateA');
+  const winrateBEl = document.getElementById('winrateB');
+  const synergyAEl = document.getElementById('synergyA');
+  const synergyBEl = document.getElementById('synergyB');
+
+  const roleKeys = ['Carry','Mid','Offlane','Support 4','Support 5'];
+  let playerRole = '';
+
+  const picked = { my: [null,null,null,null,null], enemy: [null,null,null,null,null] };
+
+  let allHeroesApi = [];            // [{id, localized_name, name, ...}]
+  let heroByName = {};              // name->object
+  let heroById = {};                // id->object
+
+  // ====== Локальні списки ролей (мінімальні; розширюй за потребою) ======
+  const LOCAL_ROLES = {
+    'Carry': ['Phantom Assassin','Faceless Void','Morphling','Shadow Fiend'],
+    'Mid':   ['Shadow Fiend','Puck','Viper','Morphling'],
+    'Offlane':['Axe','Viper','Earthshaker'],
+    'Support 4':['Earthshaker','Silencer'],
+    'Support 5':['Dazzle','Silencer']
+  };
+  function getRolesForHero(name){
+    const roles = [];
+    for(const r of roleKeys){
+      const base = r === 'Support 4' ? 'Support' : r === 'Support 5' ? 'Support' : r;
+      if(LOCAL_ROLES[r]?.includes(name)) roles.push(r);
+      // простий fallback: якщо ім'я містить Support у API-ролях, додати
+    }
+    return roles.length ? roles : ['—'];
+  }
+
+  // ====== Кеш матчапів ======
+  const matchupCache = {};
+
+  async function fetchMatchups(heroId){
+    if (heroId >= 10000) return []; // пропускаємо фейкові ID з fallback
+    if (matchupCache[heroId]) return matchupCache[heroId];
+
+    try{
+      const res = await fetch(`https://api.opendota.com/api/heroes/${heroId}/matchups`);
+      const data = await res.json();
+      data.forEach(d => d.win_rate = d.games_played ? (d.wins / d.games_played) : 0.5);
+      matchupCache[heroId] = data;
+      await new Promise(r => setTimeout(r, 60)); // легкий throttle
+      return data;
+    }catch(e){
+      console.warn('Matchup fetch failed', e);
+      matchupCache[heroId] = [];
+      return [];
+    }
+  }
+
+  // ====== Завантаження героїв з OpenDota з fallback ======
+  async function loadHeroes(){
+    try{
+      const res = await fetch('https://api.opendota.com/api/heroes');
+      const data = await res.json();
+      allHeroesApi = data;
+      heroByName = Object.fromEntries(data.map(h => [h.localized_name, h]));
+      heroById = Object.fromEntries(data.map(h => [h.id, h]));
+    }catch(e){
+      console.warn('Heroes API failed, using fallback', e);
+      const fb = [
+        { id:1, localized_name:'Shadow Fiend' },
+        { id:2, localized_name:'Earthshaker' },
+        { id:3, localized_name:'Phantom Assassin' },
+        { id:4, localized_name:'Axe' },
+        { id:5, localized_name:'Silencer' },
+        { id:6, localized_name:'Dazzle' },
+        { id:7, localized_name:'Puck' },
+        { id:8, localized_name:'Faceless Void' },
+        { id:9, localized_name:'Viper' },
+        { id:10, localized_name:'Morphling' }
+      ].map((h,i)=> ({...h, id:h.id ?? (10000+i)}));
+      allHeroesApi = fb;
+      heroByName = Object.fromEntries(fb.map(h => [h.localized_name, h]));
+      heroById = Object.fromEntries(fb.map(h => [h.id, h]));
+    }
+
+    // Заповнюємо селекти
+    for(const h of allHeroesApi){
+      const optA = document.createElement('option');
+      optA.value = h.localized_name;
+      optA.textContent = h.localized_name;
+      heroSelectMy.appendChild(optA);
+
+      const optB = document.createElement('option');
+      optB.value = h.localized_name;
+      optB.textContent = h.localized_name;
+      heroSelectEnemy.appendChild(optB);
+    }
+  }
+
+  // ====== Відмальовка ролей і селектора ролей ======
+  function renderRoleButtons(){
+    rolesContainer.innerHTML = '';
+    roleFilter.innerHTML = '<option value="">Всі ролі</option>';
+    roleKeys.forEach(r => {
+      const b = document.createElement('button');
+      b.className = 'role-btn';
+      b.textContent = r;
+      b.onclick = () => {
+        document.querySelectorAll('.role-btn').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        playerRole = r;
+        startBtn.disabled = false;
+        playerRoleLabel.textContent = r;
+        updateSuggestions();
+      };
+      rolesContainer.appendChild(b);
+
+      const opt = document.createElement('option');
+      opt.value = r; opt.textContent = r;
+      roleFilter.appendChild(opt);
+    });
+    roleFilter.onchange = () => {
+      playerRole = roleFilter.value || '';
+      playerRoleLabel.textContent = playerRole || '—';
       updateSuggestions();
     };
-    rolesContainer.appendChild(b);
-  });
-  roleKeys.forEach(r=>{
-    const opt = document.createElement('option'); opt.value=r; opt.textContent=r; roleFilter.appendChild(opt);
-  });
-}
-renderRoleButtons();
-
-/* ============================
-   Load OpenDota heroes
-   ============================ */
-
-async function loadHeroList(){
-  try{
-    const res = await fetch('https://api.opendota.com/api/heroes');
-    const data = await res.json();
-    allHeroesApi = data.sort((a,b)=>a.localized_name.localeCompare(b.localized_name));
-    allHeroesApi.forEach(h=>{
-      heroByName[h.localized_name] = h;
-      heroShort[h.localized_name] = h.name.replace('npc_dota_hero_','');
-    });
-    populateHeroPicker();
-  }catch(e){
-    console.warn('OpenDota heroes failed, fallback to role list',e);
-    // fallback minimal
-    const fallback = new Set();
-    Object.values(roleHeroes).flat().forEach(n=>fallback.add(n));
-    allHeroesApi = Array.from(fallback).map((name,i)=>({
-      id: 10000+i, localized_name: name, name: 'npc_dota_hero_'+name.toLowerCase().replace(/\s+/g,'_')
-    }));
-    allHeroesApi.forEach(h=>{
-      heroByName[h.localized_name] = h;
-      heroShort[h.localized_name] = h.name.replace('npc_dota_hero_','');
-    });
-    populateHeroPicker();
   }
-}
 
-/* ============================
-   Populate hero picker list
-   ============================ */
-
-function heroItemHtml(name){
-  const short = heroShort[name] || '';
-  const img = short ? `https://api.opendota.com/apps/dota2/images/heroes/${short}_full.png` : '';
-  return `<div style="display:flex;align-items:center;gap:8px;width:100%"><div style="width:44px;height:26px;border-radius:4px;overflow:hidden"><img src="${img}" alt=""></div><div style="flex:1"><div style="font-weight:600">${name}</div><div class="tiny" style="opacity:0.7">${getRolesForHero(name).join(', ')}</div></div><div class="tiny">pick</div></div>`;
-}
-
-function getRolesForHero(name){
-  return roleKeys.filter(r=>roleHeroes[r].includes(name));
-}
-
-function populateHeroPicker(){
-  heroListEl.innerHTML = '';
-  const names = allHeroesApi.map(h=>h.localized_name);
-  names.forEach(n=>{
-    const div = document.createElement('div');
-    div.className = 'hero-item';
-    div.dataset.name = n;
-    div.innerHTML = heroItemHtml(n);
-    div.onclick = ()=> tryPickHero(n);
-    heroListEl.appendChild(div);
-  });
-  updateDisabledHeroes();
-}
-
-/* ============================
-   Slots rendering (both teams)
-   ============================ */
-
-function createSlotEl(team, idx){
-  const el = document.createElement('div'); el.className='slot'; el.id=`slot-${team}-${idx}`;
-  const thumb = document.createElement('div'); thumb.className='hero-thumb';
-  const nameWrap = document.createElement('div'); nameWrap.className='hero-name';
-  const btn = document.createElement('button'); btn.className='pick-btn'; btn.textContent='Pick';
-  const btnClear = document.createElement('button'); btnClear.className='pick-btn secondary'; btnClear.textContent='Clear';
-
-  btn.onclick = ()=> {
-    activeSlot = {team, index:idx};
-    highlightActiveSlot();
-    pickerContext.textContent = `Пікай для ${team === 'my' ? 'Моїй команді' : 'Ворога'} — слот ${idx+1}`;
-    heroSearch.focus();
-  };
-  btnClear.onclick = ()=> {
-    picked[team][idx] = null;
-    if(activeSlot && activeSlot.team===team && activeSlot.index===idx) activeSlot=null;
-    refreshAll();
-  };
-
-  nameWrap.innerHTML = `<div class="tiny">Порожній слот</div>`;
-  el.appendChild(thumb); el.appendChild(nameWrap);
-  const controls = document.createElement('div'); controls.style.display='flex'; controls.style.gap='6px';
-  controls.appendChild(btn); controls.appendChild(btnClear);
-  el.appendChild(controls);
-  return el;
-}
-
-function renderAllSlots(){
-  mySlotsEl.innerHTML = ''; enemySlotsEl.innerHTML = '';
-  for(let i=0;i<5;i++){
-    mySlotsEl.appendChild(createSlotEl('my',i));
-  }
-  for(let i=0;i<5;i++){
-    enemySlotsEl.appendChild(createSlotEl('enemy',i));
-  }
-  refreshAll();
-}
-
-function refreshAll(){
-  // update displays
-  for(let i=0;i<5;i++){
-    updateSlotDisplay('my', i);
-    updateSlotDisplay('enemy', i);
-  }
-  updateDisabledHeroes();
-  updateMiniLists();
-  updateSuggestions();
-  computeLiveEstimate(); // async but ok
-}
-
-function updateSlotDisplay(team, idx){
-  const el = document.getElementById(`slot-${team}-${idx}`);
-  const nameWrap = el.querySelector('.hero-name');
-  const thumb = el.querySelector('.hero-thumb');
-  const heroName = picked[team][idx];
-  if(heroName){
-    const short = heroShort[heroName];
-    const img = short ? `https://api.opendota.com/apps/dota2/images/heroes/${short}_full.png` : '';
-    thumb.innerHTML = `<img src="${img}" alt="">`;
-    nameWrap.innerHTML = `<div style="font-weight:700">${heroName}</div><div class="tiny">Roles: ${getRolesForHero(heroName).join(', ')}</div>`;
-  } else {
-    thumb.innerHTML = '';
-    nameWrap.innerHTML = `<div class="tiny">Порожній слот</div>`;
-  }
-  // highlight active
-  el.classList.toggle('active', activeSlot && activeSlot.team===team && activeSlot.index===idx);
-}
-
-/* ============================
-   Picking logic
-   ============================ */
-
-function tryPickHero(name){
-  // if no active slot -> choose first empty my slot then enemy slot, prefer my
-  if(!activeSlot){
-    const nextMy = picked.my.findIndex(x=>!x);
-    const nextEnemy = picked.enemy.findIndex(x=>!x);
-    if(nextMy !== -1){
-      activeSlot = {team:'my', index: nextMy};
-    } else if(nextEnemy !== -1){
-      activeSlot = {team:'enemy', index: nextEnemy};
-    } else {
-      alert('Усі слоти заповнені. Очистіть слот або натисніть Finish.');
+  // ====== Рекомендації контрпіків ======
+  async function updateSuggestions(){
+    suggestionsEl.innerHTML = '';
+    if(!playerRole){
+      suggestionsEl.innerHTML = '<div class="tiny">Оберіть роль для рекомендацій.</div>';
       return;
     }
-  }
-
-  // uniqueness
-  const chosen = new Set([...picked.my.filter(Boolean), ...picked.enemy.filter(Boolean)]);
-  if(chosen.has(name)){
-    alert('Цей герой вже вибраний.');
-    return;
-  }
-
-  picked[activeSlot.team][activeSlot.index] = name;
-  activeSlot = null;
-  refreshAll();
-}
-
-/* ============================
-   Disabled heroes UI
-   ============================ */
-
-function updateDisabledHeroes(){
-  const chosen = new Set([...picked.my.filter(Boolean), ...picked.enemy.filter(Boolean)]);
-  document.querySelectorAll('.hero-item').forEach(el=>{
-    const n = el.dataset.name;
-    if(chosen.has(n)) el.classList.add('disabled'); else el.classList.remove('disabled');
-  });
-}
-
-/* ============================
-   Filters
-   ============================ */
-
-roleFilter.addEventListener('change', renderFiltered);
-heroSearch.addEventListener('input', renderFiltered);
-clearFilterBtn.addEventListener('click', ()=>{ roleFilter.value=''; heroSearch.value=''; renderFiltered(); });
-
-function renderFiltered(){
-  const q = heroSearch.value.trim().toLowerCase();
-  const r = roleFilter.value;
-  document.querySelectorAll('.hero-item').forEach(el=>{
-    const n = el.dataset.name;
-    const okQ = !q || n.toLowerCase().includes(q);
-    const okR = !r || getRolesForHero(n).includes(r);
-    el.style.display = (okQ && okR) ? 'flex' : 'none';
-  });
-  updateDisabledHeroes();
-}
-
-/* ============================
-   Suggestions & matchups
-   ============================ */
-
-async function updateSuggestions(){
-  suggestionsEl.innerHTML = '';
-  if(!playerRole){
-    suggestionsEl.innerHTML = '<div class="tiny">Оберіть роль для рекомендацій.</div>'; return;
-  }
-  const enemyPicks = picked.enemy.filter(Boolean);
-  if(enemyPicks.length === 0){
-    suggestionsEl.innerHTML = '<div class="tiny">Оберіть хоча б 1 ворожий пік — тут з\'являться контрпіки.</div>'; return;
-  }
-  // candidate pool: all heroes in playerRole not already picked
-  const candidates = allHeroesApi.map(h => h.localized_name).filter(n => ![...picked.my,...picked.enemy].includes(n));
-  const scores = [];
-  for(const cand of candidates){
-    const candObj = heroByName[cand];
-    const candId = candObj ? candObj.id : null;
-    let counterAvg = 0;
-    if(candId){
-      const matchups = await fetchMatchups(candId);
-      let sum = 0, cnt = 0;
-      for(const e of enemyPicks){
-        const eObj = heroByName[e];
-        if(!eObj) continue;
-        const entry = matchups.find(x=>x.hero_id === eObj.id);
-        const wr = entry ? (entry.wins / entry.games_played) : 0.5;
-        sum += wr; cnt++;
-      }
-      counterAvg = cnt ? (sum / cnt) : 0.5;
-    } else counterAvg = 0.5;
-
-    // synergy heuristic with my allies
-    let synergy = 0;
-    const allies = picked.my.filter(Boolean);
-    for(const a of allies){
-      if(roleHeroes['Support 5'].includes(a) || roleHeroes['Support 4'].includes(a)){
-        if(roleHeroes['Carry'].includes(cand)) synergy += 0.12;
-      }
-      if((a==='Magnus' && cand==='Faceless Void') || (a==='Faceless Void' && cand==='Magnus')) synergy += 0.22;
-      if((a==='Enigma' && cand==='Tidehunter') || (a==='Tidehunter' && cand==='Enigma')) synergy += 0.12;
+    const enemyPicks = picked.enemy.filter(Boolean);
+    if(enemyPicks.length === 0){
+      suggestionsEl.innerHTML = '<div class="tiny">Оберіть хоча б 1 ворожий пік — тут з’являться контрпіки.</div>';
+      return;
     }
 
-    const finalScore = (counterAvg * 0.82) + (synergy * 0.18);
-    scores.push({hero:cand, counterAvg, synergy, finalScore});
-  }
+    const candidates = allHeroesApi
+      .map(h => h.localized_name)
+      .filter(n => getRolesForHero(n).includes(playerRole))
+      .filter(n => ![...picked.my, ...picked.enemy].includes(n));
 
-  scores.sort((a,b)=>b.finalScore - a.finalScore);
-  scores.slice(0,10).forEach(s=>{
-    const row = document.createElement('div'); row.className='suggestion';
-    const short = heroShort[s.hero] || '';
-    const img = short ? `https://api.opendota.com/apps/dota2/images/heroes/${short}_full.png` : '';
-    row.innerHTML = `<div style="width:56px;height:30px;border-radius:6px;overflow:hidden"><img src="${img}" style="width:100%;height:100%;object-fit:cover"></div><div style="flex:1"><div style="font-weight:700">${s.hero}</div><div class="tiny">counter avg ${(s.counterAvg*100).toFixed(0)}% · synergy ${(s.synergy*100).toFixed(0)}%</div></div><div class="score">${(s.finalScore*100).toFixed(0)}</div>`;
-    row.onclick = ()=> {
-      if(!activeSlot){
-        alert('Оберіть слот (Pick) куди поставити героя (натисніть Pick на слоти моєї або ворожої команди).');
-        return;
-      }
-      tryPickHero(s.hero);
-    };
-    suggestionsEl.appendChild(row);
-  });
+    const scores = [];
+    const CHUNK = 8;
 
-  if(scores.length===0) suggestionsEl.innerHTML = '<div class="tiny">Немає кандидатів (всі герої ролі вже обрані або список пустий).</div>';
-}
+    for (let i = 0; i < candidates.length; i += CHUNK) {
+      const slice = candidates.slice(i, i + CHUNK);
+      const batch = await Promise.all(slice.map(async cand => {
+        const candObj = heroByName[cand];
+        const candId = candObj?.id ?? null;
 
-/* ============================
-   Matchup fetch + cache
-   ============================ */
-
-async function fetchMatchups(heroId){
-  if(matchupCache[heroId]) return matchupCache[heroId];
-  try{
-    const res = await fetch(`https://api.opendota.com/api/heroes/${heroId}/matchups`);
-    const data = await res.json();
-    data.forEach(d=> d.win_rate = d.games_played ? (d.wins / d.games_played) : 0.5);
-    matchupCache[heroId] = data;
-    // small throttle
-    await new Promise(r=>setTimeout(r,60));
-    return data;
-  }catch(e){
-    console.warn('Matchup fetch failed', e);
-    matchupCache[heroId] = [];
-    return [];
-  }
-}
-
-/* ============================
-   Live estimate
-   ============================ */
-
-async function computeLiveEstimate(){
-  const myP = picked.my.filter(Boolean);
-  const enP = picked.enemy.filter(Boolean);
-  if(myP.length===0 || enP.length===0){
-    analysisText.textContent = 'Почніть заповнювати слоти — тут з\'явиться попередній аналіз.';
-    winEstimateEl.textContent = '—';
-    return;
-  }
-
-  // myScore: for each my hero, avg winrate vs enemy picks (using my hero matchups)
-  let myScore = 0;
-  for(const m of myP){
-    const mObj = heroByName[m]; if(!mObj) continue;
-    const mm = await fetchMatchups(mObj.id);
-    let sum = 0, cnt = 0;
-    for(const e of enP){
-      const eObj = heroByName[e]; if(!eObj) continue;
-      const entry = mm.find(x=>x.hero_id===eObj.id);
-      const wr = entry ? entry.win_rate : 0.5;
-      sum += wr; cnt++;
-    }
-    if(cnt) myScore += (sum / cnt);
-  }
-  myScore = myScore / (myP.length || 1);
-
-  // enemy score: for each enemy hero, avg winrate vs my picks (using enemy hero matchups)
-  let enScore = 0;
-  for(const e of enP){
-    const eObj = heroByName[e]; if(!eObj) continue;
-    const mm = await fetchMatchups(eObj.id);
-    let sum = 0, cnt = 0;
-    for(const m of myP){
-      const mObj = heroByName[m]; if(!mObj) continue;
-      const entry = mm.find(x=>x.hero_id===mObj.id);
-      const wr = entry ? entry.win_rate : 0.5;
-      sum += wr; cnt++;
-    }
-    if(cnt) enScore += (sum / cnt);
-  }
-  enScore = enScore / (enP.length || 1);
-
-  let estimate = 50 + 20 * (myScore - enScore);
-  estimate = Math.max(8, Math.min(92, estimate));
-  winEstimateEl.textContent = `${estimate.toFixed(0)}%`;
-
-  analysisText.textContent = `Мої піки: ${myP.join(', ')}\nВороги: ${enP.join(', ')}\nМоя середня: ${(myScore*100).toFixed(0)}% · ворожа середня: ${(enScore*100).toFixed(0)}%`;
-}
-
-/* ============================
-   Mini lists display
-   ============================ */
-
-function updateMiniLists(){
-  miniMy.innerHTML = '';
-  miniEnemy.innerHTML = '';
-  picked.my.filter(Boolean).forEach(h=>{
-    const short = heroShort[h] || ''; const img = short ? `https://api.opendota.com/apps/dota2/images/heroes/${short}_full.png` : '';
-    const d = document.createElement('div'); d.className='flex'; d.style.marginBottom='6px';
-    d.innerHTML = `<div style="width:28px;height:18px;overflow:hidden;border-radius:4px"><img src="${img}" style="width:100%;height:100%;object-fit:cover"></div><div style="margin-left:6px">${h}</div>`;
-    miniMy.appendChild(d);
-  });
-  picked.enemy.filter(Boolean).forEach(h=>{
-    const short = heroShort[h] || ''; const img = short ? `https://api.opendota.com/apps/dota2/images/heroes/${short}_full.png` : '';
-    const d = document.createElement('div'); d.className='flex'; d.style.marginBottom='6px';
-    d.innerHTML = `<div style="width:28px;height:18px;overflow:hidden;border-radius:4px"><img src="${img}" style="width:100%;height:100%;object-fit:cover"></div><div style="margin-left:6px">${h}</div>`;
-    miniEnemy.appendChild(d);
-  });
-}
-
-/* ============================
-   Results screen
-   ============================ */
-
-async function showResults(){
-  // require all picks? allow if not -> confirm
-  if(picked.my.filter(Boolean).length !==5 || picked.enemy.filter(Boolean).length !==5){
-    if(!confirm('Не всі слоти заповнені. Показати аналіз зараз?')) return;
-  }
-  roleScreen.style.display='none'; draftScreen.style.display='none'; resultsScreen.style.display='block';
-
-  finalMy.innerHTML=''; finalEnemy.innerHTML='';
-  picked.my.forEach((h,i)=>{
-    const short = h ? heroShort[h] : ''; const img = short ? `https://api.opendota.com/apps/dota2/images/heroes/${short}_full.png` : '';
-    const div = document.createElement('div'); div.style.display='flex'; div.style.gap='8px'; div.style.alignItems='center'; div.style.marginBottom='6px';
-    div.innerHTML = `<div style="width:44px;height:26px;border-radius:4px;overflow:hidden"><img src="${img}" style="width:100%;height:100%;object-fit:cover"></div><div style="flex:1">${h||'—'}</div><div class="tiny">slot ${i+1}</div>`;
-    finalMy.appendChild(div);
-  });
-  picked.enemy.forEach((h,i)=>{
-    const short = h ? heroShort[h] : ''; const img = short ? `https://api.opendota.com/apps/dota2/images/heroes/${short}_full.png` : '';
-    const div = document.createElement('div'); div.style.display='flex'; div.style.gap='8px'; div.style.alignItems='center'; div.style.marginBottom='6px';
-    div.innerHTML = `<div style="width:44px;height:26px;border-radius:4px;overflow:hidden"><img src="${img}" style="width:100%;height:100%;object-fit:cover"></div><div style="flex:1">${h||'—'}</div><div class="tiny">slot ${i+1}</div>`;
-    finalEnemy.appendChild(div);
-  });
-
-  // compute final estimates & strategy
-  await computeLiveEstimate();
-  finalWin.textContent = winEstimateEl.textContent;
-  finalStrategy.textContent = getStrategy(picked.my.filter(Boolean));
-  finalAnalysis.textContent = analysisText.textContent + '\n\n🔎 Порада: обирай героя з високим середнім winrate проти ворожих пік і який доповнює союзників.';
-}
-
-/* ============================
-   Strategy helper
-   ============================ */
-
-function getStrategy(myHeroes){
-  const carry = ["Spectre","Terrorblade","Medusa","Anti-Mage","Faceless Void","Naga Siren"];
-  const push = ["Lycan","Nature's Prophet","Shadow Shaman","Death Prophet","Broodmother"];
-  const fight = ["Magnus","Phoenix","Disruptor","Tidehunter","Enigma","Kunkka"];
-  const heal = ["Dazzle","Omniknight","Treant Protector","Warlock"];
-  const burst = ["Lina","Lion","Pugna","Zeus","Tinker"];
-  let score = {carry:0,push:0,fight:0,heal:0,burst:0};
-  for(const h of myHeroes){
-    if(carry.includes(h)) score.carry++;
-    if(push.includes(h)) score.push++;
-    if(fight.includes(h)) score.fight++;
-    if(heal.includes(h)) score.heal++;
-    if(burst.includes(h)) score.burst++;
-  }
-  const max = Object.keys(score).reduce((a,b)=>score[a]>score[b]?a:b);
-  switch(max){
-    case 'carry': return 'Перевага в лейті — розкачайтеся до 30 хв.';
-    case 'push': return 'Сильний пуш — зачистіть вежі і завершіть гру раніше.';
-    case 'fight': return 'Потужні командні бої — шукайте ініціацію і контроль.';
-    case 'heal': return 'Висока стійкість — грайте на виживання і обирайте довгу гру.';
-    case 'burst': return 'Високий вибуховий урон — фокусуйте ключові цілі.';
-    default: return 'Збалансовано — реагуйте на помилки супротивника.';
-  }
-}
-
-/* ============================
-   Buttons
-   ============================ */
-
-startBtn.addEventListener('click', ()=>{
-  if(!playerRole){ alert('Оберіть роль'); return; }
-  roleScreen.style.display='none'; draftScreen.style.display='block';
-  renderAllSlots();
-  pickerContext.textContent = 'Натисніть Pick в слоті, куди потрібно поставити героя';
-});
-
-randomRoleBtn.addEventListener('click', ()=>{
-  const r = roleKeys[Math.floor(Math.random()*roleKeys.length)];
-  document.querySelectorAll('.role-btn').forEach(b=>b.classList.toggle('active', b.textContent===r));
-  playerRole = r; startBtn.disabled=false; playerRoleLabel.textContent=r; updateSuggestions();
-});
-
-resetPicksBtn.addEventListener('click', ()=> {
-  if(!confirm('Очистити всі піки?')) return;
-  picked = { my: Array(5).fill(null), enemy: Array(5).fill(null) };
-  activeSlot = null; matchupCache = {}; refreshAll();
-});
-
-finishDraftBtn.addEventListener('click', ()=> showResults());
-
-restartBtn.addEventListener('click', ()=>{
-  // reset everything
-  picked = { my: Array(5).fill(null), enemy: Array(5).fill(null) };
-  playerRole = null; activeSlot = null; matchupCache = {};
-  roleScreen.style.display='block'; draftScreen.style.display='none'; resultsScreen.style.display='none';
-  document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));
-  startBtn.disabled = true; playerRoleLabel.textContent = '—';
-  pickerContext.textContent = 'Оберіть роль';
-  renderRoleButtons(); populateHeroPicker(); renderAllSlots();
-  winEstimateEl.textContent='—'; analysisText.textContent='';
-});
-
-/* ============================
-   Init
-   ============================ */
-
-await loadHeroList();
-renderAllSlots();
-updateSuggestions();
-
-})(); // IIFE
-</script>
-  <!-- === DraftEval module (advanced synergy + counters + synergy) === -->
-<script>
-<script>
-/**
- * DraftEval — високоякісний обчислювач шансів, контрпіків і синергії.
- * Інтеграція:
- *   const res = DraftEval.evaluate([idA1,...],[idB1,...], adapters, { patchDate: '2025-09-25' });
- *   console.log(res.winProbA, res.scores);
- */
-(function(){
-  const DraftEval = {};
-
-  // ===== Config: weights & clamps =====
-  const CFG = {
-    // Ваги компонентів (сума ~1.0)
-    WEIGHTS: {
-      counters: 0.38,     // сила наших героїв проти їхніх (за матчапами)
-      synergy: 0.34,      // внутрішні комбо, таймінг, сумісність ролей
-      composition: 0.18,  // покриття типів шкоди, контролю, сейвів, пуш/рош
-      lanes: 0.10         // прогноз лейнів (якщо доступні ролі/паринги)
-    },
-    // Коефіцієнти всередині компонентів
-    SUB: {
-      synergy: {
-        combos: 0.35, timing: 0.25, roles: 0.20, coverage: 0.20
-      },
-      composition: {
-        damageMix: 0.28, control: 0.28, sustainSave: 0.22, pushRosh: 0.22
-      },
-      lanes: {
-        offlaneVsCarry: 0.40, midVsMid: 0.35, pos4pos5: 0.25
-      }
-    },
-    // Коефіцієнти для log-odds перетворення winrate
-    LOGODDS: {
-      minGames: 200,   // мінімум ігор для базової довіри
-      maxGames: 5000,  // після цього прирости довіри малі
-      baseShrink: 0.45 // дає регулятор до 0 (байєсівський шринк)
-    },
-    // Патч‑decay: чим старіші дані, тим менший внесок
-    DECAY: {
-      halfLifeDays: 21 // через 21 день вага зменшується вдвічі
-    },
-    // Фінальний clamp для ймовірності
-    PROB_CLAMP: { min: 0.08, max: 0.92 }
-  };
-
-  // ===== Helpers =====
-  function clamp(x, a, b){ return Math.max(a, Math.min(b, x)); }
-  function sigmoid(x){ return 1/(1+Math.exp(-x)); }
-  function zScore(x, mean=0, std=1){ return std>0 ? (x-mean)/std : x; }
-  function decayWeight(days, halfLife){ return Math.pow(0.5, days/halfLife); }
-  function logit(p){ p = clamp(p, 1e-6, 1-1e-6); return Math.log(p/(1-p)); }
-  function invLogit(l){ return sigmoid(l); }
-
-  // ===== Default lightweight data (заміни на повний пул) =====
-  const HERO_DB = {
-    // id: { name, roles:[...], tags:[...] }
-    1: { name:'Shadow Fiend', roles:['Mid','Carry'], tags:['Burst','WaveClear','Tower','ArmorShred'] },
-    2: { name:'Earthshaker', roles:['Support','Offlane'], tags:['Initiation','Teamfight','StunChain'] },
-    3: { name:'Phantom Assassin', roles:['Carry'], tags:['Physical','Crit','Scaling'] },
-    4: { name:'Axe', roles:['Offlane'], tags:['Initiation','Durable','AntiCarry','BKBPierce'] },
-    5: { name:'Silencer', roles:['Support'], tags:['Silence','AntiCombo','Global'] },
-    6: { name:'Dazzle', roles:['Support'], tags:['Save','Sustain','Armor','SoftDispel'] },
-    7: { name:'Puck', roles:['Mid'], tags:['Elusive','Disables','Teamfight','Magic'] },
-    8: { name:'Faceless Void', roles:['Carry'], tags:['Teamfight','Lockdown','Scaling','BKBPierce'] },
-    9: { name:'Viper', roles:['Mid','Offlane'], tags:['AntiRegen','LaneDominance','Magic'] },
-    10:{ name:'Morphling', roles:['Carry','Mid'], tags:['Adaptive','Burst','Scaling','MagicPhysical'] }
-  };
-
-  // Відомі комбо (пари/тріо) з бонусами
-  const KNOWN_COMBOS = [
-    { heroes:[2,8], score: +0.28, reason:'Chrono + Echo Slam (wombo)'},
-    { heroes:[6,3], score: +0.16, reason:'Dazzle save + PA crit windows'},
-    { heroes:[7,2], score: +0.14, reason:'Layered control (Dream Coil + Fissure)'},
-    { heroes:[1,2], score: +0.12, reason:'Setup for SF razes with stuns'}
-  ];
-
-  // Таймінг‑мітки для тегів
-  const TIMING = {
-    early: ['LaneDominance','AntiRegen','Durable'],
-    mid: ['Teamfight','Initiation','Silence','Save','WaveClear','Push','Tower'],
-    late: ['Scaling','Crit','Adaptive','Lockdown']
-  };
-
-  // Контр‑приклади на рівні тега (загальна евристика)
-  const TAG_COUNTERS = [
-    { a:'Silence', b:'Elusive', impact:+0.15, note:'Silence vs mobile casters' },
-    { a:'AntiCarry', b:'Scaling', impact:+0.12, note:'Anti‑carry tools reduce lategame spikes' },
-    { a:'ArmorShred', b:'Physical', impact:+0.08, note:'Shred supports PA/physical comps' },
-    { a:'BKBPierce', b:'Teamfight', impact:+0.10, note:'Piercing control reshapes 5v5' }
-  ];
-
-  // ===== Adapters (plug your real sources here) =====
-  const DefaultAdapters = {
-    // Обов’язково заміни на OpenDota/свій датасет
-    async getHeroMatchups(heroId){
-      // return array of { opponentId, wins, games, lastUpdate: 'YYYY-MM-DD' }
-      return []; // заглушка
-    },
-    async getLaneMatchup(myHeroId, enemyHeroId, laneType){
-      // laneType: 'mid','safe','off','support'
-      // return { winrate:0.52, games:1200, lastUpdate:'2025-09-15' }
-      return null; // заглушка
-    },
-    getHeroDb(){
-      return HERO_DB;
-    }
-  };
-
-  // ===== Counters (log-odds with confidence & decay) =====
-  async function countersComponent(teamA, teamB, adapters, options){
-    const { LOGODDS, DECAY } = CFG;
-    const patchDate = options?.patchDate ? new Date(options.patchDate) : new Date();
-
-    let total = 0, pairs = 0, details = [];
-    for(const a of teamA){
-      const matchups = await adapters.getHeroMatchups(a);
-      const map = new Map(matchups.map(m => [m.opponentId, m]));
-      for(const b of teamB){
-        const m = map.get(b);
-        let contrib = 0, conf = 0, dw = 1;
-        if(m && m.games>0){
-          const wr = m.wins / m.games;
-          const lo = logit(wr);
-          // Довіра за кількістю ігор (0..1)
-          const g = clamp((m.games - LOGODDS.minGames) / (LOGODDS.maxGames - LOGODDS.minGames), 0, 1);
-          conf = (1-LOGODDS.baseShrink) * g + LOGODDS.baseShrink*0.5; // байєс‑шринк до 0
-          // Decay за датою
-          const last = m.lastUpdate ? new Date(m.lastUpdate) : patchDate;
-          const days = Math.max(0, (patchDate - last) / (1000*3600*24));
-          dw = decayWeight(days, DECAY.halfLifeDays);
-          contrib = lo * conf * dw;
+        let counterAvg = 0.5;
+        if (candId && candId < 10000) {
+          const matchups = await fetchMatchups(candId);
+          let sum = 0, cnt = 0;
+          for (const e of enemyPicks) {
+            const eObj = heroByName[e];
+            const entry = eObj ? matchups.find(x => x.hero_id === eObj.id) : null;
+            const wr = entry ? entry.win_rate : 0.5;
+            sum += wr; cnt++;
+          }
+          counterAvg = cnt ? (sum / cnt) : 0.5;
         }
-        total += contrib; pairs++;
-        details.push({ a, b, contrib, conf, decay:dw });
-      }
-    }
-    // Нормалізуємо за кількістю порівнянь і переходимо в z‑score
-    const avgLo = pairs ? (total / pairs) : 0;
-    const score = avgLo; // у спрощенні — вже нормалізований
-    return { score, details };
-  }
 
-  // ===== Synergy (combos + timing + roles + tag counters) =====
-  function synergyComponent(team, heroDb){
-    const { SUB } = CFG;
-    const ids = team.slice();
-    const tagsByHero = ids.map(id => heroDb[id]?.tags || []);
-    const allTags = new Set(tagsByHero.flat());
-
-    // 1) Комбо
-    let comboScore = 0, comboDetails = [];
-    for(const c of KNOWN_COMBOS){
-      const hasAll = c.heroes.every(h => ids.includes(h));
-      if(hasAll){ comboScore += c.score; comboDetails.push(c); }
+        // проста парна синергія (демо)
+        let synergy = 0;
+        const allies = picked.my.filter(Boolean);
+        for (const a of allies) {
+          if((a==='Magnus' && cand==='Faceless Void') || (a==='Faceless Void' && cand==='Magnus')) synergy += 0.22;
+        }
+        const finalScore = (counterAvg * 0.82) + (synergy * 0.18);
+        return { hero: cand, counterAvg, synergy, finalScore };
+      }));
+      scores.push(...batch);
     }
 
-    // 2) Таймінг‑крива
-    const countTiming = (bucket) => tagsByHero.reduce((acc,t)=> acc + t.filter(x=>TIMING[bucket].includes(x)).length, 0);
-    const e = countTiming('early'), m = countTiming('mid'), l = countTiming('late');
-    // Бонус за збалансованість + можливість піку (midfight/lategame)
-    const totalTL = e+m+l || 1;
-    const balance = 1 - Math.abs((l/totalTL) - (m/totalTL)); // ближче до 1 — краще
-    const timingScore = 0.18*(e/totalTL) + 0.42*(m/totalTL) + 0.40*(l/totalTL) + 0.15*balance;
-
-    // 3) Ролі
-    const roles = ids.map(id => heroDb[id]?.roles || []);
-    const ideal = ['Carry','Mid','Offlane','Support','Support'];
-    const used = new Set(); let matched=0;
-    for(const r of ideal){
-      const idx = roles.findIndex((rs, i)=> !used.has(i) && rs.includes(r));
-      if(idx !== -1){ used.add(idx); matched++; }
-    }
-    const roleScore = matched/ideal.length; // 0..1
-
-    // 4) Покриття (наші теги vs самі)
-    const coverage = {
-      // Плюси: різноманіття
-      damageMix: (allTags.has('Magic') && allTags.has('Physical')) || allTags.has('MagicPhysical') ? 1 : 0,
-      control: (allTags.has('StunChain') || allTags.has('Lockdown') || allTags.has('Disables')) ? 1 : 0,
-      sustainSave: (allTags.has('Save') || allTags.has('Sustain') || allTags.has('SoftDispel')) ? 1 : 0,
-      pushRosh: (allTags.has('Push') || allTags.has('Tower')) ? 1 : 0
-    };
-    const coverageScore = 0.28*coverage.damageMix + 0.28*coverage.control + 0.22*coverage.sustainSave + 0.22*coverage.pushRosh;
-
-    const score =
-      SUB.synergy.combos    * comboScore +
-      SUB.synergy.timing    * timingScore +
-      SUB.synergy.roles     * roleScore +
-      SUB.synergy.coverage  * coverageScore;
-
-    return {
-      score,
-      details: { comboScore, comboDetails, timingScore, roleScore, coverageScore, timing: {e,m,l} }
-    };
-  }
-
-  // ===== Tag-level counters (team vs team generic) =====
-  function tagCounters(teamA, teamB, heroDb){
-    let s = 0, details = [];
-    const tagsA = new Set(teamA.flatMap(id => heroDb[id]?.tags || []));
-    const tagsB = new Set(teamB.flatMap(id => heroDb[id]?.tags || []));
-    for(const rule of TAG_COUNTERS){
-      if(tagsA.has(rule.a) && tagsB.has(rule.b)){
-        s += rule.impact;
-        details.push({ rule, applied:true });
-      }
-    }
-    return { score:s, details };
-  }
-
-  // ===== Composition coverage (redundancy & gaps) =====
-  function compositionComponent(team, heroDb){
-    const { composition } = CFG.SUB;
-    const tags = team.flatMap(id => heroDb[id]?.tags || []);
-    const countTag = (t) => tags.filter(x => x===t).length;
-
-    // Redundancy penalty: занадто багато одного типу
-    const manyMagic = countTag('Magic') >= 3;
-    const manyPhysical = countTag('Physical') >= 3;
-    const redundancyPenalty = (manyMagic ? 0.10 : 0) + (manyPhysical ? 0.10 : 0);
-
-    // Контроль
-    const controlLevel = Math.min(1, (countTag('StunChain')*0.5 + countTag('Lockdown')*0.5 + countTag('Disables')*0.35));
-    // Сейви
-    const saveLevel = Math.min(1, (countTag('Save')*0.6 + countTag('Sustain')*0.4 + countTag('SoftDispel')*0.4));
-    // Пуш/рош
-    const pushLevel = Math.min(1, (countTag('Push')*0.6 + countTag('Tower')*0.5 + countTag('ArmorShred')*0.3));
-    // Мікс шкоди
-    const damageMix = (tags.includes('MagicPhysical') || (tags.includes('Magic') && tags.includes('Physical'))) ? 1 : 0;
-
-    const dmScore = 1*damageMix - redundancyPenalty;
-    const score =
-      composition.damageMix  * dmScore +
-      composition.control    * controlLevel +
-      composition.sustainSave* saveLevel +
-      composition.pushRosh   * pushLevel;
-
-    return {
-      score,
-      details: { dmScore, controlLevel, saveLevel, pushLevel, redundancyPenalty }
-    };
-  }
-
-  // ===== Lanes (optional, via adapters) =====
-  async function lanesComponent(teamA, teamB, adapters){
-    const { lanes } = CFG.SUB;
-    // Спроба оцінити ключові лейни: mid, offlane vs safe, supports
-    // Потрібні ролі або окремий парсер твоїх слотів.
-    const res = { score:0, details:[] };
-    // Заглушка: якщо немає даних — score = 0
-    // Для продакшну: знайди mid vs mid, offlane vs carry, 4/5 vs 4/5 і агрегуй winrate за log-odds як у countersComponent.
-    return res;
-  }
-
-  // ===== Aggregate into final probability =====
-  function aggregateToProbability(parts){
-    const { WEIGHTS, PROB_CLAMP } = CFG;
-    const z =
-        WEIGHTS.counters    * parts.counters.score +
-        WEIGHTS.synergy     * parts.synergy.score +
-        WEIGHTS.composition * parts.composition.score +
-        WEIGHTS.lanes       * (parts.lanes?.score || 0);
-
-    // Перетворюємо у ймовірність через сигмоїду та clamp
-    let p = invLogit(z);
-    p = clamp(p, PROB_CLAMP.min, PROB_CLAMP.max);
-    return p;
-  }
-
-  // ===== Main evaluate =====
-  DraftEval.evaluate = async function(teamA, teamB, adapters=DefaultAdapters, options={}){
-    const heroDb = adapters.getHeroDb();
-
-    const countersA = await countersComponent(teamA, teamB, adapters, options);
-    const countersB = await countersComponent(teamB, teamA, adapters, options);
-
-    const synergyA = synergyComponent(teamA, heroDb);
-    const synergyB = synergyComponent(teamB, heroDb);
-
-    const tagCtrA = tagCounters(teamA, teamB, heroDb);
-    const tagCtrB = tagCounters(teamB, teamA, heroDb);
-
-    // Вбудовуємо tag‑counters у synergy як додатковий шар
-    synergyA.score += 0.12 * tagCtrA.score;
-    synergyB.score += 0.12 * tagCtrB.score;
-
-    const compA = compositionComponent(teamA, heroDb);
-    const compB = compositionComponent(teamB, heroDb);
-
-    const lanesA = await lanesComponent(teamA, teamB, adapters);
-    const lanesB = await lanesComponent(teamB, teamA, adapters);
-
-    const probA = aggregateToProbability({
-      counters: countersA, synergy: synergyA, composition: compA, lanes: lanesA
+    scores.sort((a,b)=>b.finalScore - a.finalScore);
+    const top = scores.slice(0,10);
+    top.forEach(s => {
+      const div = document.createElement('div');
+      div.className = 'suggestion';
+      div.innerHTML = `<span>${s.hero}</span><span class="tiny">контр ${(s.counterAvg*100).toFixed(0)}% · синергія ${(s.synergy*100).toFixed(0)}%</span>`;
+      suggestionsEl.appendChild(div);
     });
-    const probB = aggregateToProbability({
-      counters: countersB, synergy: synergyB, composition: compB, lanes: lanesB
-    });
-
-    // Нормалізація (легка): вирівнюємо так, щоб pA+pB≈1 при легкій асиметрії
-    const sum = probA + probB;
-    let winProbA = probA / sum;
-    let winProbB = probB / sum;
-    winProbA = clamp(winProbA, CFG.PROB_CLAMP.min, CFG.PROB_CLAMP.max);
-    winProbB = clamp(winProbB, CFG.PROB_CLAMP.min, CFG.PROB_CLAMP.max);
-
-    return {
-      winProbA, winProbB,
-      scores: {
-        A: {
-          counters: countersA.score,
-          synergy: synergyA.score,
-          composition: compA.score,
-          lanes: lanesA.score
-        },
-        B: {
-          counters: countersB.score,
-          synergy: synergyB.score,
-          composition: compB.score,
-          lanes: lanesB.score
-        }
-      },
-      breakdown: {
-        A: { counters: countersA.details, synergy: synergyA.details, tagCounters: tagCtrA.details, composition: compA.details, lanes: lanesA.details },
-        B: { counters: countersB.details, synergy: synergyB.details, tagCounters: tagCtrB.details, composition: compB.details, lanes: lanesB.details }
-      }
-    };
-  };
-
-  // expose
-  window.DraftEval = DraftEval;
-})();
-</script>
-  <script>
-// Адаптери для OpenDota
-const adapters = {
-  async getHeroMatchups(heroId){
-    const res = await fetch(`https://api.opendota.com/api/heroes/${heroId}/matchups`);
-    const arr = await res.json();
-    return arr.map(m => ({
-      opponentId: m.hero_id,
-      wins: m.wins,
-      games: m.games_played,
-      lastUpdate: new Date().toISOString().slice(0,10)
-    }));
-  },
-  async getLaneMatchup(){ return null; }, // можна додати пізніше
-  getHeroDb(){ return HERO_DB; } // твій пул героїв
-};
-
-// Оновлення winrate з використанням DraftEval
-async function updateWinrate() {
-  const teamAIds = teamA.map(h => h.id);
-  const teamBIds = teamB.map(h => h.id);
-
-  const res = await DraftEval.evaluate(teamAIds, teamBIds, adapters, { patchDate: '2025-09-25' });
-
-  document.getElementById('winrateA').textContent = Math.round(res.winProbA*100) + '%';
-  document.getElementById('winrateB').textContent = Math.round(res.winProbB*100) + '%';
-
-  // Для дебагу: деталізація в консолі
-  console.log('Team A breakdown', res.breakdown.A);
-  console.log('Team B breakdown', res.breakdown.B);
-}
-</script>
-  <script>
-// === Виправлені функції ===
-
-// Очищення і відмальовка кнопок ролей + select
-function renderRoleButtons(){
-  rolesContainer.innerHTML = '';
-  roleFilter.innerHTML = '<option value="">Всі ролі</option>'; // очищаємо, щоб не дублювались
-
-  roleKeys.forEach(r => {
-    const b = document.createElement('button');
-    b.className = 'role-btn';
-    b.textContent = r;
-    b.onclick = () => {
-      document.querySelectorAll('.role-btn').forEach(x => x.classList.remove('active'));
-      b.classList.add('active');
-      playerRole = r;
-      startBtn.disabled = false;
-      playerRoleLabel.textContent = r;
-      updateSuggestions();
-    };
-    rolesContainer.appendChild(b);
-
-    const opt = document.createElement('option');
-    opt.value = r; opt.textContent = r;
-    roleFilter.appendChild(opt);
-  });
-}
-
-// Кеш для матчапів
-const matchupCache = {};
-async function fetchMatchups(heroId){
-  if (heroId >= 10000) return []; // пропускаємо фейкові ID з fallback
-  if (matchupCache[heroId]) return matchupCache[heroId];
-
-  try{
-    const res = await fetch(`https://api.opendota.com/api/heroes/${heroId}/matchups`);
-    const data = await res.json();
-    data.forEach(d => d.win_rate = d.games_played ? (d.wins / d.games_played) : 0.5);
-    matchupCache[heroId] = data;
-    await new Promise(r => setTimeout(r, 60)); // легкий throttle
-    return data;
-  }catch(e){
-    console.warn('Matchup fetch failed', e);
-    matchupCache[heroId] = [];
-    return [];
-  }
-}
-
-// Рекомендації з урахуванням ролі + обмеження паралельності
-async function updateSuggestions(){
-  suggestionsEl.innerHTML = '';
-  if(!playerRole){
-    suggestionsEl.innerHTML = '<div class="tiny">Оберіть роль для рекомендацій.</div>';
-    return;
-  }
-  const enemyPicks = picked.enemy.filter(Boolean);
-  if(enemyPicks.length === 0){
-    suggestionsEl.innerHTML = '<div class="tiny">Оберіть хоча б 1 ворожий пік — тут з’являться контрпіки.</div>';
-    return;
   }
 
-  const candidates = allHeroesApi
-    .map(h => h.localized_name)
-    .filter(n => getRolesForHero(n).includes(playerRole)) // тільки вибрана роль
-    .filter(n => ![...picked.my, ...picked.enemy].includes(n));
+  // ====== Безпечний live estimate (старий метод для quick preview) ======
+  let estimateGeneration = 0;
+  async function computeLiveEstimate(){
+    const myP = picked.my.filter(Boolean);
+    const enP = picked.enemy.filter(Boolean);
+    const gen = ++estimateGeneration;
 
-  const scores = [];
-  const CHUNK = 8; // обмежуємо паралельність
-
-  for (let i = 0; i < candidates.length; i += CHUNK) {
-    const slice = candidates.slice(i, i + CHUNK);
-    const batch = await Promise.all(slice.map(async cand => {
-      const candObj = heroByName[cand];
-      const candId = candObj?.id ?? null;
-
-      let counterAvg = 0.5;
-      if (candId && candId < 10000) {
-        const matchups = await fetchMatchups(candId);
-        let sum = 0, cnt = 0;
-        for (const e of enemyPicks) {
-          const eObj = heroByName[e];
-          const entry = eObj ? matchups.find(x => x.hero_id === eObj.id) : null;
-          const wr = entry ? entry.win_rate : 0.5;
-          sum += wr; cnt++;
-        }
-        counterAvg = cnt ? (sum / cnt) : 0.5;
-      }
-
-      // проста синергія
-      let synergy = 0;
-      const allies = picked.my.filter(Boolean);
-      for (const a of allies) {
-        if((a==='Magnus' && cand==='Faceless Void') || (a==='Faceless Void' && cand==='Magnus')) synergy += 0.22;
-      }
-      const finalScore = (counterAvg * 0.82) + (synergy * 0.18);
-      return { hero: cand, counterAvg, synergy, finalScore };
-    }));
-    scores.push(...batch);
-  }
-
-  scores.sort((a,b)=>b.finalScore - a.finalScore);
-  const top = scores.slice(0,10);
-  top.forEach(s => {
-    const div = document.createElement('div');
-    div.className = 'suggestion';
-    div.textContent = `${s.hero} · контр: ${(s.counterAvg*100).toFixed(0)}% · синергія: ${(s.synergy*100).toFixed(0)}%`;
-    suggestionsEl.appendChild(div);
-  });
-}
-
-// Безпечний live estimate з генератором
-let estimateGeneration = 0;
-async function computeLiveEstimate(){
-  const myP = picked.my.filter(Boolean);
-  const enP = picked.enemy.filter(Boolean);
-  const gen = ++estimateGeneration;
-
-  if(myP.length===0 || enP.length===0){
-    if (gen !== estimateGeneration) return;
-    analysisText.textContent = 'Почніть заповнювати слоти — тут з’явиться попередній аналіз.';
-    winEstimateEl.textContent = '—';
-    return;
-  }
-
-  let myScore=0, enScore=0, cnt=0;
-  for(const m of myP){
-    const mObj = heroByName[m];
-    if(!mObj) continue;
-    const matchups = await fetchMatchups(mObj.id);
-    for(const e of enP){
-      const eObj = heroByName[e];
-      if(!eObj) continue;
-      const entry = matchups.find(x => x.hero_id === eObj.id);
-      if(entry){ myScore += entry.win_rate; cnt++; }
+    if(myP.length===0 || enP.length===0){
+      if (gen !== estimateGeneration) return;
+      analysisText.textContent = 'Почніть заповнювати слоти — тут з’явиться попередній аналіз.';
+      winEstimateEl.textContent = '—';
+      return;
     }
-  }
-  for(const e of enP){
-    const eObj = heroByName[e];
-    if(!eObj) continue;
-    const matchups = await fetchMatchups(eObj.id);
+
+    let myScore=0, enScore=0, cnt=0;
     for(const m of myP){
       const mObj = heroByName[m];
       if(!mObj) continue;
-      const entry = matchups.find(x => x.hero_id === mObj.id);
-      if(entry){ enScore += entry.win_rate; }
+      const matchups = await fetchMatchups(mObj.id);
+      for(const e of enP){
+        const eObj = heroByName[e];
+        if(!eObj) continue;
+        const entry = matchups.find(x => x.hero_id === eObj.id);
+        if(entry){ myScore += entry.win_rate; cnt++; }
+      }
     }
+    for(const e of enP){
+      const eObj = heroByName[e];
+      if(!eObj) continue;
+      const matchups = await fetchMatchups(eObj.id);
+      for(const m of myP){
+        const mObj = heroByName[m];
+        if(!mObj) continue;
+        const entry = matchups.find(x => x.hero_id === mObj.id);
+        if(entry){ enScore += entry.win_rate; }
+      }
+    }
+    if(cnt>0){ myScore/=cnt; enScore/=cnt; }
+
+    let estimate = 50 + 20*(myScore - enScore);
+    estimate = Math.max(8, Math.min(92, estimate));
+
+    if (gen !== estimateGeneration) return;
+    winEstimateEl.textContent = `${estimate.toFixed(0)}%`;
+    analysisText.textContent = `Мої піки: ${myP.join(', ')}\nВороги: ${enP.join(', ')}\nМоя середня: ${(myScore*100).toFixed(0)}% · ворожа середня: ${(enScore*100).toFixed(0)}%`;
   }
-  if(cnt>0){ myScore/=cnt; enScore/=cnt; }
 
-  let estimate = 50 + 20*(myScore - enScore);
-  estimate = Math.max(8, Math.min(92, estimate));
+  // ====== DraftEval інтеграція для фінальних відсотків ======
+  const adapters = {
+    async getHeroMatchups(heroId){
+      if(heroId >= 10000) return [];
+      const res = await fetch(`https://api.opendota.com/api/heroes/${heroId}/matchups`);
+      const arr = await res.json();
+      return arr.map(m => ({
+        opponentId: m.hero_id,
+        wins: m.wins,
+        games: m.games_played,
+        lastUpdate: new Date().toISOString().slice(0,10)
+      }));
+    },
+    async getLaneMatchup(){ return null; },
+    getHeroDb(){
+      // Будуємо базу з API-назв: мінімальні теги/ролі через LOCAL_ROLES
+      const db = {};
+      for(const h of allHeroesApi){
+        const name = h.localized_name;
+        const roles = getRolesForHero(name).filter(r => r !== '—').map(r => r.includes('Support')?'Support':r);
+        db[h.id] = {
+          name,
+          roles: roles.length ? roles : ['—'],
+          tags: deriveTagsFromName(name)
+        };
+      }
+      return Object.keys(db).length ? db : window.DraftEval?.HERO_DB || {};
+    }
+  };
 
-  if (gen !== estimateGeneration) return; // захист від гонок
-  winEstimateEl.textContent = `${estimate.toFixed(0)}%`;
-  analysisText.textContent = `Мої піки: ${myP.join(', ')}\nВороги: ${enP.join(', ')}\nМоя середня: ${(myScore*100).toFixed(0)}% · ворожа середня: ${(enScore*100).toFixed(0)}%`;
-}
-</script>
+  // Простий теговий маппер за іменами (демо; розширюй за потребою)
+  function deriveTagsFromName(name){
+    const n = name.toLowerCase();
+    const tags = [];
+    if(n.includes('void')) tags.push('Lockdown','Teamfight','Scaling','BKBPierce');
+    if(n.includes('assassin')) tags.push('Physical','Crit','Scaling');
+    if(n.includes('viper')) tags.push('Magic','AntiRegen','LaneDominance');
+    if(n.includes('axe')) tags.push('Initiation','Durable','AntiCarry','BKBPierce');
+    if(n.includes('silencer')) tags.push('Silence','AntiCombo','Global');
+    if(n.includes('dazzle')) tags.push('Save','Sustain','SoftDispel','Armor');
+    if(n.includes('earthshaker')) tags.push('Initiation','Teamfight','StunChain');
+    if(n.includes('puck')) tags.push('Elusive','Disables','Teamfight','Magic');
+    if(n.includes('morphling')) tags.push('Adaptive','Burst','Scaling','MagicPhysical');
+    if(n.includes('shadow fiend')) tags.push('Burst','WaveClear','Tower','ArmorShred');
+    return tags.length ? tags : ['Magic']; // базовий fallback
+  }
+
+  async function updateWinrate() {
+    const teamAIds = picked.my.filter(Boolean).map(n => heroByName[n]?.id).filter(Boolean);
+    const teamBIds = picked.enemy.filter(Boolean).map(n => heroByName[n]?.id).filter(Boolean);
+    if(teamAIds.length===0 || teamBIds.length===0){
+      winrateAEl.textContent = '—';
+      winrateBEl.textContent = '—';
+      synergyAEl.textContent = '';
+      synergyBEl.textContent = '';
+      return;
+    }
+
+    const res = await DraftEval.evaluate(teamAIds, teamBIds, adapters, { patchDate: new Date().toISOString().slice(0,10) });
+
+    winrateAEl.textContent = Math.round(res.winProbA*100) + '%';
+    winrateBEl.textContent = Math.round(res.winProbB*100) + '%';
+
+    synergyAEl.textContent = `Синергія: ${(res.scores.A.synergy*100).toFixed(0)} · Контрпіки: ${(res.scores.A.counters*100).toFixed(0)} · Композиція: ${(res.scores.A.composition*100).toFixed(0)}`;
+    synergyBEl.textContent = `Синергія: ${(res.scores.B.synergy*100).toFixed(0)} · Контрпіки: ${(res.scores.B.counters*100).toFixed(0)} · Композиція: ${(res.scores.B.composition*100).toFixed(0)}`;
+  }
+
+  // ====== Відмальовка команд ======
+  function renderTeam(container, arr, label){
+    container.innerHTML = '';
+    arr.forEach((name, idx) => {
+      if(!name){
+        const ghost = document.createElement('div');
+        ghost.className = 'chip';
+        ghost.textContent = `Слот ${idx+1}`;
+        container.appendChild(ghost);
+        return;
+      }
+      const chip = document.createElement('div');
+      chip.className = 'chip';
+      const roles = getRolesForHero(name).join(' / ');
+      chip.innerHTML = `<span>${name}</span><span class="tiny">${roles}</span><span class="rm" title="Видалити">×</span>`;
+      chip.querySelector('.rm').onclick = () => {
+        if(label === 'my'){ picked.my[idx] = null; } else { picked.enemy[idx] = null; }
+        renderAll();
+      };
+      container.appendChild(chip);
+    });
+  }
+
+  function renderAll(){
+    renderTeam(myTeamEl, picked.my, 'my');
+    renderTeam(enemyTeamEl, picked.enemy, 'enemy');
+    computeLiveEstimate();
+    updateWinrate();
+    updateSuggestions();
+  }
+
+  // ====== Події для селекторів додавання ======
+  addHeroMyBtn.onclick = () => {
+    const name = heroSelectMy.value;
+    if(!name) return;
+    if(picked.enemy.includes(name) || picked.my.includes(name)) return alert('Герой вже вибраний.');
+    const idx = picked.my.findIndex(x => !x);
+    if(idx === -1) return alert('Команда заповнена.');
+    picked.my[idx] = name;
+    renderAll();
+  };
+  addHeroEnemyBtn.onclick = () => {
+    const name = heroSelectEnemy.value;
+    if(!name) return;
+    if(picked.enemy.includes(name) || picked.my.includes(name)) return alert('Герой вже вибраний.');
+    const idx = picked.enemy.findIndex(x => !x);
+    if(idx === -1) return alert('Команда заповнена.');
+    picked.enemy[idx] = name;
+    renderAll();
+  };
+  clearMyBtn.onclick = () => { picked.my = [null,null,null,null,null]; renderAll(); };
+  clearEnemyBtn.onclick = () => { picked.enemy = [null,null,null,null,null]; renderAll(); };
+
+  startBtn.onclick = () => {
+    if(!playerRole) return alert('Оберіть роль.');
+    alert(`Роль встановлена: ${playerRole}. Починай драфт!`);
+  };
+
+  // ====== Ініціалізація ======
+  (async function init(){
+    renderRoleButtons();
+    await loadHeroes();
+    renderAll();
+  })();
+  </script>
 </body>
 </html>
-
-
-
-
 
 
 
