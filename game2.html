@@ -203,7 +203,7 @@
 
     <footer>Made with ❤️ — використовує OpenDota API для статистики матчапів. Якщо API недоступний — система працюватиме з локальними списками.</footer>
   </div>
-
+  
 <script>
 (async function(){
 
@@ -757,6 +757,377 @@ updateSuggestions();
 
 })(); // IIFE
 </script>
+  <!-- === DraftEval module (advanced synergy + counters + synergy) === -->
+<script>
+<script>
+/**
+ * DraftEval — високоякісний обчислювач шансів, контрпіків і синергії.
+ * Інтеграція:
+ *   const res = DraftEval.evaluate([idA1,...],[idB1,...], adapters, { patchDate: '2025-09-25' });
+ *   console.log(res.winProbA, res.scores);
+ */
+(function(){
+  const DraftEval = {};
+
+  // ===== Config: weights & clamps =====
+  const CFG = {
+    // Ваги компонентів (сума ~1.0)
+    WEIGHTS: {
+      counters: 0.38,     // сила наших героїв проти їхніх (за матчапами)
+      synergy: 0.34,      // внутрішні комбо, таймінг, сумісність ролей
+      composition: 0.18,  // покриття типів шкоди, контролю, сейвів, пуш/рош
+      lanes: 0.10         // прогноз лейнів (якщо доступні ролі/паринги)
+    },
+    // Коефіцієнти всередині компонентів
+    SUB: {
+      synergy: {
+        combos: 0.35, timing: 0.25, roles: 0.20, coverage: 0.20
+      },
+      composition: {
+        damageMix: 0.28, control: 0.28, sustainSave: 0.22, pushRosh: 0.22
+      },
+      lanes: {
+        offlaneVsCarry: 0.40, midVsMid: 0.35, pos4pos5: 0.25
+      }
+    },
+    // Коефіцієнти для log-odds перетворення winrate
+    LOGODDS: {
+      minGames: 200,   // мінімум ігор для базової довіри
+      maxGames: 5000,  // після цього прирости довіри малі
+      baseShrink: 0.45 // дає регулятор до 0 (байєсівський шринк)
+    },
+    // Патч‑decay: чим старіші дані, тим менший внесок
+    DECAY: {
+      halfLifeDays: 21 // через 21 день вага зменшується вдвічі
+    },
+    // Фінальний clamp для ймовірності
+    PROB_CLAMP: { min: 0.08, max: 0.92 }
+  };
+
+  // ===== Helpers =====
+  function clamp(x, a, b){ return Math.max(a, Math.min(b, x)); }
+  function sigmoid(x){ return 1/(1+Math.exp(-x)); }
+  function zScore(x, mean=0, std=1){ return std>0 ? (x-mean)/std : x; }
+  function decayWeight(days, halfLife){ return Math.pow(0.5, days/halfLife); }
+  function logit(p){ p = clamp(p, 1e-6, 1-1e-6); return Math.log(p/(1-p)); }
+  function invLogit(l){ return sigmoid(l); }
+
+  // ===== Default lightweight data (заміни на повний пул) =====
+  const HERO_DB = {
+    // id: { name, roles:[...], tags:[...] }
+    1: { name:'Shadow Fiend', roles:['Mid','Carry'], tags:['Burst','WaveClear','Tower','ArmorShred'] },
+    2: { name:'Earthshaker', roles:['Support','Offlane'], tags:['Initiation','Teamfight','StunChain'] },
+    3: { name:'Phantom Assassin', roles:['Carry'], tags:['Physical','Crit','Scaling'] },
+    4: { name:'Axe', roles:['Offlane'], tags:['Initiation','Durable','AntiCarry','BKBPierce'] },
+    5: { name:'Silencer', roles:['Support'], tags:['Silence','AntiCombo','Global'] },
+    6: { name:'Dazzle', roles:['Support'], tags:['Save','Sustain','Armor','SoftDispel'] },
+    7: { name:'Puck', roles:['Mid'], tags:['Elusive','Disables','Teamfight','Magic'] },
+    8: { name:'Faceless Void', roles:['Carry'], tags:['Teamfight','Lockdown','Scaling','BKBPierce'] },
+    9: { name:'Viper', roles:['Mid','Offlane'], tags:['AntiRegen','LaneDominance','Magic'] },
+    10:{ name:'Morphling', roles:['Carry','Mid'], tags:['Adaptive','Burst','Scaling','MagicPhysical'] }
+  };
+
+  // Відомі комбо (пари/тріо) з бонусами
+  const KNOWN_COMBOS = [
+    { heroes:[2,8], score: +0.28, reason:'Chrono + Echo Slam (wombo)'},
+    { heroes:[6,3], score: +0.16, reason:'Dazzle save + PA crit windows'},
+    { heroes:[7,2], score: +0.14, reason:'Layered control (Dream Coil + Fissure)'},
+    { heroes:[1,2], score: +0.12, reason:'Setup for SF razes with stuns'}
+  ];
+
+  // Таймінг‑мітки для тегів
+  const TIMING = {
+    early: ['LaneDominance','AntiRegen','Durable'],
+    mid: ['Teamfight','Initiation','Silence','Save','WaveClear','Push','Tower'],
+    late: ['Scaling','Crit','Adaptive','Lockdown']
+  };
+
+  // Контр‑приклади на рівні тега (загальна евристика)
+  const TAG_COUNTERS = [
+    { a:'Silence', b:'Elusive', impact:+0.15, note:'Silence vs mobile casters' },
+    { a:'AntiCarry', b:'Scaling', impact:+0.12, note:'Anti‑carry tools reduce lategame spikes' },
+    { a:'ArmorShred', b:'Physical', impact:+0.08, note:'Shred supports PA/physical comps' },
+    { a:'BKBPierce', b:'Teamfight', impact:+0.10, note:'Piercing control reshapes 5v5' }
+  ];
+
+  // ===== Adapters (plug your real sources here) =====
+  const DefaultAdapters = {
+    // Обов’язково заміни на OpenDota/свій датасет
+    async getHeroMatchups(heroId){
+      // return array of { opponentId, wins, games, lastUpdate: 'YYYY-MM-DD' }
+      return []; // заглушка
+    },
+    async getLaneMatchup(myHeroId, enemyHeroId, laneType){
+      // laneType: 'mid','safe','off','support'
+      // return { winrate:0.52, games:1200, lastUpdate:'2025-09-15' }
+      return null; // заглушка
+    },
+    getHeroDb(){
+      return HERO_DB;
+    }
+  };
+
+  // ===== Counters (log-odds with confidence & decay) =====
+  async function countersComponent(teamA, teamB, adapters, options){
+    const { LOGODDS, DECAY } = CFG;
+    const patchDate = options?.patchDate ? new Date(options.patchDate) : new Date();
+
+    let total = 0, pairs = 0, details = [];
+    for(const a of teamA){
+      const matchups = await adapters.getHeroMatchups(a);
+      const map = new Map(matchups.map(m => [m.opponentId, m]));
+      for(const b of teamB){
+        const m = map.get(b);
+        let contrib = 0, conf = 0, dw = 1;
+        if(m && m.games>0){
+          const wr = m.wins / m.games;
+          const lo = logit(wr);
+          // Довіра за кількістю ігор (0..1)
+          const g = clamp((m.games - LOGODDS.minGames) / (LOGODDS.maxGames - LOGODDS.minGames), 0, 1);
+          conf = (1-LOGODDS.baseShrink) * g + LOGODDS.baseShrink*0.5; // байєс‑шринк до 0
+          // Decay за датою
+          const last = m.lastUpdate ? new Date(m.lastUpdate) : patchDate;
+          const days = Math.max(0, (patchDate - last) / (1000*3600*24));
+          dw = decayWeight(days, DECAY.halfLifeDays);
+          contrib = lo * conf * dw;
+        }
+        total += contrib; pairs++;
+        details.push({ a, b, contrib, conf, decay:dw });
+      }
+    }
+    // Нормалізуємо за кількістю порівнянь і переходимо в z‑score
+    const avgLo = pairs ? (total / pairs) : 0;
+    const score = avgLo; // у спрощенні — вже нормалізований
+    return { score, details };
+  }
+
+  // ===== Synergy (combos + timing + roles + tag counters) =====
+  function synergyComponent(team, heroDb){
+    const { SUB } = CFG;
+    const ids = team.slice();
+    const tagsByHero = ids.map(id => heroDb[id]?.tags || []);
+    const allTags = new Set(tagsByHero.flat());
+
+    // 1) Комбо
+    let comboScore = 0, comboDetails = [];
+    for(const c of KNOWN_COMBOS){
+      const hasAll = c.heroes.every(h => ids.includes(h));
+      if(hasAll){ comboScore += c.score; comboDetails.push(c); }
+    }
+
+    // 2) Таймінг‑крива
+    const countTiming = (bucket) => tagsByHero.reduce((acc,t)=> acc + t.filter(x=>TIMING[bucket].includes(x)).length, 0);
+    const e = countTiming('early'), m = countTiming('mid'), l = countTiming('late');
+    // Бонус за збалансованість + можливість піку (midfight/lategame)
+    const totalTL = e+m+l || 1;
+    const balance = 1 - Math.abs((l/totalTL) - (m/totalTL)); // ближче до 1 — краще
+    const timingScore = 0.18*(e/totalTL) + 0.42*(m/totalTL) + 0.40*(l/totalTL) + 0.15*balance;
+
+    // 3) Ролі
+    const roles = ids.map(id => heroDb[id]?.roles || []);
+    const ideal = ['Carry','Mid','Offlane','Support','Support'];
+    const used = new Set(); let matched=0;
+    for(const r of ideal){
+      const idx = roles.findIndex((rs, i)=> !used.has(i) && rs.includes(r));
+      if(idx !== -1){ used.add(idx); matched++; }
+    }
+    const roleScore = matched/ideal.length; // 0..1
+
+    // 4) Покриття (наші теги vs самі)
+    const coverage = {
+      // Плюси: різноманіття
+      damageMix: (allTags.has('Magic') && allTags.has('Physical')) || allTags.has('MagicPhysical') ? 1 : 0,
+      control: (allTags.has('StunChain') || allTags.has('Lockdown') || allTags.has('Disables')) ? 1 : 0,
+      sustainSave: (allTags.has('Save') || allTags.has('Sustain') || allTags.has('SoftDispel')) ? 1 : 0,
+      pushRosh: (allTags.has('Push') || allTags.has('Tower')) ? 1 : 0
+    };
+    const coverageScore = 0.28*coverage.damageMix + 0.28*coverage.control + 0.22*coverage.sustainSave + 0.22*coverage.pushRosh;
+
+    const score =
+      SUB.synergy.combos    * comboScore +
+      SUB.synergy.timing    * timingScore +
+      SUB.synergy.roles     * roleScore +
+      SUB.synergy.coverage  * coverageScore;
+
+    return {
+      score,
+      details: { comboScore, comboDetails, timingScore, roleScore, coverageScore, timing: {e,m,l} }
+    };
+  }
+
+  // ===== Tag-level counters (team vs team generic) =====
+  function tagCounters(teamA, teamB, heroDb){
+    let s = 0, details = [];
+    const tagsA = new Set(teamA.flatMap(id => heroDb[id]?.tags || []));
+    const tagsB = new Set(teamB.flatMap(id => heroDb[id]?.tags || []));
+    for(const rule of TAG_COUNTERS){
+      if(tagsA.has(rule.a) && tagsB.has(rule.b)){
+        s += rule.impact;
+        details.push({ rule, applied:true });
+      }
+    }
+    return { score:s, details };
+  }
+
+  // ===== Composition coverage (redundancy & gaps) =====
+  function compositionComponent(team, heroDb){
+    const { composition } = CFG.SUB;
+    const tags = team.flatMap(id => heroDb[id]?.tags || []);
+    const countTag = (t) => tags.filter(x => x===t).length;
+
+    // Redundancy penalty: занадто багато одного типу
+    const manyMagic = countTag('Magic') >= 3;
+    const manyPhysical = countTag('Physical') >= 3;
+    const redundancyPenalty = (manyMagic ? 0.10 : 0) + (manyPhysical ? 0.10 : 0);
+
+    // Контроль
+    const controlLevel = Math.min(1, (countTag('StunChain')*0.5 + countTag('Lockdown')*0.5 + countTag('Disables')*0.35));
+    // Сейви
+    const saveLevel = Math.min(1, (countTag('Save')*0.6 + countTag('Sustain')*0.4 + countTag('SoftDispel')*0.4));
+    // Пуш/рош
+    const pushLevel = Math.min(1, (countTag('Push')*0.6 + countTag('Tower')*0.5 + countTag('ArmorShred')*0.3));
+    // Мікс шкоди
+    const damageMix = (tags.includes('MagicPhysical') || (tags.includes('Magic') && tags.includes('Physical'))) ? 1 : 0;
+
+    const dmScore = 1*damageMix - redundancyPenalty;
+    const score =
+      composition.damageMix  * dmScore +
+      composition.control    * controlLevel +
+      composition.sustainSave* saveLevel +
+      composition.pushRosh   * pushLevel;
+
+    return {
+      score,
+      details: { dmScore, controlLevel, saveLevel, pushLevel, redundancyPenalty }
+    };
+  }
+
+  // ===== Lanes (optional, via adapters) =====
+  async function lanesComponent(teamA, teamB, adapters){
+    const { lanes } = CFG.SUB;
+    // Спроба оцінити ключові лейни: mid, offlane vs safe, supports
+    // Потрібні ролі або окремий парсер твоїх слотів.
+    const res = { score:0, details:[] };
+    // Заглушка: якщо немає даних — score = 0
+    // Для продакшну: знайди mid vs mid, offlane vs carry, 4/5 vs 4/5 і агрегуй winrate за log-odds як у countersComponent.
+    return res;
+  }
+
+  // ===== Aggregate into final probability =====
+  function aggregateToProbability(parts){
+    const { WEIGHTS, PROB_CLAMP } = CFG;
+    const z =
+        WEIGHTS.counters    * parts.counters.score +
+        WEIGHTS.synergy     * parts.synergy.score +
+        WEIGHTS.composition * parts.composition.score +
+        WEIGHTS.lanes       * (parts.lanes?.score || 0);
+
+    // Перетворюємо у ймовірність через сигмоїду та clamp
+    let p = invLogit(z);
+    p = clamp(p, PROB_CLAMP.min, PROB_CLAMP.max);
+    return p;
+  }
+
+  // ===== Main evaluate =====
+  DraftEval.evaluate = async function(teamA, teamB, adapters=DefaultAdapters, options={}){
+    const heroDb = adapters.getHeroDb();
+
+    const countersA = await countersComponent(teamA, teamB, adapters, options);
+    const countersB = await countersComponent(teamB, teamA, adapters, options);
+
+    const synergyA = synergyComponent(teamA, heroDb);
+    const synergyB = synergyComponent(teamB, heroDb);
+
+    const tagCtrA = tagCounters(teamA, teamB, heroDb);
+    const tagCtrB = tagCounters(teamB, teamA, heroDb);
+
+    // Вбудовуємо tag‑counters у synergy як додатковий шар
+    synergyA.score += 0.12 * tagCtrA.score;
+    synergyB.score += 0.12 * tagCtrB.score;
+
+    const compA = compositionComponent(teamA, heroDb);
+    const compB = compositionComponent(teamB, heroDb);
+
+    const lanesA = await lanesComponent(teamA, teamB, adapters);
+    const lanesB = await lanesComponent(teamB, teamA, adapters);
+
+    const probA = aggregateToProbability({
+      counters: countersA, synergy: synergyA, composition: compA, lanes: lanesA
+    });
+    const probB = aggregateToProbability({
+      counters: countersB, synergy: synergyB, composition: compB, lanes: lanesB
+    });
+
+    // Нормалізація (легка): вирівнюємо так, щоб pA+pB≈1 при легкій асиметрії
+    const sum = probA + probB;
+    let winProbA = probA / sum;
+    let winProbB = probB / sum;
+    winProbA = clamp(winProbA, CFG.PROB_CLAMP.min, CFG.PROB_CLAMP.max);
+    winProbB = clamp(winProbB, CFG.PROB_CLAMP.min, CFG.PROB_CLAMP.max);
+
+    return {
+      winProbA, winProbB,
+      scores: {
+        A: {
+          counters: countersA.score,
+          synergy: synergyA.score,
+          composition: compA.score,
+          lanes: lanesA.score
+        },
+        B: {
+          counters: countersB.score,
+          synergy: synergyB.score,
+          composition: compB.score,
+          lanes: lanesB.score
+        }
+      },
+      breakdown: {
+        A: { counters: countersA.details, synergy: synergyA.details, tagCounters: tagCtrA.details, composition: compA.details, lanes: lanesA.details },
+        B: { counters: countersB.details, synergy: synergyB.details, tagCounters: tagCtrB.details, composition: compB.details, lanes: lanesB.details }
+      }
+    };
+  };
+
+  // expose
+  window.DraftEval = DraftEval;
+})();
+</script>
+  <script>
+// Адаптери для OpenDota
+const adapters = {
+  async getHeroMatchups(heroId){
+    const res = await fetch(`https://api.opendota.com/api/heroes/${heroId}/matchups`);
+    const arr = await res.json();
+    return arr.map(m => ({
+      opponentId: m.hero_id,
+      wins: m.wins,
+      games: m.games_played,
+      lastUpdate: new Date().toISOString().slice(0,10)
+    }));
+  },
+  async getLaneMatchup(){ return null; }, // можна додати пізніше
+  getHeroDb(){ return HERO_DB; } // твій пул героїв
+};
+
+// Оновлення winrate з використанням DraftEval
+async function updateWinrate() {
+  const teamAIds = teamA.map(h => h.id);
+  const teamBIds = teamB.map(h => h.id);
+
+  const res = await DraftEval.evaluate(teamAIds, teamBIds, adapters, { patchDate: '2025-09-25' });
+
+  document.getElementById('winrateA').textContent = Math.round(res.winProbA*100) + '%';
+  document.getElementById('winrateB').textContent = Math.round(res.winProbB*100) + '%';
+
+  // Для дебагу: деталізація в консолі
+  console.log('Team A breakdown', res.breakdown.A);
+  console.log('Team B breakdown', res.breakdown.B);
+}
+</script>
+</body>
+</html>
+
+
 </body>
 </html>
 
