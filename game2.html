@@ -1,276 +1,166 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Counterpick — вибір героїв</title>
-<style>
-  body { font-family: Arial, Helvetica, sans-serif; background:#0f1720; color:#e6eef8; padding:20px; }
-  h1 { margin: 0 0 12px 0; font-size:20px; }
-  .wrap { display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start; }
-  .card { background:#091025; padding:12px; border-radius:8px; min-width:260px; box-shadow:0 6px 18px rgba(0,0,0,0.6); }
-  label { display:block; font-size:13px; margin-bottom:6px; color:#bcd6ff; }
-  select { width:100%; padding:8px 10px; border-radius:6px; border:1px solid #203040; background:#071226; color:#e6eef8; }
-  .row { display:flex; gap:8px; margin-bottom:8px; }
-  button { padding:10px 14px; border-radius:8px; border:none; background:#2563eb; color:white; cursor:pointer; }
-  button[disabled] { background:#3b82c2; opacity:0.6; cursor:not-allowed; }
-  #results { margin-top:14px; }
-  .hero-line { padding:8px 6px; border-radius:6px; background:linear-gradient(90deg, rgba(255,255,255,0.02), transparent); margin-bottom:6px; }
-  .small { font-size:12px; color:#99b4d6; }
-</style>
+  <meta charset="UTF-8" />
+  <title>Dota 2 Counter Picker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #eee;
+      text-align: center;
+      padding: 20px;
+    }
+    select {
+      margin: 5px;
+      padding: 5px;
+      min-width: 180px;
+      background: #222;
+      color: #fff;
+      border: 1px solid #555;
+      border-radius: 5px;
+    }
+    button {
+      padding: 10px 20px;
+      margin-top: 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 5px;
+      background: #28a745;
+      color: white;
+      border: none;
+    }
+    button:hover { background: #218838; }
+    .results {
+      margin-top: 30px;
+      background: #222;
+      padding: 20px;
+      border-radius: 10px;
+    }
+    h2 { color: #ffcc00; }
+    .container {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+  </style>
 </head>
 <body>
-  <h1>Dota2 — Counterpick (4 vs 5)</h1>
-  <div class="wrap">
-    <div class="card" id="myCard">
-      <strong>Моя команда (4 герої)</strong>
-      <div id="myTeam" style="margin-top:8px"></div>
-      <div class="small" style="margin-top:6px">Обрано: <span id="myCount">0</span>/4</div>
+  <h1>Dota 2 Counter Picker</h1>
+
+  <div class="container">
+    <div>
+      <h2>Моя команда (4 герої)</h2>
+      <div id="myTeam"></div>
     </div>
 
-    <div class="card" id="enemyCard">
-      <strong>Суперник (5 героїв)</strong>
-      <div id="enemyTeam" style="margin-top:8px"></div>
-      <div class="small" style="margin-top:6px">Обрано: <span id="enemyCount">0</span>/5</div>
-    </div>
-
-    <div style="min-width:220px;">
-      <div style="margin-bottom:8px">
-        <button id="goBtn" disabled>Go</button>
-        <button id="resetBtn" style="margin-left:8px">Reset</button>
-      </div>
-      <div class="small">Після натискання — обчислюються топ-3 герої для допіску в твою команду.</div>
+    <div>
+      <h2>Команда ворога (5 героїв)</h2>
+      <div id="enemyTeam"></div>
     </div>
   </div>
 
-  <div id="results"></div>
+  <button id="goButton">Go</button>
 
-<script>
-(async function(){
-  // Спробуємо завантажити heroes.json; якщо не вдасться — використаємо fallback.
-  let heroes = [];
-  try {
-    const res = await fetch('heroes.json');
-    if(!res.ok) throw new Error('fetch failed');
-    const parsed = await res.json();
-    if(Array.isArray(parsed) && parsed.length>0) heroes = parsed;
-  } catch (e) {
-    // fallback — невеликий демо-набір героїв з полями synergy і counters
-    heroes = [
-      {
-        "name":"Invoker",
-        "synergy": { "Enigma":0.8, "Faceless Void":1.0, "Rubick":0.5, "Crystal Maiden":0.6 },
-        "counters": { "Anti-Mage":0.4, "Nyx Assassin":0.2 }
-      },
-      {
-        "name":"Anti-Mage",
-        "synergy": { "Crystal Maiden":0.6, "Rubick":0.3, "Nyx Assassin":0.2 },
-        "counters": { "Invoker":2.0, "Puck":1.5, "Enigma":1.2 }
-      },
-      {
-        "name":"Enigma",
-        "synergy": { "Invoker":0.8, "Faceless Void":1.2, "Puck":0.5 },
-        "counters": { "Silencer":-0.5, "Rubick":-0.4 }
-      },
-      {
-        "name":"Faceless Void",
-        "synergy": { "Enigma":1.2, "Puck":0.3, "Invoker":0.6 },
-        "counters": { "Puck":0.9, "Tidehunter":-0.2 }
-      },
-      {
-        "name":"Crystal Maiden",
-        "synergy": { "Anti-Mage":0.6, "Phantom Assassin":0.4, "Rubick":0.5 },
-        "counters": { "Nyx Assassin":0.3 }
-      },
-      {
-        "name":"Rubick",
-        "synergy": { "Invoker":0.5, "Crystal Maiden":0.5, "Puck":0.2 },
-        "counters": { "Invoker":0.6, "Enigma":0.5 }
-      },
-      {
-        "name":"Phantom Assassin",
-        "synergy": { "Crystal Maiden":0.4, "Rubick":0.2 },
-        "counters": { "Anti-Mage":1.0, "Tidehunter":0.6 }
-      },
-      {
-        "name":"Nyx Assassin",
-        "synergy": { "Anti-Mage":0.3, "Puck":0.2 },
-        "counters": { "Invoker":1.8, "Puck":1.5 }
-      },
-      {
-        "name":"Silencer",
-        "synergy": { "Invoker":0.2 },
-        "counters": { "Invoker":2.5, "Enigma":2.0 }
-      },
-      {
-        "name":"Puck",
-        "synergy": { "Faceless Void":0.6, "Enigma":0.5 },
-        "counters": { "Faceless Void":1.5, "Enigma":0.8 }
-      },
-      {
-        "name":"Tidehunter",
-        "synergy": { "Faceless Void":0.4 },
-        "counters": { "Faceless Void":1.8, "Phantom Assassin":1.3 }
-      },
-      {
-        "name":"Bloodseeker",
-        "synergy": { "Phantom Assassin":0.3 },
-        "counters": { "Anti-Mage":0.8 }
+  <div class="results" id="results"></div>
+
+  <script>
+    let heroes = [];
+
+    // Завантажуємо heroes.json
+    fetch("heroes.json")
+      .then(response => response.json())
+      .then(data => {
+        heroes = data;
+        createSelectors();
+      })
+      .catch(err => {
+        console.error("❌ Не вдалося завантажити heroes.json:", err);
+      });
+
+    function createSelectors() {
+      const myTeamDiv = document.getElementById("myTeam");
+      const enemyTeamDiv = document.getElementById("enemyTeam");
+
+      for (let i = 0; i < 4; i++) {
+        myTeamDiv.appendChild(createHeroSelect(`myHero${i + 1}`));
       }
-    ];
-    console.warn('heroes.json not loaded — using fallback demo list.');
-  }
-
-  // Map для швидкого доступу
-  const heroesByName = {};
-  heroes.forEach(h => heroesByName[h.name] = h);
-
-  // UI створення селекторів
-  const myTeamDiv = document.getElementById('myTeam');
-  const enemyTeamDiv = document.getElementById('enemyTeam');
-  const myCountSpan = document.getElementById('myCount');
-  const enemyCountSpan = document.getElementById('enemyCount');
-  const goBtn = document.getElementById('goBtn');
-  const resetBtn = document.getElementById('resetBtn');
-  const resultsDiv = document.getElementById('results');
-
-  function createSelect(id, team) {
-    const sel = document.createElement('select');
-    sel.dataset.team = team;
-    sel.dataset.idx = id;
-    const placeholder = document.createElement('option');
-    placeholder.value = '';
-    placeholder.textContent = '-- Вибери героя --';
-    sel.appendChild(placeholder);
-    heroes.forEach(h => {
-      const opt = document.createElement('option');
-      opt.value = h.name;
-      opt.textContent = h.name;
-      sel.appendChild(opt);
-    });
-    sel.addEventListener('change', onSelectionChange);
-    return sel;
-  }
-
-  // створюємо 4 і 5 селекторів
-  for(let i=0;i<4;i++) myTeamDiv.appendChild(createSelect(i,'my'));
-  for(let i=0;i<5;i++) enemyTeamDiv.appendChild(createSelect(i,'enemy'));
-
-  function getAllSelects() {
-    return Array.from(document.querySelectorAll('select'));
-  }
-
-  function getSelectedLists() {
-    const my = [];
-    const enemy = [];
-    getAllSelects().forEach(s => {
-      if(s.value) {
-        if(s.dataset.team === 'my') my.push(s.value);
-        else enemy.push(s.value);
+      for (let i = 0; i < 5; i++) {
+        enemyTeamDiv.appendChild(createHeroSelect(`enemyHero${i + 1}`));
       }
-    });
-    return { my, enemy };
-  }
-
-  function updateCountsAndButton() {
-    const { my, enemy } = getSelectedLists();
-    myCountSpan.textContent = my.length;
-    enemyCountSpan.textContent = enemy.length;
-    goBtn.disabled = !(my.length === 4 && enemy.length === 5);
-  }
-
-  // Заборона дублювання (герой може бути вибраний лише один раз у будь-якому селекті)
-  function refreshOptionDisables() {
-    const selected = new Set(getAllSelects().map(s => s.value).filter(Boolean));
-    getAllSelects().forEach(sel => {
-      Array.from(sel.options).forEach(opt => {
-        if(!opt.value) { opt.disabled = false; return; }
-        // дозвіл для опції, яка є поточним значенням цього селекту
-        opt.disabled = (selected.has(opt.value) && sel.value !== opt.value);
-      });
-    });
-  }
-
-  function onSelectionChange() {
-    refreshOptionDisables();
-    updateCountsAndButton();
-    resultsDiv.innerHTML = ''; // очистити попередні результати при зміні вибору
-  }
-
-  // reset
-  resetBtn.addEventListener('click', () => {
-    getAllSelects().forEach(s => s.value = '');
-    refreshOptionDisables();
-    updateCountsAndButton();
-    resultsDiv.innerHTML = '';
-  });
-
-  // обчислення топ-3
-  function calculateTop3(myList, enemyList) {
-    const selectedAll = new Set([...myList, ...enemyList]);
-    const candidates = heroes.filter(h => !selectedAll.has(h.name));
-    // якщо кандидатів менше — покажемо скільки є
-    const scored = candidates.map(c => {
-      // сумарна синергія: як мої герої "підтримують" кандидата
-      let synergyScore = 0;
-      myList.forEach(m => {
-        const mobj = heroesByName[m];
-        if(mobj && mobj.synergy && typeof mobj.synergy[c.name] === 'number') {
-          synergyScore += mobj.synergy[c.name];
-        }
-      });
-      // як кандидат контрить супротивників
-      let counterScore = 0;
-      enemyList.forEach(e => {
-        // candidate.counters[e] — наскільки кандидат сильний проти e
-        if(c.counters && typeof c.counters[e] === 'number') {
-          counterScore += c.counters[e];
-        }
-      });
-      const total = (synergyScore || 0) + (counterScore || 0);
-      return { hero: c.name, total, synergyScore, counterScore };
-    });
-
-    scored.sort((a,b) => b.total - a.total);
-    return scored.slice(0,3);
-  }
-
-  goBtn.addEventListener('click', () => {
-    const { my, enemy } = getSelectedLists();
-    if(my.length !== 4 || enemy.length !== 5) {
-      alert('Виберіть 4 героїв для своєї команди і 5 для суперника.');
-      return;
     }
-    const top = calculateTop3(my, enemy);
-    if(top.length === 0) {
-      resultsDiv.innerHTML = '<div class="card"><em>Немає доступних кандидатів — всі герої вже вибрані.</em></div>';
-      return;
+
+    function createHeroSelect(id) {
+      const select = document.createElement("select");
+      select.id = id;
+
+      const defaultOption = document.createElement("option");
+      defaultOption.value = "";
+      defaultOption.textContent = "— виберіть героя —";
+      select.appendChild(defaultOption);
+
+      heroes.forEach(hero => {
+        const option = document.createElement("option");
+        option.value = hero.name;
+        option.textContent = hero.name;
+        select.appendChild(option);
+      });
+
+      return select;
     }
-    resultsDiv.innerHTML = '<div class="card"><strong>Топ-3 кандидати:</strong><div style="margin-top:8px;"></div></div>';
-    const container = resultsDiv.querySelector('.card div');
-    top.forEach(t => {
-      const el = document.createElement('div');
-      el.className = 'hero-line';
-      el.innerHTML = `<strong>${t.hero}</strong>
-        <div class="small">оцінка: ${t.total.toFixed(2)} (синергія ${t.synergyScore.toFixed(2)} + контри ${t.counterScore.toFixed(2)})</div>`;
-      container.appendChild(el);
+
+    document.getElementById("goButton").addEventListener("click", () => {
+      const myTeam = [];
+      const enemyTeam = [];
+
+      for (let i = 0; i < 4; i++) {
+        const val = document.getElementById(`myHero${i + 1}`).value;
+        if (val) myTeam.push(val);
+      }
+      for (let i = 0; i < 5; i++) {
+        const val = document.getElementById(`enemyHero${i + 1}`).value;
+        if (val) enemyTeam.push(val);
+      }
+
+      if (myTeam.length < 4 || enemyTeam.length < 5) {
+        alert("Будь ласка, виберіть 4 своїх героїв і 5 ворожих!");
+        return;
+      }
+
+      showBestPicks(myTeam, enemyTeam);
     });
-    // додаємо пояснення (корисно при відлагодженні)
-    const note = document.createElement('div');
-    note.className = 'small';
-    note.style.marginTop = '8px';
-    note.textContent = 'Пояснення: score = сумарна синергія з вашими героями + сумарна ефективність проти ворожих героїв.';
-    container.appendChild(note);
-  });
 
-  // стартове оновлення
-  refreshOptionDisables();
-  updateCountsAndButton();
+    function showBestPicks(myTeam, enemyTeam) {
+      const synergyScores = {};
 
-})();
-</script>
+      heroes.forEach(hero => {
+        if (myTeam.includes(hero.name) || enemyTeam.includes(hero.name)) return;
+
+        // рахунок контрпік сили
+        let counterScore = 0;
+        enemyTeam.forEach(enemy => {
+          const enemyData = heroes.find(h => h.name === enemy);
+          if (!enemyData) return;
+          if (hero.BestCounters.includes(enemy)) counterScore += 3;
+          if (hero.commonCounters.includes(enemy)) counterScore += 1;
+        });
+
+        synergyScores[hero.name] = counterScore;
+      });
+
+      const sorted = Object.entries(synergyScores)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3);
+
+      const resultDiv = document.getElementById("results");
+      resultDiv.innerHTML = "<h2>🔹 Найкращі герої для піку:</h2>" +
+        sorted.map(([name, score]) => `<p>${name} — сила контрпіку: ${score}</p>`).join("");
+    }
+  </script>
 </body>
 </html>
+
 
 
 
