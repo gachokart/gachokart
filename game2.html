@@ -545,50 +545,56 @@
 
   // ====== Quick live estimate (як у початковому коді) ======
   let estimateGeneration = 0;
-  async function computeLiveEstimate(){
-    const myP = picked.my.filter(Boolean);
-    const enP = picked.enemy.filter(Boolean);
-    const gen = ++estimateGeneration;
+  // НОВА функція
+function logit(p){ 
+  p = Math.max(0.001, Math.min(0.999, p)); 
+  return Math.log(p/(1-p)); 
+}
+function invLogit(x){ return 1/(1+Math.exp(-x)); }
 
-    if(myP.length===0 || enP.length===0){
-      if (gen !== estimateGeneration) return;
-      analysisText.textContent = 'Почніть заповнювати слоти — тут з’явиться попередній аналіз.';
-      winEstimateEl.textContent = '—';
-      return;
-    }
+async function computeLiveEstimate(){
+  const myP = picked.my.filter(Boolean);
+  const enP = picked.enemy.filter(Boolean);
+  const gen = ++estimateGeneration;
 
-    let myScore=0, enScore=0, cnt=0;
-    for(const m of myP){
-      const mObj = heroByName[m];
-      if(!mObj) continue;
-      const matchups = await fetchMatchups(mObj.id);
-      for(const e of enP){
-        const eObj = heroByName[e];
-        if(!eObj) continue;
-        const entry = matchups.find(x => x.hero_id === eObj.id);
-        if(entry){ myScore += entry.win_rate; cnt++; }
-      }
-    }
+  if(myP.length===0 || enP.length===0){
+    if (gen !== estimateGeneration) return;
+    analysisText.textContent = 'Почніть заповнювати слоти — тут з’явиться попередній аналіз.';
+    winEstimateEl.textContent = '—';
+    return;
+  }
+
+  let totalLo = 0, totalWeight = 0;
+
+  for(const m of myP){
+    const mObj = heroByName[m];
+    if(!mObj || mObj.id >= 10000) continue;
+    const matchups = await fetchMatchups(mObj.id);
+
     for(const e of enP){
       const eObj = heroByName[e];
-      if(!eObj) continue;
-      const matchups = await fetchMatchups(eObj.id);
-      for(const m of myP){
-        const mObj = heroByName[m];
-        if(!mObj) continue;
-        const entry = matchups.find(x => x.hero_id === mObj.id);
-        if(entry){ enScore += entry.win_rate; }
+      if(!eObj || eObj.id >= 10000) continue;
+      const entry = matchups.find(x => x.hero_id === eObj.id);
+      if(entry && entry.games_played > 0){
+        const wr = entry.wins / entry.games_played;
+        const lo = logit(wr);
+        const weight = Math.min(entry.games_played, 5000) / 5000;
+        totalLo += lo * weight;
+        totalWeight += weight;
       }
     }
-    if(cnt>0){ myScore/=cnt; enScore/=cnt; }
-
-    let estimate = 50 + 20*(myScore - enScore);
-    estimate = Math.max(8, Math.min(92, estimate));
-
-    if (gen !== estimateGeneration) return;
-    winEstimateEl.textContent = `${estimate.toFixed(0)}%`;
-    analysisText.textContent = `Мої піки: ${myP.join(', ')}\nВороги: ${enP.join(', ')}\nМоя середня: ${(myScore*100).toFixed(0)}% · ворожа середня: ${(enScore*100).toFixed(0)}%`;
   }
+
+  let avgLo = totalWeight > 0 ? totalLo / totalWeight : 0;
+  let prob = invLogit(avgLo);
+  prob = Math.max(0.08, Math.min(0.92, prob));
+
+  if (gen !== estimateGeneration) return;
+  winEstimateEl.textContent = `${(prob*100).toFixed(0)}%`;
+  analysisText.textContent = `Мої піки: ${myP.join(', ')}\nВороги: ${enP.join(', ')}\nЙмовірність перемоги ≈ ${(prob*100).toFixed(1)}%`;
+}
+
+
 
   // ====== DraftEval adapters integration ======
   const adapters = {
