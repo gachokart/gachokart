@@ -4,17 +4,36 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Dota 2 Draft Helper</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">  
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>  
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> 
 <style>
   body { font-family: Arial, sans-serif; background: #121212; color: #fff; text-align: center; padding: 20px; }
-  h1 { color: #00ffcc; }
+  h1 {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 20px;
+  color: #00ffcc;
+  text-shadow: 2px 2px #000;
+  margin-bottom: 20px;
+}
   h2 { color: #00ccff; margin-top: 30px; }
   select { width: 200px; margin: 5px; padding: 5px; border-radius: 5px; border: none; background: #1e1e1e; color: #fff; }
   button { padding: 10px 20px; margin-top: 20px; font-size: 16px; cursor: pointer; background: #00ffcc; border: none; border-radius: 8px; transition: 0.3s; }
   button:hover { background: #00cc99; }
-  .team-container { display: flex; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
+  .team-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.team-container select {
+  width: 140px;
+  font-size: 12px;
+  padding: 4px;
+} }
   .result { margin-top: 30px; }
   .hero { background: #1e1e1e; border-radius: 8px; padding: 10px; margin: 10px; width: 200px; display: inline-block; }
 </style>
