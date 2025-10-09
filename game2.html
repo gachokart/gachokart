@@ -76,23 +76,23 @@
   <script>
     let heroes = [];
 
-    // ✅ Завантаження бази героїв із GitHub
+    // ✅ Завантаження бази героїв із GitHub (ПРАЦЮЮЧИЙ fetch)
     fetch('https://raw.githubusercontent.com/gachokart/gachokart/main/heroes.json')
       .then(res => {
         if (!res.ok) throw new Error('Не вдалося завантажити heroes.json');
         return res.json();
       })
       .then(data => {
-        console.log('✅ Герої завантажені:', data.length);
         heroes = data;
+        console.log('✅ Герої завантажені:', heroes.length);
         createSelectors();
       })
       .catch(err => {
         console.error('❌ Помилка завантаження heroes.json:', err);
-        alert('Не вдалося завантажити базу героїв. Перевірте шлях до heroes.json у GitHub.');
+        alert('Помилка: не вдалося завантажити базу героїв. Перевір посилання або інтернет-з’єднання.');
       });
 
-    // 🧩 Створення селекторів для обох команд
+    // Створення селекторів для обох команд
     function createSelectors() {
       const myTeamDiv = document.getElementById('myTeam');
       const enemyTeamDiv = document.getElementById('enemyTeam');
@@ -118,7 +118,7 @@
       document.getElementById('goBtn').addEventListener('click', calculateBestPicks);
     }
 
-    // 🧮 Алгоритм підрахунку кращих піків
+    // Алгоритм підрахунку кращих піків
     function calculateBestPicks() {
       const myHeroes = Array.from(document.querySelectorAll('#myTeam select'))
         .map(s => s.value).filter(v => v);
@@ -172,6 +172,7 @@
   </script>
 </body>
 </html>
+
 
 
 
