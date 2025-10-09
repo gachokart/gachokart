@@ -77,16 +77,20 @@
     let heroes = [];
 
     // Завантаження бази героїв із GitHub
-    fetch('https://raw.githubusercontent.com/gachokart/gachokart/main/heroes.json')
-      .then(res => res.json())
-      .then(data => {
-        heroes = data;
-        createSelectors();
-      })
-      .catch(err => {
-        console.error("❌ Помилка завантаження heroes.json:", err);
-        alert("Не вдалося завантажити heroes.json. Перевірте шлях до файлу.");
-      });
+    fetch('./heroes.json')
+  .then(res => {
+    if (!res.ok) throw new Error('Не вдалося завантажити heroes.json');
+    return res.json();
+  })
+  .then(data => {
+    console.log('Герої:', data);
+    // твоя логіка
+  })
+  .catch(err => {
+    console.error('Помилка:', err);
+  });
+
+
 
     // Створення селекторів для обох команд
     function createSelectors() {
