@@ -4,6 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Dota 2 Draft Helper</title>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> 
 <style>
   body { font-family: Arial, sans-serif; background: #121212; color: #fff; text-align: center; padding: 20px; }
   h1 { color: #00ffcc; }
@@ -573,13 +575,31 @@ function createSelectors() {
     .concat(heroes.map(h => `<option value="${h.name}">${h.name}</option>`))
     .join('');
 
-  const totalMy = stageLimits.map(s => s.my).reduce((a,b)=>a+b,0);
-  const totalEnemy = stageLimits.map(s => s.enemy).reduce((a,b)=>a+b,0);
+  const totalMy = stageLimits.map(s => s.my).reduce((a, b) => a + b, 0);
+  const totalEnemy = stageLimits.map(s => s.enemy).reduce((a, b) => a + b, 0);
 
-  for (let i = 0; i < totalMy; i++) { const select = document.createElement('select'); select.innerHTML = heroOptions; myTeamDiv.appendChild(select); }
-  for (let i = 0; i < totalEnemy; i++) { const select = document.createElement('select'); select.innerHTML = heroOptions; enemyTeamDiv.appendChild(select); }
+  for (let i = 0; i < totalMy; i++) {
+    const select = document.createElement('select');
+    select.className = 'slot select2';
+    select.innerHTML = heroOptions;
+    myTeamDiv.appendChild(select);
+  }
 
-  updateSelects(); 
+  for (let i = 0; i < totalEnemy; i++) {
+    const select = document.createElement('select');
+    select.className = 'slot select2';
+    select.innerHTML = heroOptions;
+    enemyTeamDiv.appendChild(select);
+  }
+
+  // Ініціалізуємо Select2
+  $('.select2').select2({
+    placeholder: 'Вибери героя',
+    allowClear: true,
+    width: '100%'
+  });
+
+  updateSelects();
   document.getElementById('nextBtn').addEventListener('click', nextStage);
 
   const selects = Array.from(document.querySelectorAll('select'));
