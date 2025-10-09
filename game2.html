@@ -628,11 +628,11 @@ function calculateBestPicks() {
   });
 
   scores.sort((a,b)=>b.score-a.score);
-  const top = scores.slice(0, Math.min(3, scores.length));
+  const top = scores.slice(0, Math.min(5, scores.length));
 
   const resultDiv = document.getElementById('results');
   resultDiv.innerHTML = `<h2>Топ-герої для наступного піку:</h2>` +
-    top.map(t=>`<div class="hero"><h3>${t.hero}</h3><p>Оцінка: ${t.score.toFixed(5)}</p></div>`).join('');
+    top.map(t=>`<div class="hero"><h3>${t.hero}</h3><p>Оцінка: ${t.score.toFixed(4)}</p></div>`).join('');
 }
 
 // 🔹 Кнопка "Наступний етап" або "Go"
