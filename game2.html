@@ -493,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Створюємо опції для кожного селекта
   selects.forEach(select => {
-    select.innerHTML = ''; // очищаємо
+    select.innerHTML = '';
     const defaultOption = document.createElement('option');
     defaultOption.value = '';
     defaultOption.textContent = '-- Оберіть героя --';
@@ -523,6 +523,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     });
+  }
+
+  // Відстеження змін
+  selects.forEach(select => {
+    select.addEventListener('change', updateSelects);
+  });
+
+  updateSelects(); // початкове оновлення
+});
+</script>
   }
 
   // Відстежуємо зміни
