@@ -414,24 +414,43 @@
     });
 
     function createSelectors() {
-      const myTeamDiv = document.getElementById('myTeam');
-      const enemyTeamDiv = document.getElementById('enemyTeam');
+  const myTeamDiv = document.getElementById('myTeam');
+  const enemyTeamDiv = document.getElementById('enemyTeam');
 
-      const heroOptions = ['<option value="">Вибери героя</option>']
-        .concat(heroes.map(h => `<option value="${h.name}">${h.name}</option>`))
-        .join('');
+  const heroOptions = ['<option value="">Вибери героя</option>']
+    .concat(heroes.map(h => `<option value="${h.name}">${h.name}</option>`))
+    .join('');
 
-      for (let i = 0; i < 4; i++) {
-        const select = document.createElement('select');
-        select.innerHTML = heroOptions;
-        myTeamDiv.appendChild(select);
-      }
+  const allSelects = [];
 
-      for (let i = 0; i < 5; i++) {
-        const select = document.createElement('select');
-        select.innerHTML = heroOptions;
-        enemyTeamDiv.appendChild(select);
-      }
+  for (let i = 0; i < 4; i++) {
+    const select = document.createElement('select');
+    select.innerHTML = heroOptions;
+    myTeamDiv.appendChild(select);
+    allSelects.push(select);
+  }
+
+  for (let i = 0; i < 5; i++) {
+    const select = document.createElement('select');
+    select.innerHTML = heroOptions;
+    enemyTeamDiv.appendChild(select);
+    allSelects.push(select);
+  }
+
+  // Оновлюємо доступні опції при зміні будь-якого селектора
+  allSelects.forEach(select => {
+    select.addEventListener('change', () => {
+      const selectedHeroes = allSelects.map(s => s.value).filter(v => v);
+      allSelects.forEach(s => {
+        Array.from(s.options).forEach(option => {
+          if (option.value && !s.value) {
+            option.disabled = selectedHeroes.includes(option.value);
+          }
+       
+
+  document.getElementById('goBtn').addEventListener('click', calculateBestPicks);
+}
+
 
       document.getElementById('goBtn').addEventListener('click', calculateBestPicks);
     }
