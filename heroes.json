@@ -451,66 +451,66 @@
   },
   {
     "id": 51,
-    "name": "Broodmother",
-    "roles": ["Melee", "Carry", "Escape", "Nuker", "Pusher"],
-    "winrate": 0.5480,
-    "pickrate": 0.0283,
-    "BestCounters": ["Arc Warden", "Night Stalker", "Puck", "Elder Titan", "Clinkz", "Ursa", "Ember Spirit", "Silencer", "Zeus", "Nature's Prophet"],
-    "commonCounters": ["Naga Siren", "Earthshaker", "Chen", "Dark Seer", "Crystal Maiden", "Necrophos", "Meepo", "Omniknight", "Sand King", "Axe"]
+    "name": "Zeus",
+    "roles": ["Ranged", "Carry", "Nuker"],
+    "winrate": 0.5072,
+    "pickrate": 0.1225,
+    "BestCounters": ["Sand King",	"Drow Ranger",	"Morphling",	"Shadow Fiend",	"Terrorblade",	"Ancient Apparition",	"Mirana"	,"Weaver",	"Monkey King"	,"Outworld Destroyer"],
+    "commonCounters": ["Meepo",	"Broodmother",	"Visage",	"Huskar",	"Ember Spirit",	"Storm Spirit",	"Brewmaster",	"Lycan",	"Io",	"Spectre"]
   },
   {
-    "id": 5,
-    "name": "Juggernaut",
-    "roles": ["Melee", "Carry", "Escape", "Pusher"],
-    "winrate": 0.5413,
-    "pickrate": 0.1842,
-    "BestCounters": ["Slardar", "Phoenix", "Tidehunter", "Centaur Warrunner", "Underlord", "Nyx Assassin", "Sand King", "Lifestealer", "Dark Willow", "Clockwerk"],
-    "commonCounters": ["Visage", "Morphling", "Riki", "Chen", "Death Prophet", "Io", "Templar Assassin", "Lone Druid", "Doom", "Kez"]
+    "id": 52,
+    "name": "Lycan",
+    "roles": ["Melee", "Carry", "Durable", "Escape", "Pusher"],
+    "winrate": 0.5071,
+    "pickrate": 0.0230,
+    "BestCounters": ["Elder Titan",	"Keeper of the Light",	"Brewmaster",	"Bane",	"Arc Warden",	"Grimstroke",	"Huskar",	"Skywrath Mage",	"Treant Protector",	"Leshrac"],
+    "commonCounters": ["Chen",	"Naga Siren",	"Underlord",	"Tidehunter",	"Bristleback",	"Dark Seer",	"Phantom Lancer",	"Crystal Maiden",	"Enchantress",	"Spirit Breaker"]
   },
   {
-    "id": 6,
-    "name": "Abaddon",
-    "roles": ["Carry", "Melee"],
-    "winrate": 0.5319,
-    "pickrate": 0.0732,
-    "BestCounters": ["Silencer", "Spectre", "Axe", "Bane", "Wraith King", "Bounty Hunter", "Arc Warden", "Troll Warlord", "Batrider", "Queen of Pain"],
-    "commonCounters": ["Dark Seer", "Elder Titan", "Chen", "Ancient Apparition", "Undying", "Doom", "Lycan", "Anti-Mage", "Outworld Destroyer", "Enchantress"]
+    "id": 53,
+    "name": "Alchemist",
+    "roles": ["Melee", "Carry", "Disabler", "Durable", "Initiator", "Nuker", "Support"],
+    "winrate": 0.5062,
+    "pickrate": 0.0514,
+    "BestCounters": ["Medusa"	,"Naga Siren"	,"Enigma"	,"Lone Druid",	"Bloodseeker",	"Wraith King",	"Centaur Warrunner",	"Lycan",	"Templar Assassin",	"Treant Protector"],
+    "commonCounters": ["Slark"	,"Timbersaw",	"Anti-Mage",	"Io",	"Doom",	"Storm Spirit",	"Slardar",	"Chen",	"Marci",	"Leshrac"]
   },
   {
-    "id": 7,
-    "name": "Lifestealer",
-    "roles": ["Melee", "Carry", "Disabler", "Durable", "Escape"],
-    "winrate": 0.5263,
-    "pickrate": 0.1121,
-    "BestCounters": ["Bloodseeker", "Sand King", "Tiny", "Wraith King", "Sven", "Techies", "Kunkka", "Nyx Assassin", "Centaur Warrunner", "Mars"],
-    "commonCounters": ["Chen", "Chaos Knight", "Clinkz", "Doom", "Morphling", "Enigma", "Slardar", "Razor", "Nature's Prophet", "Naga Siren"]
+    "id": 54,
+    "name": "Pudge",
+    "roles": ["Melee", "Disabler", "Durable", "Initiator", "Nuker"],
+    "winrate": 0.5057,
+    "pickrate": 0.2298,
+    "BestCounters": ["Enchantress",	"Axe",	"Necrophos",	"Pugna",	"Phantom Lancer",	"Sniper",	"Spectre",	"Phantom Assassin",	"Drow Ranger",	"Clinkz"],
+    "commonCounters": ["Pangolier",	"Beastmaster",	"Monkey King",	"Terrorblade",	"Ringmaster",	"Kez"	,"Grimstroke",	"Timbersaw",	"Bristleback",	"Batrider"]
   },
   {
-    "id": 8,
-    "name": "Slardar",
-    "roles": ["Melee", "Carry", "Disabler", "Durable", "Escape", "Initiator"],
-    "winrate": 0.5368,
-    "pickrate": 0.0872,
-    "BestCounters": ["Anti-Mage", "Lifestealer", "Sven", "Spectre", "Nyx Assassin", "Clinkz", "Ursa", "Elder Titan", "Lycan", "Lone Druid"],
-    "commonCounters": ["Chaos Knight", "Terrorblade", "Phantom Lancer", "Naga Siren", "Tidehunter", "Chen", "Juggernaut", "Luna", "Dragon Knight", "Medusa"]
+    "id": 55,
+    "name": "Bounty Hunter",
+    "roles": ["Melee", "Escape", "Nuker"],
+    "winrate": 0.5047,
+    "pickrate": 0.0333,
+    "BestCounters": ["Io",	"Spectre",	"Clinkz",	"Beastmaster",	"Weaver",	"Riki","Bane","Mirana",	"Death Prophet",	"Invoker"],
+    "commonCounters": ["Naga Siren",	"Chen",	"Brewmaster",	"Phantom Lancer",	"Abaddon",	"Shadow Shaman",	"Omniknight",	"Clockwerk",	"Doom",	"Slark"]
   },
   {
-    "id": 9,
-    "name": "Silencer",
-    "roles": ["Ranged", "Carry", "Disabler", "Initiator", "Nuker", "Support"],
-    "winrate": 0.5322,
-    "pickrate": 0.1613,
-    "BestCounters": ["Dawnbreaker", "Timbersaw", "Necrophos", "Witch Doctor", "Ursa", "Visage", "Sand King", "Storm Spirit", "Lich", "Primal Beast"],
-    "commonCounters": ["Tidehunter", "Abaddon", "Naga Siren", "Phantom Lancer", "Huskar", "Slark", "Broodmother", "Lone Druid", "Morphling", "Lycan"]
+    "id": 56,
+    "name": "Queen of Pain",
+    "roles": ["Ranged", "Carry", "Escape", "Nuker"],
+    "winrate": 0.5040,
+    "pickrate": 0.1811,
+    "BestCounters": ["Leshrac",	"Sand King",	"Clockwerk",	"Razor",	"Mars",	"Dark Seer",	"Luna"	,"Timbersaw",	"Windranger",	"Batrider"],
+    "commonCounters": ["Huskar",	"Puck",	"Ember Spirit",	"Elder Titan",	"Legion Commander",	"Pugna",	"Riki",	"Medusa",	"Meepo",	"Tinker"]
   },
   {
-    "id": 10,
-    "name": "Dawnbreaker",
-    "roles": ["Melee", "Carry", "Durable"],
-    "winrate": 0.5262,
-    "pickrate": 0.1464,
-    "BestCounters": ["Bloodseeker", "Legion Commander", "Naga Siren", "Wraith King", "Chaos Knight", "Crystal Maiden", "Meepo", "Enigma", "Shadow Demon", "Phantom Assassin"],
-    "commonCounters": ["Silencer", "Bristleback", "Phoenix", "Winter Wyvern", "Morphling", "Nyx Assassin", "Ursa", "Visage", "Pangolier", "Death Prophet"]
+    "id": 57,
+    "name": "Earth Spirit",
+    "roles": ["Melee", "Disabler", "Durable", "Escape", "Initiator", "Nuker"],
+    "winrate": 0.5034,
+    "pickrate": 0.0299,
+    "BestCounters": ["Drow Ranger",	"Razor",	"Arc Warden",	"Sniper",	"Nyx Assassin",	"Broodmother",	"Mars",	"Medusa",	"Shadow Demon",	"Nature's Prophet"],
+    "commonCounters": ["Enigma",	"Phoenix",	"Huskar",	"Io"	,"Lone Druid",	"Tidehunter",	"Abaddon",	"Pangolier",	"Legion Commander",	"Shadow Shaman"]
   },
 ]
  
