@@ -665,14 +665,25 @@ function createSelectors() {
 // 🔹 Блокуємо повторні героїв
 function updateSelects() {
   const selects = Array.from(document.querySelectorAll('select'));
-  const selectedHeroes = selects.map(s => s.value).filter(v => v!=='');
+  const selectedHeroes = selects.map(s => s.value).filter(v => v !== '');
+
   selects.forEach(select => {
     const current = select.value;
     Array.from(select.options).forEach(opt => {
-      if(opt.value==='') { opt.disabled=false; } 
-      else { opt.disabled = selectedHeroes.includes(opt.value) && opt.value!==current; }
+      if (opt.value === '') {
+        opt.disabled = false;
+      } else {
+        opt.disabled = selectedHeroes.includes(opt.value) && opt.value !== current;
+      }
     });
-  });
+
+    // 🔄 Оновлюємо Select2 вручну
+    $(select).select2('destroy');
+    $(select).select2({
+      placeholder: 'Вибери героя',
+      allowClear: true,
+      width: '100%'
+    });
 }
 
 // 🔹 Розрахунок топ героїв для наступного піку
