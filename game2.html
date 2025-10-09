@@ -12,13 +12,8 @@
       text-align: center;
       padding: 20px;
     }
-    h1 {
-      color: #00ffcc;
-    }
-    h2 {
-      color: #00ccff;
-      margin-top: 30px;
-    }
+    h1 { color: #00ffcc; }
+    h2 { color: #00ccff; margin-top: 30px; }
     select {
       width: 200px;
       margin: 5px;
@@ -38,18 +33,14 @@
       border-radius: 8px;
       transition: 0.3s;
     }
-    button:hover {
-      background: #00cc99;
-    }
+    button:hover { background: #00cc99; }
     .team-container {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
       margin-bottom: 20px;
     }
-    .result {
-      margin-top: 30px;
-    }
+    .result { margin-top: 30px; }
     .hero {
       background: #1e1e1e;
       border-radius: 8px;
@@ -62,7 +53,7 @@
 </head>
 <body>
   <h1>Dota 2 Counter Picker</h1>
-  
+
   <h2>Моя команда (4 герої)</h2>
   <div id="myTeam" class="team-container"></div>
 
@@ -74,25 +65,54 @@
   <div id="results" class="result"></div>
 
   <script>
-    let heroes = [];
+    // =============================
+    // 🔥 ВШИТИЙ heroes.json
+    // =============================
+    const heroes = [
+      {
+        "name": "Wraith King",
+        "roles": ["Carry", "Durable", "Initiator"],
+        "winrate": 0.52,
+        "BestCounters": ["Lifestealer", "Phantom Assassin"],
+        "commonCounters": ["Anti-Mage", "Outworld Destroyer"]
+      },
+      {
+        "name": "Phantom Assassin",
+        "roles": ["Carry", "Escape"],
+        "winrate": 0.50,
+        "BestCounters": ["Sniper", "Shadow Fiend"],
+        "commonCounters": ["Axe", "Legion Commander"]
+      },
+      {
+        "name": "Axe",
+        "roles": ["Initiator", "Durable", "Disabler"],
+        "winrate": 0.49,
+        "BestCounters": ["Phantom Assassin", "Juggernaut"],
+        "commonCounters": ["Venomancer", "Viper"]
+      },
+      {
+        "name": "Viper",
+        "roles": ["Carry", "Disabler", "Nuker"],
+        "winrate": 0.51,
+        "BestCounters": ["Phantom Assassin", "Templar Assassin"],
+        "commonCounters": ["Sniper", "Medusa"]
+      },
+      {
+        "name": "Sniper",
+        "roles": ["Carry", "Nuker"],
+        "winrate": 0.48,
+        "BestCounters": ["Viper", "Drow Ranger"],
+        "commonCounters": ["Phantom Assassin", "Storm Spirit"]
+      }
+    ];
 
-    // ✅ Завантаження бази героїв із GitHub (ПРАЦЮЮЧИЙ fetch)
-    fetch('https://raw.githubusercontent.com/gachokart/gachokart/main/heroes.json')
-      .then(res => {
-        if (!res.ok) throw new Error('Не вдалося завантажити heroes.json');
-        return res.json();
-      })
-      .then(data => {
-        heroes = data;
-        console.log('✅ Герої завантажені:', heroes.length);
-        createSelectors();
-      })
-      .catch(err => {
-        console.error('❌ Помилка завантаження heroes.json:', err);
-        alert('Помилка: не вдалося завантажити базу героїв. Перевір посилання або інтернет-з’єднання.');
-      });
+    // =============================
+    // 🧩 Основна логіка
+    // =============================
+    document.addEventListener('DOMContentLoaded', () => {
+      createSelectors();
+    });
 
-    // Створення селекторів для обох команд
     function createSelectors() {
       const myTeamDiv = document.getElementById('myTeam');
       const enemyTeamDiv = document.getElementById('enemyTeam');
@@ -101,14 +121,12 @@
         .concat(heroes.map(h => `<option value="${h.name}">${h.name}</option>`))
         .join('');
 
-      // 4 герої для моєї команди
       for (let i = 0; i < 4; i++) {
         const select = document.createElement('select');
         select.innerHTML = heroOptions;
         myTeamDiv.appendChild(select);
       }
 
-      // 5 героїв для ворогів
       for (let i = 0; i < 5; i++) {
         const select = document.createElement('select');
         select.innerHTML = heroOptions;
@@ -118,7 +136,6 @@
       document.getElementById('goBtn').addEventListener('click', calculateBestPicks);
     }
 
-    // Алгоритм підрахунку кращих піків
     function calculateBestPicks() {
       const myHeroes = Array.from(document.querySelectorAll('#myTeam select'))
         .map(s => s.value).filter(v => v);
@@ -137,19 +154,16 @@
 
         let score = 0;
 
-        // Якщо герой контрить ворогів
         enemyHeroes.forEach(enemy => {
           if (hero.BestCounters && hero.BestCounters.includes(enemy)) score += 1.5;
           if (hero.commonCounters && hero.commonCounters.includes(enemy)) score -= 1;
         });
 
-        // Перевірка синергії з командою
         myHeroes.forEach(my => {
           const myHero = heroes.find(h => h.name === my);
           if (myHero && myHero.roles.some(r => hero.roles.includes(r))) score += 0.3;
         });
 
-        // Корекція по winrate
         if (hero.winrate) score += hero.winrate * 2;
 
         scores.push({ hero: hero.name, score });
@@ -172,6 +186,7 @@
   </script>
 </body>
 </html>
+
 
 
 
