@@ -38,7 +38,11 @@
   border: 1px solid #888;
   border-radius: 4px;
 }
-  .select2-container--default .select2-selection--single {
+  .select2-container {
+  width: 195px !important; /* 130px × 1.5 */
+}
+
+.select2-container--default .select2-selection--single {
   background-color: #ffffff;
   color: #000000;
   border: 1px solid #888;
@@ -56,8 +60,15 @@
   height: 30px;
 }
 
-.select2-container {
-  width: 130px !important;
+/* 🔥 Чорний текст у випадаючому списку */
+.select2-results__option {
+  color: #000000;
+  background-color: #ffffff;
+}
+
+.select2-results__option--highlighted {
+  background-color: #e0e0e0;
+  color: #000000;
 }
   .result { margin-top: 30px; }
   .hero { background: #1e1e1e; border-radius: 8px; padding: 10px; margin: 10px; width: 200px; display: inline-block; }
