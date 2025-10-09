@@ -484,45 +484,33 @@
       `;
     }
   </script>
-  <script>
+ <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const rawJson = document.getElementById('heroes-data').textContent;
-  const heroes = JSON.parse(rawJson);
-  const heroNames = heroes.map(h => h.name.trim());
-  const selects = document.querySelectorAll('select.slot');
-
-  // Створюємо опції для кожного селекта
-  selects.forEach(select => {
-    select.innerHTML = '';
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.textContent = '-- Оберіть героя --';
-    select.appendChild(defaultOption);
-
-    heroNames.forEach(name => {
-      const option = document.createElement('option');
-      option.value = name;
-      option.textContent = name;
-      select.appendChild(option);
-    });
-  });
+  const selects = Array.from(document.querySelectorAll('select'));
 
   // Функція для оновлення доступності героїв
   function updateSelects() {
-    const selectedHeroes = Array.from(selects)
-      .map(s => s.value)
-      .filter(v => v !== '');
-
+    const selectedHeroes = selects.map(s => s.value).filter(v => v !== '');
     selects.forEach(select => {
       const currentValue = select.value;
-      Array.from(select.options).forEach(opt => {
-        if (opt.value === '') {
-          opt.disabled = false;
+      Array.from(select.options).forEach(option => {
+        if (option.value === '') {
+          option.disabled = false;
         } else {
-          opt.disabled = selectedHeroes.includes(opt.value) && opt.value !== currentValue;
+          // якщо герой вже вибраний в іншому селекті – вимикаємо його
+          option.disabled = selectedHeroes.includes(option.value) && option.value !== currentValue;
         }
       });
     });
+  }
+
+  // Відстежуємо зміни
+  selects.forEach(select => select.addEventListener('change', updateSelects));
+
+  updateSelects(); // початкове оновлення
+});
+</script>
+
   }
 
   // Відстеження змін
