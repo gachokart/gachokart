@@ -12,8 +12,12 @@
       text-align: center;
       padding: 20px;
     }
-    h2 {
+    h1 {
       color: #00ffcc;
+    }
+    h2 {
+      color: #00ccff;
+      margin-top: 30px;
     }
     select {
       width: 200px;
@@ -21,6 +25,8 @@
       padding: 5px;
       border-radius: 5px;
       border: none;
+      background: #1e1e1e;
+      color: #fff;
     }
     button {
       padding: 10px 20px;
@@ -56,6 +62,7 @@
 </head>
 <body>
   <h1>Dota 2 Counter Picker</h1>
+  
   <h2>Моя команда (4 герої)</h2>
   <div id="myTeam" class="team-container"></div>
 
@@ -69,40 +76,45 @@
   <script>
     let heroes = [];
 
-    // Завантаження JSON
-    fetch('./heroes.json')
+    // Завантаження бази героїв із GitHub
+    fetch('https://raw.githubusercontent.com/gachokart/gachokart/main/heroes.json')
       .then(res => res.json())
       .then(data => {
         heroes = data;
         createSelectors();
       })
       .catch(err => {
-        console.error("Помилка завантаження heroes.json:", err);
+        console.error("❌ Помилка завантаження heroes.json:", err);
+        alert("Не вдалося завантажити heroes.json. Перевірте шлях до файлу.");
       });
 
+    // Створення селекторів для обох команд
     function createSelectors() {
       const myTeamDiv = document.getElementById('myTeam');
       const enemyTeamDiv = document.getElementById('enemyTeam');
 
-      // 4 герої для себе
+      const heroOptions = ['<option value="">Вибери героя</option>']
+        .concat(heroes.map(h => `<option value="${h.name}">${h.name}</option>`))
+        .join('');
+
+      // 4 герої для моєї команди
       for (let i = 0; i < 4; i++) {
         const select = document.createElement('select');
-        select.innerHTML = `<option value="">Вибери героя</option>` +
-          heroes.map(h => `<option value="${h.name}">${h.name}</option>`).join('');
+        select.innerHTML = heroOptions;
         myTeamDiv.appendChild(select);
       }
 
-      // 5 героїв ворога
+      // 5 героїв для ворогів
       for (let i = 0; i < 5; i++) {
         const select = document.createElement('select');
-        select.innerHTML = `<option value="">Вибери героя</option>` +
-          heroes.map(h => `<option value="${h.name}">${h.name}</option>`).join('');
+        select.innerHTML = heroOptions;
         enemyTeamDiv.appendChild(select);
       }
 
       document.getElementById('goBtn').addEventListener('click', calculateBestPicks);
     }
 
+    // Алгоритм підрахунку кращих піків
     function calculateBestPicks() {
       const myHeroes = Array.from(document.querySelectorAll('#myTeam select'))
         .map(s => s.value).filter(v => v);
@@ -110,31 +122,31 @@
         .map(s => s.value).filter(v => v);
 
       if (enemyHeroes.length < 1) {
-        alert("Вибери принаймні 1 героя противника!");
+        alert("⚠️ Вибери хоча б 1 героя противника!");
         return;
       }
 
       let scores = [];
 
       heroes.forEach(hero => {
-        if (myHeroes.includes(hero.name) || enemyHeroes.includes(hero.name)) return; // вже вибраний
+        if (myHeroes.includes(hero.name) || enemyHeroes.includes(hero.name)) return;
 
         let score = 0;
 
-        // Перевірка BestCounters — якщо герой контрить ворога
+        // Якщо герой контрить ворогів
         enemyHeroes.forEach(enemy => {
-          if (hero.BestCounters && hero.BestCounters.includes(enemy)) score += 1;
+          if (hero.BestCounters && hero.BestCounters.includes(enemy)) score += 1.5;
           if (hero.commonCounters && hero.commonCounters.includes(enemy)) score -= 1;
         });
 
         // Перевірка синергії з командою
         myHeroes.forEach(my => {
           const myHero = heroes.find(h => h.name === my);
-          if (myHero && myHero.roles.some(r => hero.roles.includes(r))) score += 0.5;
+          if (myHero && myHero.roles.some(r => hero.roles.includes(r))) score += 0.3;
         });
 
-        // Легка корекція по winrate
-        score += hero.winrate * 2;
+        // Корекція по winrate
+        if (hero.winrate) score += hero.winrate * 2;
 
         scores.push({ hero: hero.name, score });
       });
