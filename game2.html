@@ -1,3 +1,191 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dota 2 Draft Helper</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #121212; color: #fff; text-align: center; padding: 20px; }
+  h1 { color: #00ffcc; }
+  h2 { color: #00ccff; margin-top: 30px; }
+  select { width: 200px; margin: 5px; padding: 5px; border-radius: 5px; border: none; background: #1e1e1e; color: #fff; }
+  button { padding: 10px 20px; margin-top: 20px; font-size: 16px; cursor: pointer; background: #00ffcc; border: none; border-radius: 8px; transition: 0.3s; }
+  button:hover { background: #00cc99; }
+  .team-container { display: flex; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
+  .result { margin-top: 30px; }
+  .hero { background: #1e1e1e; border-radius: 8px; padding: 10px; margin: 10px; width: 200px; display: inline-block; }
+</style>
+</head>
+<body>
+<h1>Dota 2 Draft Helper</h1>
+
+<h2>Моя команда</h2>
+<div id="myTeam" class="team-container"></div>
+
+<h2>Команда противника</h2>
+<div id="enemyTeam" class="team-container"></div>
+
+<button id="nextBtn">Наступний етап</button>
+<div id="results" class="result"></div>
+
+<script>
+// =========================
+// 🔥 ВШИТИЙ heroes.json
+// =========================
+const heroes = [
+  { "name": "Wraith King", "roles":["Melee","Carry","Disabler","Durable","Initiator"], "winrate":0.5257, "pickrate":0.095, "BestCounters":["Enigma","Ursa"], "commonCounters":["Chen","Underlord"] },
+  { "name": "Vengeful Spirit", "roles":["Ranged","Disabler","Escape","Initiator","Nuker","Support"], "winrate":0.5453, "pickrate":0.1204, "BestCounters":["Legion Commander","Nyx Assassin"], "commonCounters":["Phantom Lancer","Chen"] },
+  { "name": "Meepo", "roles":["Melee","Carry","Disabler","Escape","Initiator","Nuker","Pusher"], "winrate":0.4978, "pickrate":0.0287, "BestCounters":["Anti-Mage","Arc Warden"], "commonCounters":["Elder Titan","Winter Wyvern"] },
+  { "name": "Broodmother", "roles":["Melee","Carry","Escape","Nuker","Pusher"], "winrate":0.548, "pickrate":0.0283, "BestCounters":["Arc Warden","Night Stalker"], "commonCounters":["Naga Siren","Earthshaker"] },
+  { "name": "Juggernaut", "roles":["Melee","Carry","Escape","Pusher"], "winrate":0.5413, "pickrate":0.1842, "BestCounters":["Slardar","Phoenix"], "commonCounters":["Visage","Morphling"] },
+  { "name": "Abaddon", "roles":["Carry","Melee"], "winrate":0.5319, "pickrate":0.0732, "BestCounters":["Silencer","Spectre"], "commonCounters":["Dark Seer","Elder Titan"] },
+  { "name": "Slardar", "roles":["Melee","Carry","Disabler","Durable","Escape","Initiator"], "winrate":0.5368, "pickrate":0.0872, "BestCounters":["Anti-Mage","Lifestealer"], "commonCounters":["Chaos Knight","Terrorblade"] },
+  { "name": "Silencer", "roles":["Ranged","Carry","Disabler","Initiator","Nuker","Support"], "winrate":0.5322, "pickrate":0.1613, "BestCounters":["Dawnbreaker","Timbersaw"], "commonCounters":["Tidehunter","Abaddon"] }
+  // можеш додати всі інших героїв сюди
+];
+
+// =========================
+// 🧩 Логіка драфту
+// =========================
+let stage = 1; // поточна стадія
+const stageLimits = [
+  { my: 2, enemy: 2 }, // стадія 1
+  { my: 2, enemy: 2 }, // стадія 2
+  { my: 1, enemy: 1 }  // стадія 3
+];
+
+document.addEventListener('DOMContentLoaded', () => {
+  createSelectors();
+});
+
+function createSelectors() {
+  const myTeamDiv = document.getElementById('myTeam');
+  const enemyTeamDiv = document.getElementById('enemyTeam');
+
+  const heroOptions = ['<option value="">Вибери героя</option>']
+    .concat(heroes.map(h => `<option value="${h.name}">${h.name}</option>`))
+    .join('');
+
+  const totalMy = stageLimits.map(s => s.my).reduce((a,b)=>a+b,0);
+  const totalEnemy = stageLimits.map(s => s.enemy).reduce((a,b)=>a+b,0);
+
+  for (let i = 0; i < totalMy; i++) { const select = document.createElement('select'); select.innerHTML = heroOptions; myTeamDiv.appendChild(select); }
+  for (let i = 0; i < totalEnemy; i++) { const select = document.createElement('select'); select.innerHTML = heroOptions; enemyTeamDiv.appendChild(select); }
+
+  updateSelects(); 
+  document.getElementById('nextBtn').addEventListener('click', nextStage);
+
+  const selects = Array.from(document.querySelectorAll('select'));
+  selects.forEach(select => select.addEventListener('change', updateSelects));
+}
+
+// 🔹 Блокуємо повторні героїв
+function updateSelects() {
+  const selects = Array.from(document.querySelectorAll('select'));
+  const selectedHeroes = selects.map(s => s.value).filter(v => v!=='');
+  selects.forEach(select => {
+    const current = select.value;
+    Array.from(select.options).forEach(opt => {
+      if(opt.value==='') { opt.disabled=false; } 
+      else { opt.disabled = selectedHeroes.includes(opt.value) && opt.value!==current; }
+    });
+  });
+}
+
+// 🔹 Розрахунок топ героїв для наступного піку
+function calculateBestPicks() {
+  const myHeroes = Array.from(document.querySelectorAll('#myTeam select')).map(s=>s.value).filter(v=>v!=='');
+  const enemyHeroes = Array.from(document.querySelectorAll('#enemyTeam select')).map(s=>s.value).filter(v=>v!=='');
+  const selectsThisStage = stageLimits[stage-1];
+
+  let scores = [];
+
+  heroes.forEach(hero => {
+    if(myHeroes.includes(hero.name) || enemyHeroes.includes(hero.name)) return;
+    let score = 0;
+
+    // сильний проти ворогів
+    enemyHeroes.forEach(e=>{ 
+      if(hero.BestCounters?.includes(e)) score+=1.5;
+      if(hero.commonCounters?.includes(e)) score-=1;
+    });
+
+    // синергія з командою
+    myHeroes.forEach(my=>{
+      const h = heroes.find(h=>h.name===my);
+      if(h && h.roles.some(r=>hero.roles.includes(r))) score+=0.3;
+    });
+
+    if(hero.winrate) score+=hero.winrate*2;
+    scores.push({hero:hero.name, score});
+  });
+
+  scores.sort((a,b)=>b.score-a.score);
+  const top = scores.slice(0, Math.min(3, scores.length));
+
+  const resultDiv = document.getElementById('results');
+  resultDiv.innerHTML = `<h2>Топ-герої для наступного піку:</h2>` +
+    top.map(t=>`<div class="hero"><h3>${t.hero}</h3><p>Оцінка: ${t.score.toFixed(2)}</p></div>`).join('');
+}
+
+// 🔹 Кнопка "Наступний етап" або "Go"
+function nextStage() {
+  const mySelected = Array.from(document.querySelectorAll('#myTeam select')).map(s=>s.value).filter(v=>v!=='');
+  const enemySelected = Array.from(document.querySelectorAll('#enemyTeam select')).map(s=>s.value).filter(v=>v!=='');
+  const limits = stageLimits[stage-1];
+
+  if(mySelected.length<limits.my || enemySelected.length<limits.enemy){
+    alert(`⚠️ Обери ${limits.my} героїв у свою команду та ${limits.enemy} у команду суперника!`);
+    return;
+  }
+
+  if(stage<3){
+    stage++;
+    calculateBestPicks();
+  } else {
+    // остання стадія, показуємо шанси
+    const myTeam = mySelected;
+    const enemyTeam = enemySelected;
+    let myScore=0, enemyScore=0;
+
+    heroes.forEach(h=>{
+      if(myTeam.includes(h.name)){
+        enemyTeam.forEach(e=>{
+          if(h.BestCounters?.includes(e)) myScore+=1;
+          if(h.commonCounters?.includes(e)) myScore-=0.5;
+        });
+      }
+      if(enemyTeam.includes(h.name)){
+        myTeam.forEach(m=>{
+          if(h.BestCounters?.includes(m)) enemyScore+=1;
+          if(h.commonCounters?.includes(m)) enemyScore-=0.5;
+        });
+      }
+    });
+
+    const myChance = Math.min(100, Math.max(0, 50 + (myScore - enemyScore)*10));
+    document.getElementById('results').innerHTML = `<h2>Шанс на перемогу моєї команди: ${myChance.toFixed(0)}%</h2>`;
+  }
+}
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
