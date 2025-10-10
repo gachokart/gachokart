@@ -671,32 +671,31 @@ function createSelectors() {
 }
 
 
-// 🔹 Блокуємо повторні героїв
-function updateSelects() {
-  const selects = Array.from(document.querySelectorAll('select2'));
-  const selectedHeroes = selects.map(s => s.value).filter(v => v !== '');
+document.addEventListener("change", (e) => {
+  if (e.target.classList.contains("select2")) {
+    const allSelects = document.querySelectorAll(".select2");
+    const chosen = Array.from(allSelects)
+      .map(s => s.value)
+      .filter(v => v);
 
-  selects.forEach(select => {
-    const current = select.value;
-    Array.from(select.options).forEach(opt => {
-      if (opt.value === '') {
-        opt.disabled = false;
-      } else {
-        opt.disabled = selectedHeroes.includes(opt.value) && opt.value !== current;
-      }
+    allSelects.forEach(select => {
+      Array.from(select.options).forEach(opt => {
+        if (opt.value && chosen.includes(opt.value) && opt.value !== select.value) {
+          opt.disabled = true;
+        } else {
+          opt.disabled = false;
+        }
+      });
     });
-    });
-}
 
-
-    // 🔄 Оновлюємо Select2 вручну
-    $(select2).select2('destroy');
-    $(select2).select2({
+    // оновлюємо select2, щоб зміни застосувались
+    $('.select2').select2('destroy').select2({
       placeholder: 'Вибери героя',
       allowClear: true,
       width: '100%'
     });
-    
+  }
+});
 
 // 🔹 Розрахунок топ героїв для наступного піку
 function calculateBestPicks() {
@@ -773,6 +772,31 @@ function nextStage() {
     document.getElementById('results').innerHTML = `<h2>Шанс на перемогу моєї команди: ${myChance.toFixed(0)}%</h2>`;
   }
 }
+  document.addEventListener("change", (e) => {
+  if (e.target.classList.contains("select2")) {
+    const allSelects = document.querySelectorAll(".select2");
+    const chosen = Array.from(allSelects)
+      .map(s => s.value)
+      .filter(v => v);
+
+    allSelects.forEach(select => {
+      Array.from(select.options).forEach(opt => {
+        if (opt.value && chosen.includes(opt.value) && opt.value !== select.value) {
+          opt.disabled = true;
+        } else {
+          opt.disabled = false;
+        }
+      });
+    });
+
+    // оновлюємо select2, щоб зміни застосувались
+    $('.select2').select2('destroy').select2({
+      placeholder: 'Вибери героя',
+      allowClear: true,
+      width: '100%'
+    });
+  }
+});
 </script>
 </body>
 </html>
