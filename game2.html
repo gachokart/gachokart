@@ -639,14 +639,14 @@ function createSelectors() {
   const totalEnemy = stageLimits.map(s => s.enemy).reduce((a, b) => a + b, 0);
 
   for (let i = 0; i < totalMy; i++) {
-    const select = document.createElement('select');
+    const select = document.createElement('select2');
     select.className = 'slot select2';
     select.innerHTML = heroOptions;
     myTeamDiv.appendChild(select);
   }
 
   for (let i = 0; i < totalEnemy; i++) {
-    const select = document.createElement('select');
+    const select = document.createElement('select2');
     select.className = 'slot select2';
     select.innerHTML = heroOptions;
     enemyTeamDiv.appendChild(select);
