@@ -653,11 +653,16 @@ function createSelectors() {
   }
 
   // Ініціалізуємо Select2
-  $('.select2').select2({
-    placeholder: 'Вибери героя',
-    allowClear: true,
-    width: '100%'
-  });
+    $(select).select2('destroy');
+    $(select).select2({
+      placeholder: 'Вибери героя',
+      allowClear: true,
+      width: '100%'
+    });
+  }); // ← ця дужка була відсутня
+}
+
+
 
   updateSelects();
   document.getElementById('nextBtn').addEventListener('click', nextStage);
