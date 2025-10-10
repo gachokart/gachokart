@@ -722,7 +722,7 @@
   {
     "id": 81,
     "name": "Grimstroke",
-    "roles": ["Ranged", 'Disabler", "Escape", "Nuker", "Support"],
+    "roles": ["Ranged", "Disabler", "Escape", "Nuker", "Support"],
     "winrate": 0.4857,
     "pickrate": 0.0475,
     "BestCounters": ["Slark","Primal Beast","Storm Spirit","Pangolier","Tinker","Pudge","Viper","Phantom Lancer","Meepo","Batrider"],
