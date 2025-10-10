@@ -201,18 +201,11 @@ const stageLimits = [
 
 document.addEventListener('DOMContentLoaded', () => {
   createSelectors();
-  updateSelects();
-
+  updateUniqueSelection(); // одразу запускаємо
   document.getElementById('nextBtn').addEventListener('click', nextStage);
-
-  // слухачі на всі селекти
-  document.addEventListener('change', e => {
-    if (e.target.matches('select.slot')) {
-      updateSelects();
-    }
-  });
 });
 
+// Створюємо селектори
 function createSelectors() {
   const myTeamDiv = document.getElementById('myTeam');
   const enemyTeamDiv = document.getElementById('enemyTeam');
@@ -238,46 +231,38 @@ function createSelectors() {
     enemyTeamDiv.appendChild(select);
   }
 
-  // ініціалізація Select2 для всіх селекторів
   $('.select2').select2({
     placeholder: 'Вибери героя',
     allowClear: true,
     width: '100%'
   });
+
+  // подія на зміну
+  $(document).on('change', '.select2', updateUniqueSelection);
 }
 
+// 🔹 Забороняємо повторний вибір героя
+function updateUniqueSelection() {
+  const allSelects = document.querySelectorAll('.select2');
+  const chosen = Array.from(allSelects)
+    .map(s => s.value)
+    .filter(v => v);
 
-document.addEventListener("change", (e) => {
-  if (e.target.classList.contains("select2")) {
-    const allSelects = document.querySelectorAll(".select2");
-    const chosen = Array.from(allSelects)
-      .map(s => s.value)
-      .filter(v => v);
-
-    allSelects.forEach(select => {
-      Array.from(select.options).forEach(opt => {
-        if (opt.value && chosen.includes(opt.value) && opt.value !== select.value) {
-          opt.disabled = true;
-        } else {
-          opt.disabled = false;
-        }
-      });
+  allSelects.forEach(select => {
+    Array.from(select.options).forEach(opt => {
+      if (opt.value && chosen.includes(opt.value) && opt.value !== select.value) {
+        opt.disabled = true;
+      } else {
+        opt.disabled = false;
+      }
     });
+  });
+}
 
-    // оновлюємо select2, щоб зміни застосувались
-    $('.select2').select2('destroy').select2({
-      placeholder: 'Вибери героя',
-      allowClear: true,
-      width: '100%'
-    });
-  }
-});
-
-// 🔹 Розрахунок топ героїв для наступного піку
+// 🔹 Розрахунок топ героїв
 function calculateBestPicks() {
   const myHeroes = Array.from(document.querySelectorAll('#myTeam select')).map(s=>s.value).filter(v=>v!=='');
   const enemyHeroes = Array.from(document.querySelectorAll('#enemyTeam select')).map(s=>s.value).filter(v=>v!=='');
-  const selectsThisStage = stageLimits[stage-1];
 
   let scores = [];
 
@@ -285,13 +270,11 @@ function calculateBestPicks() {
     if(myHeroes.includes(hero.name) || enemyHeroes.includes(hero.name)) return;
     let score = 0;
 
-    // сильний проти ворогів
     enemyHeroes.forEach(e=>{ 
       if(hero.BestCounters?.includes(e)) score+=1.5;
       if(hero.commonCounters?.includes(e)) score-=1;
     });
 
-    // синергія з командою
     myHeroes.forEach(my=>{
       const h = heroes.find(h=>h.name===my);
       if(h && h.roles.some(r=>hero.roles.includes(r))) score+=0.3;
@@ -302,7 +285,7 @@ function calculateBestPicks() {
   });
 
   scores.sort((a,b)=>b.score-a.score);
-  const top = scores.slice(0, Math.min(5, scores.length));
+  const top = scores.slice(0, 5);
 
   const resultDiv = document.getElementById('results');
   resultDiv.innerHTML = `<h2>Топ-герої для наступного піку:</h2>` +
@@ -324,20 +307,17 @@ function nextStage() {
     stage++;
     calculateBestPicks();
   } else {
-    // остання стадія, показуємо шанси
-    const myTeam = mySelected;
-    const enemyTeam = enemySelected;
     let myScore=0, enemyScore=0;
 
     heroes.forEach(h=>{
-      if(myTeam.includes(h.name)){
-        enemyTeam.forEach(e=>{
+      if(mySelected.includes(h.name)){
+        enemySelected.forEach(e=>{
           if(h.BestCounters?.includes(e)) myScore+=1;
           if(h.commonCounters?.includes(e)) myScore-=0.5;
         });
       }
-      if(enemyTeam.includes(h.name)){
-        myTeam.forEach(m=>{
+      if(enemySelected.includes(h.name)){
+        mySelected.forEach(m=>{
           if(h.BestCounters?.includes(m)) enemyScore+=1;
           if(h.commonCounters?.includes(m)) enemyScore-=0.5;
         });
@@ -348,31 +328,6 @@ function nextStage() {
     document.getElementById('results').innerHTML = `<h2>Шанс на перемогу моєї команди: ${myChance.toFixed(0)}%</h2>`;
   }
 }
-  document.addEventListener("change", (e) => {
-  if (e.target.classList.contains("select2")) {
-    const allSelects = document.querySelectorAll(".select2");
-    const chosen = Array.from(allSelects)
-      .map(s => s.value)
-      .filter(v => v);
-
-    allSelects.forEach(select => {
-      Array.from(select.options).forEach(opt => {
-        if (opt.value && chosen.includes(opt.value) && opt.value !== select.value) {
-          opt.disabled = true;
-        } else {
-          opt.disabled = false;
-        }
-      });
-    });
-
-    // оновлюємо select2, щоб зміни застосувались
-    $('.select2').select2('destroy').select2({
-      placeholder: 'Вибери героя',
-      allowClear: true,
-      width: '100%'
-    });
-  }
-});
 </script>
 </body>
 </html>
