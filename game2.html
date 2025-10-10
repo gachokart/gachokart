@@ -35,7 +35,7 @@
 
   // якщо у твоєму heroes.json структура така:
   // [ { "id": 1, "name": "Wraith King", ... }, ... ]
-  heroes = data.map(h => h.name).sort();
+  heroes = data.map(h => h.localized_name).sort();
   heroMap = Object.fromEntries(data.map(h => [h.id, h.name]));
   nameToId = Object.fromEntries(data.map(h => [h.name, h.id]));
 
