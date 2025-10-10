@@ -33,11 +33,15 @@
 // 🔥 ВШИТИЙ heroes.json
 // =========================
 const heroes = [
-  {"name": "Wraith King","roles": ["Melee", "Carry", "Disabler", "Durable", "Initiator"],"winrate": 0.5257,"pickrate": 0.0950,"BestCounters": ["Enigma", "Ursa", "Outworld Destroyer", "Templar Assassin", "Legion Commander", "Riki", "Clinkz", "Shadow Shaman", "Sven", "Ancient Apparition"],"commonCounters": ["Chen", "Underlord", "Necrophos", "Chaos Knight", "Lone Druid", "Phantom Lancer", "Warlock", "Undying", "Dark Seer", "Naga Siren"]},
-  {"name": "Vengeful Spirit","roles": ["Ranged", "Disabler", "Escape", "Initiator", "Nuker", "Support"],"winrate": 0.5453,"pickrate": 0.1204,"BestCounters": ["Legion Commander", "Night Stalker", "Ursa", "Nyx Assassin", "Windranger", "Skywrath Mage", "Clinkz", "Sven", "Shadow Fiend", "Lion"],"commonCounters": ["Phantom Lancer", "Chen", "Elder Titan", "Naga Siren", "Brewmaster", "Beastmaster""Dark Seer", "Enchantress", "Terrorblade", "Ringmaster"]},
-  {"name": "Meepo","roles": ["Melee", "Carry", "Disabler", "Escape", "Initiator", "Nuker", "Pusher"],"winrate": 0.4978,"pickrate": 0.0287,"BestCounters": ["Anti-Mage", "Arc Warden", "Spectre", "Void Spirit", "Zeus", "Broodmother", "Storm Spirit", "Lycan", "Clockwerk", "Dark Seer"],"commonCounters": ["Elder Titan", "Winter Wyvern", "Earthshaker", "Lina", "Underlord", "Monkey King", "Troll Warlord", "Sven", "Batrider", "Shadow Fiend"]},
- 
-
+  { "name": "Wraith King", "roles":["Melee","Carry","Disabler","Durable","Initiator"], "winrate":0.5257, "pickrate":0.095, "BestCounters":["Enigma","Ursa"], "commonCounters":["Chen","Underlord"] },
+  { "name": "Vengeful Spirit", "roles":["Ranged","Disabler","Escape","Initiator","Nuker","Support"], "winrate":0.5453, "pickrate":0.1204, "BestCounters":["Legion Commander","Nyx Assassin"], "commonCounters":["Phantom Lancer","Chen"] },
+  { "name": "Meepo", "roles":["Melee","Carry","Disabler","Escape","Initiator","Nuker","Pusher"], "winrate":0.4978, "pickrate":0.0287, "BestCounters":["Anti-Mage","Arc Warden"], "commonCounters":["Elder Titan","Winter Wyvern"] },
+  { "name": "Broodmother", "roles":["Melee","Carry","Escape","Nuker","Pusher"], "winrate":0.548, "pickrate":0.0283, "BestCounters":["Arc Warden","Night Stalker"], "commonCounters":["Naga Siren","Earthshaker"] },
+  { "name": "Juggernaut", "roles":["Melee","Carry","Escape","Pusher"], "winrate":0.5413, "pickrate":0.1842, "BestCounters":["Slardar","Phoenix"], "commonCounters":["Visage","Morphling"] },
+  { "name": "Abaddon", "roles":["Carry","Melee"], "winrate":0.5319, "pickrate":0.0732, "BestCounters":["Silencer","Spectre"], "commonCounters":["Dark Seer","Elder Titan"] },
+  { "name": "Slardar", "roles":["Melee","Carry","Disabler","Durable","Escape","Initiator"], "winrate":0.5368, "pickrate":0.0872, "BestCounters":["Anti-Mage","Lifestealer"], "commonCounters":["Chaos Knight","Terrorblade"] },
+  { "name": "Silencer", "roles":["Ranged","Carry","Disabler","Initiator","Nuker","Support"], "winrate":0.5322, "pickrate":0.1613, "BestCounters":["Dawnbreaker","Timbersaw"], "commonCounters":["Tidehunter","Abaddon"] }
+  // можеш додати всі інших героїв сюди
 ];
 
 // =========================
@@ -166,6 +170,22 @@ function nextStage() {
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
