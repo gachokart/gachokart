@@ -1115,7 +1115,24 @@
     "BestCounters": ["Elder Titan","Brewmaster","Omniknight","Bane","Huskar","Lycan","Keeper of the Light","Grimstroke","Troll Warlord","Bloodseeker"],
     "commonCounters": ["Medusa","Wraith King","Nature's Prophet","Naga Siren","Windranger","Rubick","Venomancer","Luna","Anti-Mage","Ringmaster"]
   },
-  
+  {
+    "id": 125,
+    "name": "Muerta",
+    "roles": ["Ranged", "Carry", "Disabler", "Nuker"],
+    "winrate": 0.4679,
+    "pickrate": 0.0353,
+    "BestCounters": ["Brewmaster","Necrophos","Monkey King","Lycan","Elder Titan","Treant Protector","Troll Warlord","Ember Spirit","Dragon Knight","Kez"],
+    "commonCounters": ["Rubick","Spectre","Bristleback","Axe","Nyx Assassin","Ringmaster","Invoker","Skywrath Mage","Dark Seer","Pudge"]
+  },
+  {
+    "id": 126,
+    "name": "Primal Beast",
+    "roles": ["Melee", "Disabler", "Durable", "Initiator"],
+    "winrate": 0.4838,
+    "pickrate": 0.0365,
+    "BestCounters": ["Pangolier","Dark Seer","Chen","Pugna","Broodmother","Nature's Prophet","Sniper","Treant Protector","Naga Siren","Clinkz"],
+    "commonCounters": ["Grimstroke","Huskar","Viper","Keeper of the Light","Death Prophet","Tiny","Lone Druid","Skywrath Mage","Sven","Clockwerk"]
+  },
   
 ]
  
