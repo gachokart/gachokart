@@ -1252,7 +1252,7 @@ function calculateBestPicks() {
 
   const resultDiv = document.getElementById('results');
   resultDiv.innerHTML = `<h2>Топ-герої для наступного піку:</h2>` +
-    top.map(t=>`<div class="hero"><h3>${t.hero}</h3><p>Оцінка: ${t.score.toFixed(2)}</p></div>`).join('');
+    top.map(t=>`<div class="hero"><h3>${t.hero}</h3><p>Оцінка: ${t.score.toFixed(4)}</p></div>`).join('');
 }
 
 // 🔹 Кнопка "Наступний етап" або "Go"
