@@ -680,6 +680,9 @@ function updateSelects() {
         opt.disabled = selectedHeroes.includes(opt.value) && opt.value !== current;
       }
     });
+    });
+}
+
 
     // 🔄 Оновлюємо Select2 вручну
     $(select).select2('destroy');
