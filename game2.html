@@ -666,13 +666,13 @@ $('.select2').select2({
   updateSelects();
   document.getElementById('nextBtn').addEventListener('click', nextStage);
 
-  const selects = Array.from(document.querySelectorAll('select'));
+  const selects = Array.from(document.querySelectorAll('select2'));
   selects.forEach(select => select.addEventListener('change', updateSelects));
 }
 
 // 🔹 Блокуємо повторні героїв
 function updateSelects() {
-  const selects = Array.from(document.querySelectorAll('select'));
+  const selects = Array.from(document.querySelectorAll('select2'));
   const selectedHeroes = selects.map(s => s.value).filter(v => v !== '');
 
   selects.forEach(select => {
@@ -689,8 +689,8 @@ function updateSelects() {
 
 
     // 🔄 Оновлюємо Select2 вручну
-    $(select).select2('destroy');
-    $(select).select2({
+    $(select2).select2('destroy');
+    $(select2).select2({
       placeholder: 'Вибери героя',
       allowClear: true,
       width: '100%'
