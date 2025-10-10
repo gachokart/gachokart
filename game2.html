@@ -194,18 +194,20 @@ const heroes = [
 // =========================
 let stage = 1; // поточна стадія
 const stageLimits = [
-  { my: 2, enemy: 2 }, // стадія 1
-  { my: 2, enemy: 2 }, // стадія 2
-  { my: 1, enemy: 1 }  // стадія 3
+  { my: 2, enemy: 2 },
+  { my: 2, enemy: 2 },
+  { my: 1, enemy: 1 }
 ];
 
 document.addEventListener('DOMContentLoaded', () => {
   createSelectors();
-  updateUniqueSelection(); // одразу запускаємо
+  updateSelects(); // викликаємо оновлення одразу
   document.getElementById('nextBtn').addEventListener('click', nextStage);
+
+  // Делегований обробник — залишиться робочим навіть якщо ми будемо перевідкривати select2
+  $(document).on('change', '.select2', updateSelects);
 });
 
-// Створюємо селектори
 function createSelectors() {
   const myTeamDiv = document.getElementById('myTeam');
   const enemyTeamDiv = document.getElementById('enemyTeam');
@@ -231,68 +233,74 @@ function createSelectors() {
     enemyTeamDiv.appendChild(select);
   }
 
+  // Ініціалізація Select2 для всіх селекторів
   $('.select2').select2({
     placeholder: 'Вибери героя',
     allowClear: true,
     width: '100%'
   });
-
-  // подія на зміну
-  $(document).on('change', '.select2', updateUniqueSelection);
 }
 
-// 🔹 Забороняємо повторний вибір героя
-function updateUniqueSelection() {
-  const allSelects = document.querySelectorAll('.select2');
-  const chosen = Array.from(allSelects)
-    .map(s => s.value)
-    .filter(v => v);
+// --- Виправлена функція: блокує повтори та оновлює select2 коректно ---
+function updateSelects() {
+  const selects = Array.from(document.querySelectorAll('.select2'));
+  const chosen = selects.map(s => s.value).filter(v => v);
 
-  allSelects.forEach(select => {
+  // Встановлюємо disabled для опцій у нативних <option>
+  selects.forEach(select => {
+    const current = select.value;
     Array.from(select.options).forEach(opt => {
-      if (opt.value && chosen.includes(opt.value) && opt.value !== select.value) {
-        opt.disabled = true;
-      } else {
+      if (!opt.value) {
         opt.disabled = false;
+      } else {
+        opt.disabled = chosen.includes(opt.value) && opt.value !== current;
       }
+    });
+  });
+
+  // Оновлюємо Select2: знищуємо й створюємо заново кожен елемент, зберігаючи вибір
+  $('.select2').each(function() {
+    const $s = $(this);
+    const cur = $s.val();
+    // destroy -> browser матиме оновлені disabled для option
+    $s.select2('destroy');
+    $s.val(cur);
+    $s.select2({
+      placeholder: 'Вибери героя',
+      allowClear: true,
+      width: '100%'
     });
   });
 }
 
-// 🔹 Розрахунок топ героїв
+// ----------------- Логіка підказок і підрахунку -----------------
 function calculateBestPicks() {
   const myHeroes = Array.from(document.querySelectorAll('#myTeam select')).map(s=>s.value).filter(v=>v!=='');
   const enemyHeroes = Array.from(document.querySelectorAll('#enemyTeam select')).map(s=>s.value).filter(v=>v!=='');
-
   let scores = [];
 
   heroes.forEach(hero => {
     if(myHeroes.includes(hero.name) || enemyHeroes.includes(hero.name)) return;
     let score = 0;
-
     enemyHeroes.forEach(e=>{ 
       if(hero.BestCounters?.includes(e)) score+=1.5;
       if(hero.commonCounters?.includes(e)) score-=1;
     });
-
     myHeroes.forEach(my=>{
       const h = heroes.find(h=>h.name===my);
       if(h && h.roles.some(r=>hero.roles.includes(r))) score+=0.3;
     });
-
     if(hero.winrate) score+=hero.winrate*2;
     scores.push({hero:hero.name, score});
   });
 
   scores.sort((a,b)=>b.score-a.score);
-  const top = scores.slice(0, 5);
-
+  const top = scores.slice(0, Math.min(5, scores.length));
   const resultDiv = document.getElementById('results');
   resultDiv.innerHTML = `<h2>Топ-герої для наступного піку:</h2>` +
     top.map(t=>`<div class="hero"><h3>${t.hero}</h3><p>Оцінка: ${t.score.toFixed(4)}</p></div>`).join('');
 }
 
-// 🔹 Кнопка "Наступний етап" або "Go"
 function nextStage() {
   const mySelected = Array.from(document.querySelectorAll('#myTeam select')).map(s=>s.value).filter(v=>v!=='');
   const enemySelected = Array.from(document.querySelectorAll('#enemyTeam select')).map(s=>s.value).filter(v=>v!=='');
