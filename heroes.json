@@ -512,6 +512,96 @@
     "BestCounters": ["Drow Ranger",	"Razor",	"Arc Warden",	"Sniper",	"Nyx Assassin",	"Broodmother",	"Mars",	"Medusa",	"Shadow Demon",	"Nature's Prophet"],
     "commonCounters": ["Enigma",	"Phoenix",	"Huskar",	"Io"	,"Lone Druid",	"Tidehunter",	"Abaddon",	"Pangolier",	"Legion Commander",	"Shadow Shaman"]
   },
+  {
+    "id":58,
+    "name": "Troll Warlord",
+    "roles": ["Ranged", "Carry", "Disabler", "Durable", "Pusher"],
+    "winrate": 0.5018,
+    "pickrate": 0.0472,
+    "BestCounters": ["Meepo",	"Io",	"Anti-Mage",	"Elder Titan",	"Sven",	"Marci",	"Ember Spirit",	"Ursa"	,"Templar Assassin"	,"Huskar"],
+    "commonCounters": ["Chen",	"Naga Siren",	"Dark Seer","Doom",	"Axe",	"Dark Willow",	"Muerta",	"Razor",	"Slark","Outworld Destroyer"]
+  },
+  {
+    "id": 59,
+    "name": "Snapfire",
+    "roles": ["Ranged", "Disabler", "Escape", "Nuker", "Support"],
+    "winrate": 0.5006,
+    "pickrate": 0.1834,
+    "BestCounters": ["Dark Seer",	"Naga Siren",	"Tidehunter",	"Chaos Knight",	"Sand King",	"Medusa",	"Terrorblade",	"Warlock",	"Clockwerk",	"Underlord"],
+    "commonCounters": ["Elder Titan",	"Pangolier",	"Templar Assassin",	"Bloodseeker",	"Keeper of the Light",	"Bane"	,"Io",	"Morphling"	,"Kez",	"Outworld Destroyer"]
+  },
+  {
+    "id": 60,
+    "name": "Dragon Knight",
+    "roles": ["Melee", "Carry", "Disabler", "Durable", "Initiator", "Nuker", "Pusher"],
+    "winrate": 0.5005,
+    "pickrate": 0.0543,
+    "BestCounters": ["Bloodseeker","Wraith King",	"Slardar",	"Puck",	"Legion Commander",	"Sven",	"Night Stalker",	"Meepo",	"Lifestealer",	"Kez"],
+    "commonCounters": ["Viper",	"Dark Seer",	"Chen",	"Terrorblade",	"Muerta",	"Batrider",	"Venomancer",	"Doom",	"Timbersaw",	"Bane"]
+  },
+  {
+    "id": 61,
+    "name": "Ancient Apparition",
+    "roles": ["Ranged", "Disabler", "Nuker", "Support"],
+    "winrate": 0.4999,
+    "pickrate": 0.0710,
+    "BestCounters": ["Huskar",	"Necrophos",	"Dazzle",	"Abaddon"	,"Io"	,"Gyrocopter",	"Troll Warlord"	,"Chen",	"Undying",	"Kunkka"],
+    "commonCounters": ["Pangolier",	"Phantom Lancer",	"Weaver",	"Storm Spirit",	"Puck",	"Windranger"	,"Void Spirit"	,"Anti-Mage",	"Outworld Destroyer",	"Batrider"]
+  },
+  {
+    "id": 62,
+    "name": "Phoenix",
+    "roles": ["Ranged", "Disabler", "Escape", "Initiator", "Nuker", "Support"],
+    "winrate": 0.4996,
+    "pickrate": 0.0667,
+    "BestCounters": ["Chen",	"Chaos Knight",	"Dawnbreaker",	"Terrorblade",	"Wraith King",	"Templar Assassin",	"Crystal Maiden",	"Treant Protector",	"Leshrac",	"Sand King"],
+    "commonCounters": ["Huskar",	"Juggernaut",	"Bloodseeker",	"Lina",	"Io",	"Keeper of the Light",	"Arc Warden",	"Mirana",	"Marci",	"Bane"]
+  },
+  {
+    "id": 63,
+    "name": "Enigma",
+    "roles": ["Ranged", "Disabler", "Initiator", "Pusher"],
+    "winrate": 0.4982,
+    "pickrate": 0.0292,
+    "BestCounters": ["Earth Spirit","Magnus","Venomancer","Mars","Ursa","Lifestealer","Enchantress","Storm Spirit","Treant Protector","Luna"],
+    "commonCounters": ["Rubick",	"Medusa",	"Gyrocopter",	"Bloodseeker",	"Wraith King",	"Bristleback"	,"Warlock",	"Dawnbreaker",	"Alchemist",	"Muerta"]
+  },
+  {
+    "id": 64,
+    "name": "Chaos Knight",
+    "roles": ["Melee", "Carry", "Disabler", "Durable", "Initiator", "Pusher"],
+    "winrate": 0.4972,
+    "pickrate": 0.0255,
+    "BestCounters": ["Bloodseeker","Slardar","Lifestealer","Wraith King","Faceless Void","Legion Commander","Huskar","Bane","Viper","Chen"],
+    "commonCounters": ["Sand King","Phantom Lancer","Dark Seer","Naga Siren","Winter Wyvern","Tidehunter","Warlock","Phoenix","Underlord","Timbersaw"]
+  },
+  {
+    "id": 65,
+    "name": "Keeper of the Light",
+    "roles": ["Ranged", "Disabler", "Nuker", "Support"],
+    "winrate": 0.4964,
+    "pickrate": 0.0202,
+    "BestCounters": ["Elder Titan","Visage","Underlord","Dazzle","Leshrac","Warlock","Wraith King","Winter Wyvern","Arc Warden",	"Primal Beast"],
+    "commonCounters": ["Chen","Dark Seer","Lycan","Naga Siren","Clinkz","Storm Spirit","Dark Willow","Doom","Omniknight","Slardar"]
+  },
+  {
+    "id": 66,
+    "name": "Treant Protector",
+    "roles": ["Melee", "Disabler", "Durable", "Escape", "Initiator", "Support"],
+    "winrate": 0.4955,
+    "pickrate": 0.0270,
+    "BestCounters": ["Templar Assassin","Dazzle","Phantom Assassin","Nature's Prophet","Medusa","Bane","Lion","Ember Spirit","Tusk","Dragon Knight"],
+    "commonCounters": ["Chen","Dark Seer","Lycan","Naga Siren","Underlord","Muerta","Doom","Elder Titan","Oracle","Necrophos"]
+  },
+  {
+    "id": 67,
+    "name": "Bloodseeker",
+    "roles": ["Melee", "Carry", "Disabler", "Initiator", "Nuker"],
+    "winrate": 0.4950,
+    "pickrate": 0.0190,
+    "BestCounters": ["Night Stalker","Huskar","Batrider","Timbersaw","Slark","Arc Warden","Pangolier","Enigma","Anti-Mage","Phoenix"],
+    "commonCounters": ["Chaos Knight","Dragon Knight","Centaur Warrunner","Medusa","Chen","Dawnbreaker","Lifestealer","Legion Commander","Doom","Dark Willow"]
+  },
 ]
  
 
