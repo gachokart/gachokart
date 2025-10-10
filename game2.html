@@ -625,6 +625,16 @@ const stageLimits = [
 
 document.addEventListener('DOMContentLoaded', () => {
   createSelectors();
+  updateSelects();
+
+  document.getElementById('nextBtn').addEventListener('click', nextStage);
+
+  // слухачі на всі селекти
+  document.addEventListener('change', e => {
+    if (e.target.matches('select.slot')) {
+      updateSelects();
+    }
+  });
 });
 
 function createSelectors() {
@@ -639,36 +649,27 @@ function createSelectors() {
   const totalEnemy = stageLimits.map(s => s.enemy).reduce((a, b) => a + b, 0);
 
   for (let i = 0; i < totalMy; i++) {
-    const select = document.createElement('select2');
+    const select = document.createElement('select');
     select.className = 'slot select2';
     select.innerHTML = heroOptions;
     myTeamDiv.appendChild(select);
   }
 
   for (let i = 0; i < totalEnemy; i++) {
-    const select = document.createElement('select2');
+    const select = document.createElement('select');
     select.className = 'slot select2';
     select.innerHTML = heroOptions;
     enemyTeamDiv.appendChild(select);
   }
 
-  // Ініціалізуємо Select2
-   // після того, як усі селекти додані
-$('.select2').select2({
-  placeholder: 'Вибери героя',
-  allowClear: true,
-  width: '100%'
-    });
- }
-
-
-
-  updateSelects();
-  document.getElementById('nextBtn').addEventListener('click', nextStage);
-
-  const selects = Array.from(document.querySelectorAll('select2'));
-  selects.forEach(select => select.addEventListener('change', updateSelects));
+  // ініціалізація Select2 для всіх селекторів
+  $('.select2').select2({
+    placeholder: 'Вибери героя',
+    allowClear: true,
+    width: '100%'
+  });
 }
+
 
 // 🔹 Блокуємо повторні героїв
 function updateSelects() {
