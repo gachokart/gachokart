@@ -433,7 +433,7 @@
   },
   {
     "id": 49,
-    "name": "	Disruptor",
+    "name": "Disruptor",
     "roles": ["Ranged", "Disabler", "Initiator", "Nuker", "Support"],
     "winrate": 0.5080,
     "pickrate": 0.1059,
@@ -442,7 +442,7 @@
   },
   {
     "id": 50,
-    "name": "	Mirana",
+    "name": "Mirana",
     "roles": ["Ranged", "Carry", "Disabler", "Escape", "Nuker", "Support"],
     "winrate": 0.5077,
     "pickrate": 0.0507,
@@ -1117,22 +1117,24 @@
   },
   {
     "id": 125,
-    "name": "Muerta",
-    "roles": ["Ranged", "Carry", "Disabler", "Nuker"],
-    "winrate": 0.4679,
-    "pickrate": 0.0353,
-    "BestCounters": ["Brewmaster","Necrophos","Monkey King","Lycan","Elder Titan","Treant Protector","Troll Warlord","Ember Spirit","Dragon Knight","Kez"],
-    "commonCounters": ["Rubick","Spectre","Bristleback","Axe","Nyx Assassin","Ringmaster","Invoker","Skywrath Mage","Dark Seer","Pudge"]
+    "name": "Spectre",
+    "roles": ["Melee", "Carry", "Durable", "Escape"],
+    "winrate": 0.5093,
+    "pickrate": 0.0541,
+    "BestCounters": ["Clinkz","Sniper","Puck","Nature's Prophet","Muerta","Axe","Zeus","Faceless Void","Windranger","Templar Assassin"],
+    "commonCounters": ["Meepo","Abaddon","Undying","Lycan","Underlord","Beastmaster","Slardar","Bounty Hunter","Sven","Io"]
   },
   {
     "id": 126,
-    "name": "Primal Beast",
-    "roles": ["Melee", "Disabler", "Durable", "Initiator"],
-    "winrate": 0.4838,
-    "pickrate": 0.0365,
-    "BestCounters": ["Pangolier","Dark Seer","Chen","Pugna","Broodmother","Nature's Prophet","Sniper","Treant Protector","Naga Siren","Clinkz"],
-    "commonCounters": ["Grimstroke","Huskar","Viper","Keeper of the Light","Death Prophet","Tiny","Lone Druid","Skywrath Mage","Sven","Clockwerk"]
+    "name": "Void Spirit",
+    "roles": ["Melee", "Carry", "Disabler", "Escape", "Nuker"],
+    "winrate": 0.5108,
+    "pickrate": 0.0536,
+    "BestCounters": ["Juggernaut","Weaver","Invoker","Ancient Apparition","Mars","Sand King","Puck","Elder Titan","Leshrac","Phantom Assassin"],
+    "commonCounters": ["Meepo","Beastmaster","Lone Druid","Underlord","Huskar","Io","Anti-Mage","Tidehunter","Terrorblade","Monkey King"]
   },
+ 
+  
   
 ]
  
