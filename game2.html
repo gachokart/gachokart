@@ -672,12 +672,16 @@ function createSelectors() {
 
 
 // 🔹 Блокуємо повторні героїв
+// 🔹 Блокуємо повторний вибір героїв
 function updateSelects() {
-  const selects = Array.from(document.querySelectorAll('select2'));
-  const selectedHeroes = selects.map(s => s.value).filter(v => v !== '');
+  const selects = Array.from(document.querySelectorAll('select.slot')); // <-- звичайні select
+  const selectedHeroes = selects
+    .map(s => s.value)
+    .filter(v => v !== '');
 
   selects.forEach(select => {
     const current = select.value;
+
     Array.from(select.options).forEach(opt => {
       if (opt.value === '') {
         opt.disabled = false;
@@ -685,7 +689,13 @@ function updateSelects() {
         opt.disabled = selectedHeroes.includes(opt.value) && opt.value !== current;
       }
     });
-    });
+
+    // Якщо використовується Select2, оновлюємо відображення
+    if ($(select).data('select2')) {
+      // Перемалювати список з урахуванням disabled
+      $(select).trigger('change.select2');
+    }
+  });
 }
 
 
