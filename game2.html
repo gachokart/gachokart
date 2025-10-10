@@ -4,76 +4,14 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Dota 2 Draft Helper</title>
-<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">  
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">  
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>  
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> 
 <style>
   body { font-family: Arial, sans-serif; background: #121212; color: #fff; text-align: center; padding: 20px; }
-  h1 {
-  font-family: 'Press Start 2P', cursive;
-  font-size: 18px;
-  color: #ff4444;
-  text-shadow: 2px 2px #000;
-  margin-bottom: 30px;
-}
+  h1 { color: #00ffcc; }
   h2 { color: #00ccff; margin-top: 30px; }
   select { width: 200px; margin: 5px; padding: 5px; border-radius: 5px; border: none; background: #1e1e1e; color: #fff; }
   button { padding: 10px 20px; margin-top: 20px; font-size: 16px; cursor: pointer; background: #00ffcc; border: none; border-radius: 8px; transition: 0.3s; }
   button:hover { background: #00cc99; }
-  .team-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.team-container select {
-  width: 130px;
-  font-size: 12px;
-  padding: 4px;
-  background-color: #ffffff;
-  color: #000000;
-  border: 1px solid #888;
-  border-radius: 4px;
-}
-  .select2-container {
-  width: 195px !important; /* 130px × 1.5 */
-}
-
-.select2-container--default .select2-selection--single {
-  font-family: 'Pacifico', cursive;
-  background-color: #ffffff;
-  color: #000000;
-  border: 1px solid #888;
-  font-size: 12px;
-  height: 30px;
-  border-radius: 4px;
-}
-
-.select2-container--default .select2-selection--single .select2-selection__rendered {
-  color: #000000;
-  line-height: 30px;
-}
-
-.select2-container--default .select2-selection--single .select2-selection__arrow {
-  height: 30px;
-}
-
-/* 🔥 Чорний текст у випадаючому списку */
-
-.select2-results__option {
-  font-family: 'Pacifico', cursive
-  color: #000000;
-  background-color: #ffffff !important ;
-}
-
-.select2-results__option--highlighted {
-  background-color: #e0e0e0;
-  color: #000000;
-}
+  .team-container { display: flex; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
   .result { margin-top: 30px; }
   .hero { background: #1e1e1e; border-radius: 8px; padding: 10px; margin: 10px; width: 200px; display: inline-block; }
 </style>
@@ -95,98 +33,15 @@
 // 🔥 ВШИТИЙ heroes.json
 // =========================
 const heroes = [
-   
-  {
-    "id": 1,
-    "name": "Wraith King",
-    "roles": ["Melee", "Carry", "Disabler", "Durable", "Initiator"],
-    "winrate": 0.5257,
-    "pickrate": 0.0950,
-    "BestCounters": ["Enigma", "Ursa", "Outworld Destroyer", "Templar Assassin", "Legion Commander", "Riki", "Clinkz", "Shadow Shaman", "Sven", "Ancient Apparition"],
-    "commonCounters": ["Chen", "Underlord", "Necrophos", "Chaos Knight", "Lone Druid", "Phantom Lancer", "Warlock", "Undying", "Dark Seer", "Naga Siren"]
-  },
-  {
-    "id": 2,
-    "name": "Vengeful Spirit",
-    "roles": ["Ranged", "Disabler", "Escape", "Initiator", "Nuker", "Support"],
-    "winrate": 0.5453,
-    "pickrate": 0.1204,
-    "BestCounters": ["Legion Commander", "Night Stalker", "Ursa", "Nyx Assassin", "Windranger", "Skywrath Mage", "Clinkz", "Sven", "Shadow Fiend", "Lion"],
-    "commonCounters": ["Phantom Lancer", "Chen", "Elder Titan", "Naga Siren", "Brewmaster", "Beastmaster", "Dark Seer", "Enchantress", "Terrorblade", "Ringmaster"]
-  },
-  {
-    "id": 3,
-    "name": "Meepo",
-    "roles": ["Melee", "Carry", "Disabler", "Escape", "Initiator", "Nuker", "Pusher"],
-    "winrate": 0.4978,
-    "pickrate": 0.0287,
-    "BestCounters": ["Anti-Mage", "Arc Warden", "Spectre", "Void Spirit", "Zeus", "Broodmother", "Storm Spirit", "Lycan", "Clockwerk", "Dark Seer"],
-    "commonCounters": ["Elder Titan", "Winter Wyvern", "Earthshaker", "Lina", "Underlord", "Monkey King", "Troll Warlord", "Sven", "Batrider", "Shadow Fiend"]
-  },
-  {
-    "id": 4,
-    "name": "Broodmother",
-    "roles": ["Melee", "Carry", "Escape", "Nuker", "Pusher"],
-    "winrate": 0.5480,
-    "pickrate": 0.0283,
-    "BestCounters": ["Arc Warden", "Night Stalker", "Puck", "Elder Titan", "Clinkz", "Ursa", "Ember Spirit", "Silencer", "Zeus", "Nature's Prophet"],
-    "commonCounters": ["Naga Siren", "Earthshaker", "Chen", "Dark Seer", "Crystal Maiden", "Necrophos", "Meepo", "Omniknight", "Sand King", "Axe"]
-  },
-  {
-    "id": 5,
-    "name": "Juggernaut",
-    "roles": ["Melee", "Carry", "Escape", "Pusher"],
-    "winrate": 0.5413,
-    "pickrate": 0.1842,
-    "BestCounters": ["Slardar", "Phoenix", "Tidehunter", "Centaur Warrunner", "Underlord", "Nyx Assassin", "Sand King", "Lifestealer", "Dark Willow", "Clockwerk"],
-    "commonCounters": ["Visage", "Morphling", "Riki", "Chen", "Death Prophet", "Io", "Templar Assassin", "Lone Druid", "Doom", "Kez"]
-  },
-  {
-    "id": 6,
-    "name": "Abaddon",
-    "roles": ["Carry", "Melee"],
-    "winrate": 0.5319,
-    "pickrate": 0.0732,
-    "BestCounters": ["Silencer", "Spectre", "Axe", "Bane", "Wraith King", "Bounty Hunter", "Arc Warden", "Troll Warlord", "Batrider", "Queen of Pain"],
-    "commonCounters": ["Dark Seer", "Elder Titan", "Chen", "Ancient Apparition", "Undying", "Doom", "Lycan", "Anti-Mage", "Outworld Destroyer", "Enchantress"]
-  },
-  {
-    "id": 7,
-    "name": "Lifestealer",
-    "roles": ["Melee", "Carry", "Disabler", "Durable", "Escape"],
-    "winrate": 0.5263,
-    "pickrate": 0.1121,
-    "BestCounters": ["Bloodseeker", "Sand King", "Tiny", "Wraith King", "Sven", "Techies", "Kunkka", "Nyx Assassin", "Centaur Warrunner", "Mars"],
-    "commonCounters": ["Chen", "Chaos Knight", "Clinkz", "Doom", "Morphling", "Enigma", "Slardar", "Razor", "Nature's Prophet", "Naga Siren"]
-  },
-  {
-    "id": 8,
-    "name": "Slardar",
-    "roles": ["Melee", "Carry", "Disabler", "Durable", "Escape", "Initiator"],
-    "winrate": 0.5368,
-    "pickrate": 0.0872,
-    "BestCounters": ["Anti-Mage", "Lifestealer", "Sven", "Spectre", "Nyx Assassin", "Clinkz", "Ursa", "Elder Titan", "Lycan", "Lone Druid"],
-    "commonCounters": ["Chaos Knight", "Terrorblade", "Phantom Lancer", "Naga Siren", "Tidehunter", "Chen", "Juggernaut", "Luna", "Dragon Knight", "Medusa"]
-  },
-  {
-    "id": 9,
-    "name": "Silencer",
-    "roles": ["Ranged", "Carry", "Disabler", "Initiator", "Nuker", "Support"],
-    "winrate": 0.5322,
-    "pickrate": 0.1613,
-    "BestCounters": ["Dawnbreaker", "Timbersaw", "Necrophos", "Witch Doctor", "Ursa", "Visage", "Sand King", "Storm Spirit", "Lich", "Primal Beast"],
-    "commonCounters": ["Tidehunter", "Abaddon", "Naga Siren", "Phantom Lancer", "Huskar", "Slark", "Broodmother", "Lone Druid", "Morphling", "Lycan"]
-  },
-  {
-    "id": 10,
-    "name": "Dawnbreaker",
-    "roles": ["Melee", "Carry", "Durable"],
-    "winrate": 0.5262,
-    "pickrate": 0.1464,
-    "BestCounters": ["Bloodseeker", "Legion Commander", "Naga Siren", "Wraith King", "Chaos Knight", "Crystal Maiden", "Meepo", "Enigma", "Shadow Demon", "Phantom Assassin"],
-    "commonCounters": ["Silencer", "Bristleback", "Phoenix", "Winter Wyvern", "Morphling", "Nyx Assassin", "Ursa", "Visage", "Pangolier", "Death Prophet"]
-  }
-
+  { "name": "Wraith King", "roles":["Melee","Carry","Disabler","Durable","Initiator"], "winrate":0.5257, "pickrate":0.095, "BestCounters":["Enigma","Ursa"], "commonCounters":["Chen","Underlord"] },
+  { "name": "Vengeful Spirit", "roles":["Ranged","Disabler","Escape","Initiator","Nuker","Support"], "winrate":0.5453, "pickrate":0.1204, "BestCounters":["Legion Commander","Nyx Assassin"], "commonCounters":["Phantom Lancer","Chen"] },
+  { "name": "Meepo", "roles":["Melee","Carry","Disabler","Escape","Initiator","Nuker","Pusher"], "winrate":0.4978, "pickrate":0.0287, "BestCounters":["Anti-Mage","Arc Warden"], "commonCounters":["Elder Titan","Winter Wyvern"] },
+  { "name": "Broodmother", "roles":["Melee","Carry","Escape","Nuker","Pusher"], "winrate":0.548, "pickrate":0.0283, "BestCounters":["Arc Warden","Night Stalker"], "commonCounters":["Naga Siren","Earthshaker"] },
+  { "name": "Juggernaut", "roles":["Melee","Carry","Escape","Pusher"], "winrate":0.5413, "pickrate":0.1842, "BestCounters":["Slardar","Phoenix"], "commonCounters":["Visage","Morphling"] },
+  { "name": "Abaddon", "roles":["Carry","Melee"], "winrate":0.5319, "pickrate":0.0732, "BestCounters":["Silencer","Spectre"], "commonCounters":["Dark Seer","Elder Titan"] },
+  { "name": "Slardar", "roles":["Melee","Carry","Disabler","Durable","Escape","Initiator"], "winrate":0.5368, "pickrate":0.0872, "BestCounters":["Anti-Mage","Lifestealer"], "commonCounters":["Chaos Knight","Terrorblade"] },
+  { "name": "Silencer", "roles":["Ranged","Carry","Disabler","Initiator","Nuker","Support"], "winrate":0.5322, "pickrate":0.1613, "BestCounters":["Dawnbreaker","Timbersaw"], "commonCounters":["Tidehunter","Abaddon"] }
+  // можеш додати всі інших героїв сюди
 ];
 
 // =========================
@@ -194,18 +49,13 @@ const heroes = [
 // =========================
 let stage = 1; // поточна стадія
 const stageLimits = [
-  { my: 2, enemy: 2 },
-  { my: 2, enemy: 2 },
-  { my: 1, enemy: 1 }
+  { my: 2, enemy: 2 }, // стадія 1
+  { my: 2, enemy: 2 }, // стадія 2
+  { my: 1, enemy: 1 }  // стадія 3
 ];
 
 document.addEventListener('DOMContentLoaded', () => {
   createSelectors();
-  updateSelects(); // викликаємо оновлення одразу
-  document.getElementById('nextBtn').addEventListener('click', nextStage);
-
-  // Делегований обробник — залишиться робочим навіть якщо ми будемо перевідкривати select2
-  $(document).on('change', '.select2', updateSelects);
 });
 
 function createSelectors() {
@@ -216,91 +66,69 @@ function createSelectors() {
     .concat(heroes.map(h => `<option value="${h.name}">${h.name}</option>`))
     .join('');
 
-  const totalMy = stageLimits.map(s => s.my).reduce((a, b) => a + b, 0);
-  const totalEnemy = stageLimits.map(s => s.enemy).reduce((a, b) => a + b, 0);
+  const totalMy = stageLimits.map(s => s.my).reduce((a,b)=>a+b,0);
+  const totalEnemy = stageLimits.map(s => s.enemy).reduce((a,b)=>a+b,0);
 
-  for (let i = 0; i < totalMy; i++) {
-    const select = document.createElement('select');
-    select.className = 'slot select2';
-    select.innerHTML = heroOptions;
-    myTeamDiv.appendChild(select);
-  }
+  for (let i = 0; i < totalMy; i++) { const select = document.createElement('select'); select.innerHTML = heroOptions; myTeamDiv.appendChild(select); }
+  for (let i = 0; i < totalEnemy; i++) { const select = document.createElement('select'); select.innerHTML = heroOptions; enemyTeamDiv.appendChild(select); }
 
-  for (let i = 0; i < totalEnemy; i++) {
-    const select = document.createElement('select');
-    select.className = 'slot select2';
-    select.innerHTML = heroOptions;
-    enemyTeamDiv.appendChild(select);
-  }
+  updateSelects(); 
+  document.getElementById('nextBtn').addEventListener('click', nextStage);
 
-  // Ініціалізація Select2 для всіх селекторів
-  $('.select2').select2({
-    placeholder: 'Вибери героя',
-    allowClear: true,
-    width: '100%'
-  });
+  const selects = Array.from(document.querySelectorAll('select'));
+  selects.forEach(select => select.addEventListener('change', updateSelects));
 }
 
-// --- Виправлена функція: блокує повтори та оновлює select2 коректно ---
+// 🔹 Блокуємо повторні героїв
 function updateSelects() {
-  const selects = Array.from(document.querySelectorAll('.select2'));
-  const chosen = selects.map(s => s.value).filter(v => v);
-
-  // Встановлюємо disabled для опцій у нативних <option>
+  const selects = Array.from(document.querySelectorAll('select'));
+  const selectedHeroes = selects.map(s => s.value).filter(v => v!=='');
   selects.forEach(select => {
     const current = select.value;
     Array.from(select.options).forEach(opt => {
-      if (!opt.value) {
-        opt.disabled = false;
-      } else {
-        opt.disabled = chosen.includes(opt.value) && opt.value !== current;
-      }
-    });
-  });
-
-  // Оновлюємо Select2: знищуємо й створюємо заново кожен елемент, зберігаючи вибір
-  $('.select2').each(function() {
-    const $s = $(this);
-    const cur = $s.val();
-    // destroy -> browser матиме оновлені disabled для option
-    $s.select2('destroy');
-    $s.val(cur);
-    $s.select2({
-      placeholder: 'Вибери героя',
-      allowClear: true,
-      width: '100%'
+      if(opt.value==='') { opt.disabled=false; } 
+      else { opt.disabled = selectedHeroes.includes(opt.value) && opt.value!==current; }
     });
   });
 }
 
-// ----------------- Логіка підказок і підрахунку -----------------
+// 🔹 Розрахунок топ героїв для наступного піку
 function calculateBestPicks() {
   const myHeroes = Array.from(document.querySelectorAll('#myTeam select')).map(s=>s.value).filter(v=>v!=='');
   const enemyHeroes = Array.from(document.querySelectorAll('#enemyTeam select')).map(s=>s.value).filter(v=>v!=='');
+  const selectsThisStage = stageLimits[stage-1];
+
   let scores = [];
 
   heroes.forEach(hero => {
     if(myHeroes.includes(hero.name) || enemyHeroes.includes(hero.name)) return;
     let score = 0;
+
+    // сильний проти ворогів
     enemyHeroes.forEach(e=>{ 
       if(hero.BestCounters?.includes(e)) score+=1.5;
       if(hero.commonCounters?.includes(e)) score-=1;
     });
+
+    // синергія з командою
     myHeroes.forEach(my=>{
       const h = heroes.find(h=>h.name===my);
       if(h && h.roles.some(r=>hero.roles.includes(r))) score+=0.3;
     });
+
     if(hero.winrate) score+=hero.winrate*2;
     scores.push({hero:hero.name, score});
   });
 
   scores.sort((a,b)=>b.score-a.score);
-  const top = scores.slice(0, Math.min(5, scores.length));
+  const top = scores.slice(0, Math.min(3, scores.length));
+
   const resultDiv = document.getElementById('results');
   resultDiv.innerHTML = `<h2>Топ-герої для наступного піку:</h2>` +
-    top.map(t=>`<div class="hero"><h3>${t.hero}</h3><p>Оцінка: ${t.score.toFixed(4)}</p></div>`).join('');
+    top.map(t=>`<div class="hero"><h3>${t.hero}</h3><p>Оцінка: ${t.score.toFixed(2)}</p></div>`).join('');
 }
 
+// 🔹 Кнопка "Наступний етап" або "Go"
 function nextStage() {
   const mySelected = Array.from(document.querySelectorAll('#myTeam select')).map(s=>s.value).filter(v=>v!=='');
   const enemySelected = Array.from(document.querySelectorAll('#enemyTeam select')).map(s=>s.value).filter(v=>v!=='');
@@ -315,17 +143,20 @@ function nextStage() {
     stage++;
     calculateBestPicks();
   } else {
+    // остання стадія, показуємо шанси
+    const myTeam = mySelected;
+    const enemyTeam = enemySelected;
     let myScore=0, enemyScore=0;
 
     heroes.forEach(h=>{
-      if(mySelected.includes(h.name)){
-        enemySelected.forEach(e=>{
+      if(myTeam.includes(h.name)){
+        enemyTeam.forEach(e=>{
           if(h.BestCounters?.includes(e)) myScore+=1;
           if(h.commonCounters?.includes(e)) myScore-=0.5;
         });
       }
-      if(enemySelected.includes(h.name)){
-        mySelected.forEach(m=>{
+      if(enemyTeam.includes(h.name)){
+        myTeam.forEach(m=>{
           if(h.BestCounters?.includes(m)) enemyScore+=1;
           if(h.commonCounters?.includes(m)) enemyScore-=0.5;
         });
@@ -339,10 +170,6 @@ function nextStage() {
 </script>
 </body>
 </html>
-
-
-
-
 
 
 
