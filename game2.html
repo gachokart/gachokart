@@ -1267,39 +1267,84 @@ function updateSelects() {
 
 // 🔹 Розрахунок топ героїв для наступного піку
 function calculateBestPicks() {
-  const myHeroes = Array.from(document.querySelectorAll('#myTeam select')).map(s=>s.value).filter(v=>v!=='');
-  const enemyHeroes = Array.from(document.querySelectorAll('#enemyTeam select')).map(s=>s.value).filter(v=>v!=='');
-  const selectsThisStage = stageLimits[stage-1];
+  const myHeroes = Array.from(document.querySelectorAll('#myTeam select'))
+    .map(s => s.value).filter(v => v !== '');
+  const enemyHeroes = Array.from(document.querySelectorAll('#enemyTeam select'))
+    .map(s => s.value).filter(v => v !== '');
 
   let scores = [];
 
-  heroes.forEach(hero => {
-    if(myHeroes.includes(hero.name) || enemyHeroes.includes(hero.name)) return;
-    let score = 0;
+  // вагові коефіцієнти (можна буде навчити)
+  const W = {
+    winrate: 2.0,
+    pickrate: 0.5,
+    synergy: 0.5,
+    counterStrong: 1.5,
+    counterWeak: 0.7,
+    roleBalance: 1.0,
+    duplicatePenalty: 1.2
+  };
 
-    // сильний проти ворогів
-    enemyHeroes.forEach(e=>{ 
-      if(hero.BestCounters?.includes(e)) score+=1.5;
-      if(hero.commonCounters?.includes(e)) score-=1;
-    });
-
-    // синергія з командою
-    myHeroes.forEach(my=>{
-      const h = heroes.find(h=>h.name===my);
-      if(h && h.roles.some(r=>hero.roles.includes(r))) score+=0.3;
-    });
-
-    if(hero.winrate) score+=hero.winrate*2;
-    scores.push({hero:hero.name, score});
+  // підрахунок частоти ролей у своїй команді
+  const roleCount = {};
+  myHeroes.forEach(my => {
+    const h = heroes.find(x => x.name === my);
+    if (h) h.roles.forEach(r => roleCount[r] = (roleCount[r] || 0) + 1);
   });
 
-  scores.sort((a,b)=>b.score-a.score);
+  heroes.forEach(hero => {
+    if (myHeroes.includes(hero.name) || enemyHeroes.includes(hero.name)) return;
+    let score = 0;
+
+    // 1️⃣ сила героя за статистикою
+    const win = (hero.winrate - 0.5) / 0.5;  // нормалізація [-1,+1]
+    const pick = Math.log(1 + hero.pickrate * 100) / Math.log(1 + 100) || 0; 
+    score += W.winrate * win + W.pickrate * pick;
+
+    // 2️⃣ контрпіки проти ворогів
+    enemyHeroes.forEach(enemy => {
+      if (hero.BestCounters?.includes(enemy)) score += W.counterStrong;
+      if (hero.commonCounters?.includes(enemy)) score += W.counterWeak;
+    });
+
+    // 3️⃣ синергія з союзниками (спільні ролі = базова взаємодія)
+    myHeroes.forEach(my => {
+      const ally = heroes.find(h => h.name === my);
+      if (ally && ally.roles.some(r => hero.roles.includes(r))) {
+        score += W.synergy;
+      }
+    });
+
+    // 4️⃣ штраф за дублювання ролей (якщо ролей уже забагато)
+    hero.roles.forEach(r => {
+      if (roleCount[r] && roleCount[r] > 1) {
+        score -= W.duplicatePenalty * (roleCount[r] - 1);
+      }
+    });
+
+    // 5️⃣ бонус за покращення балансу ролей (різноманіття)
+    const uniqueRoles = Object.keys(roleCount).length;
+    if (uniqueRoles < 5 && hero.roles.some(r => !roleCount[r])) {
+      score += W.roleBalance * 0.8; // бонус, якщо додає нову роль
+    }
+
+    scores.push({ hero: hero.name, score });
+  });
+
+  // сортування і вивід
+  scores.sort((a, b) => b.score - a.score);
   const top = scores.slice(0, Math.min(5, scores.length));
 
   const resultDiv = document.getElementById('results');
   resultDiv.innerHTML = `<h2>Топ-герої для наступного піку:</h2>` +
-    top.map(t=>`<div class="hero"><h3>${t.hero}</h3><p>Оцінка: ${t.score.toFixed(4)}</p></div>`).join('');
+    top.map(t => `
+      <div class="hero">
+        <h3>${t.hero}</h3>
+        <p>Оцінка: ${t.score.toFixed(3)}</p>
+      </div>
+    `).join('');
 }
+
 
 // 🔹 Кнопка "Наступний етап" або "Go"
 function nextStage() {
