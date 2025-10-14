@@ -1265,23 +1265,37 @@ function updateSelects() {
   });
 }
 
-// 🔹 Розрахунок топ героїв для наступного піку
+// 🔹 Функція для отримання вагових коефіцієнтів за стадією драфту
+function getWeightsByStage(stage) {
+  switch (stage) {
+    case 1:
+    case 2:
+      return { synergy: 0.40, counters: 0.25, winrate: 0.15, pickrate: 0.10, roles: 0.10 };
+    case 3:
+    case 4:
+      return { synergy: 0.30, counters: 0.30, winrate: 0.20, pickrate: 0.10, roles: 0.10 };
+    case 5:
+    default:
+      return { synergy: 0.20, counters: 0.45, winrate: 0.15, pickrate: 0.05, roles: 0.15 };
+  }
+}
+
+// 🔹 Основна функція для розрахунку топ героїв
 function calculateBestPicks() {
   const myHeroes = Array.from(document.querySelectorAll('#myTeam select'))
     .map(s => s.value).filter(v => v !== '');
   const enemyHeroes = Array.from(document.querySelectorAll('#enemyTeam select'))
     .map(s => s.value).filter(v => v !== '');
 
+  const stage = Math.min(myHeroes.length + enemyHeroes.length + 1, 5); // визначаємо стадію (1–5)
+  const weights = getWeightsByStage(stage);
+
   let scores = [];
 
-  // вагові коефіцієнти (можна буде навчити)
+  // базові коефіцієнти (всередині формули масштабуються)
   const W = {
-    winrate: 2.0,
-    pickrate: 0.5,
-    synergy: 0.5,
     counterStrong: 1.5,
     counterWeak: 0.7,
-    roleBalance: 1.0,
     duplicatePenalty: 1.2
   };
 
@@ -1296,44 +1310,50 @@ function calculateBestPicks() {
     if (myHeroes.includes(hero.name) || enemyHeroes.includes(hero.name)) return;
     let score = 0;
 
-    // 1️⃣ сила героя за статистикою
-    const win = (hero.winrate - 0.5) / 0.5;  // нормалізація [-1,+1]
-    const pick = Math.log(1 + hero.pickrate * 100) / Math.log(1 + 100) || 0; 
-    score += W.winrate * win + W.pickrate * pick;
+    // 1️⃣ сила героя за статистикою (winrate, pickrate)
+    const winNorm = (hero.winrate - 0.5) / 0.5;  // нормалізація [-1,+1]
+    const pickNorm = Math.log(1 + hero.pickrate * 100) / Math.log(101) || 0;
+    score += weights.winrate * winNorm + weights.pickrate * pickNorm;
 
     // 2️⃣ контрпіки проти ворогів
+    let counterScore = 0;
     enemyHeroes.forEach(enemy => {
-      if (hero.BestCounters?.includes(enemy)) score += W.counterStrong;
-      if (hero.commonCounters?.includes(enemy)) score += W.counterWeak;
+      if (hero.BestCounters?.includes(enemy)) counterScore += W.counterStrong;
+      if (hero.commonCounters?.includes(enemy)) counterScore += W.counterWeak;
     });
+    score += counterScore * weights.counters;
 
-    // 3️⃣ синергія з союзниками (спільні ролі = базова взаємодія)
+    // 3️⃣ синергія з союзниками (спільні ролі)
+    let synergyScore = 0;
     myHeroes.forEach(my => {
       const ally = heroes.find(h => h.name === my);
-      if (ally && ally.roles.some(r => hero.roles.includes(r))) {
-        score += W.synergy;
-      }
+      if (ally && ally.roles.some(r => hero.roles.includes(r))) synergyScore += 1;
     });
+    score += synergyScore * weights.synergy;
 
-    // 4️⃣ штраф за дублювання ролей (якщо ролей уже забагато)
+    // 4️⃣ штраф за дублювання ролей
     hero.roles.forEach(r => {
       if (roleCount[r] && roleCount[r] > 1) {
         score -= W.duplicatePenalty * (roleCount[r] - 1);
       }
     });
 
-    // 5️⃣ бонус за покращення балансу ролей (різноманіття)
+    // 5️⃣ бонус за покращення балансу ролей
     const uniqueRoles = Object.keys(roleCount).length;
     if (uniqueRoles < 5 && hero.roles.some(r => !roleCount[r])) {
-      score += W.roleBalance * 0.8; // бонус, якщо додає нову роль
+      score += weights.roles; // бонус за нову роль
     }
 
-    scores.push({ hero: hero.name, score });
+    scores.push({ hero: hero.name, score: Number(score.toFixed(4)) });
   });
 
-  // сортування і вивід
+  // 🔹 Сортуємо героїв за рейтингом
   scores.sort((a, b) => b.score - a.score);
-  const top = scores.slice(0, Math.min(5, scores.length));
+
+  console.log("Стадія драфту:", stage);
+  console.table(scores.slice(0, 10)); // топ-10 героїв у консолі
+  return scores;
+}
 
   const resultDiv = document.getElementById('results');
   resultDiv.innerHTML = `<h2>Топ-герої для наступного піку:</h2>` +
