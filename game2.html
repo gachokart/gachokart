@@ -1230,40 +1230,52 @@ const stageLimits = [
 
 let stage = 1;
 
-// 🔹 Створення селекторів після завантаження сторінки
+// === ІНІЦІАЛІЗАЦІЯ ===
 document.addEventListener('DOMContentLoaded', () => {
+  createHeroList();
   createSelectors();
 });
 
-// === СТВОРЕННЯ СЕЛЕКТОРІВ ===
+// === datalist для пошуку ===
+function createHeroList() {
+  const list = document.getElementById("heroesList");
+  list.innerHTML = heroes.map(h => `<option value="${h.name}">`).join('');
+}
+
+// === СТВОРЕННЯ СЕЛЕКТОРІВ (input) ===
 function createSelectors() {
   const myTeamDiv = document.getElementById('myTeam');
   const enemyTeamDiv = document.getElementById('enemyTeam');
-  const heroOptions = ['<option value="">Вибери героя</option>']
-    .concat(heroes.map(h => `<option value="${h.name}">${h.name}</option>`))
-    .join('');
-
   const totalMy = stageLimits.map(s => s.my).reduce((a,b)=>a+b,0);
   const totalEnemy = stageLimits.map(s => s.enemy).reduce((a,b)=>a+b,0);
 
-  for (let i=0;i<totalMy;i++){ const s=document.createElement('select'); s.innerHTML=heroOptions; myTeamDiv.appendChild(s); }
-  for (let i=0;i<totalEnemy;i++){ const s=document.createElement('select'); s.innerHTML=heroOptions; enemyTeamDiv.appendChild(s); }
+  for (let i=0;i<totalMy;i++){
+    const input=document.createElement('input');
+    input.setAttribute("list","heroesList");
+    input.placeholder="Введи героя...";
+    myTeamDiv.appendChild(input);
+  }
 
-  updateSelects();
+  for (let i=0;i<totalEnemy;i++){
+    const input=document.createElement('input');
+    input.setAttribute("list","heroesList");
+    input.placeholder="Введи героя...";
+    enemyTeamDiv.appendChild(input);
+  }
+
   document.getElementById('nextBtn').addEventListener('click', nextStage);
-  document.querySelectorAll('select').forEach(sel=>sel.addEventListener('change',updateSelects));
+  document.querySelectorAll('input[list]').forEach(inp => inp.addEventListener('input', updateInputs));
 }
 
-// === БЛОКУВАННЯ ДУБЛІВ ===
-function updateSelects() {
-  const selects = Array.from(document.querySelectorAll('select'));
-  const selected = selects.map(s=>s.value).filter(v=>v!=='');
-  selects.forEach(sel=>{
-    const cur=sel.value;
-    Array.from(sel.options).forEach(opt=>{
-      if(opt.value==='') opt.disabled=false;
-      else opt.disabled=selected.includes(opt.value)&&opt.value!==cur;
-    });
+// === БЛОКУВАННЯ ДУБЛІКАТІВ ===
+function updateInputs() {
+  const inputs = Array.from(document.querySelectorAll('input[list]'));
+  const selected = inputs.map(i=>i.value.trim()).filter(v=>v!=='');
+  inputs.forEach(inp=>{
+    if (selected.filter(v=>v===inp.value).length>1) {
+      inp.value = ''; // очистити дубльований
+      alert("⚠️ Цей герой вже вибраний!");
+    }
   });
 }
 
@@ -1278,8 +1290,8 @@ function getWeightsByStage(stage){
 
 // === РОЗРАХУНОК НАЙКРАЩИХ ПІКІВ ===
 function calculateBestPicks(){
-  const myHeroes = Array.from(document.querySelectorAll('#myTeam select')).map(s=>s.value).filter(v=>v!=='');
-  const enemyHeroes = Array.from(document.querySelectorAll('#enemyTeam select')).map(s=>s.value).filter(v=>v!=='');
+  const myHeroes = Array.from(document.querySelectorAll('#myTeam input')).map(i=>i.value).filter(v=>v!=='');
+  const enemyHeroes = Array.from(document.querySelectorAll('#enemyTeam input')).map(i=>i.value).filter(v=>v!=='');
   const stage = Math.min(myHeroes.length + enemyHeroes.length + 1, 5);
   const weights = getWeightsByStage(stage);
 
@@ -1297,12 +1309,10 @@ function calculateBestPicks(){
     if(myHeroes.includes(hero.name)||enemyHeroes.includes(hero.name))return;
     let score=0;
 
-    // 1️⃣ winrate + pickrate
     const winNorm=(hero.winrate-0.5)/0.5;
     const pickNorm=Math.log(1+hero.pickrate*100)/Math.log(101);
     score+=weights.winrate*winNorm+weights.pickrate*pickNorm;
 
-    // 2️⃣ контрпіки
     let counterScore=0;
     enemyHeroes.forEach(e=>{
       if(hero.BestCounters?.includes(e))counterScore+=W.counterStrong;
@@ -1310,7 +1320,6 @@ function calculateBestPicks(){
     });
     score+=counterScore*weights.counters;
 
-    // 3️⃣ синергія
     let synergy=0;
     myHeroes.forEach(m=>{
       const ally=heroes.find(h=>h.name===m);
@@ -1318,7 +1327,6 @@ function calculateBestPicks(){
     });
     score+=synergy*weights.synergy;
 
-    // 4️⃣ штраф за дублювання ролей (відхилення від ідеалу)
     let rolePenalty=0;
     for(const [role,count] of Object.entries(roleCount)){
       const ideal=idealRoles[role]||0;
@@ -1327,7 +1335,6 @@ function calculateBestPicks(){
     }
     score-=rolePenalty*weights.roles;
 
-    // 5️⃣ бонус за нову унікальну роль
     const uniqueRoles=Object.keys(roleCount).length;
     if(uniqueRoles<5 && hero.roles.some(r=>!roleCount[r]))score+=weights.roles;
 
@@ -1336,8 +1343,8 @@ function calculateBestPicks(){
 
   scores.sort((a,b)=>b.score-a.score);
   const top=scores.slice(0,5);
-  const resultDiv=document.getElementById('results');
-  resultDiv.innerHTML=`<h2>Топ-герої для наступного піку:</h2>`+
+  document.getElementById('results').innerHTML=
+    `<h2>Топ-герої для наступного піку:</h2>`+
     top.map(t=>`<div class="hero"><h3>${t.hero}</h3><p>Оцінка: ${t.score.toFixed(3)}</p></div>`).join('');
   console.table(top);
   return scores;
@@ -1345,8 +1352,8 @@ function calculateBestPicks(){
 
 // === КНОПКА GO ===
 function nextStage(){
-  const mySel=Array.from(document.querySelectorAll('#myTeam select')).map(s=>s.value).filter(v=>v!=='');
-  const enemySel=Array.from(document.querySelectorAll('#enemyTeam select')).map(s=>s.value).filter(v=>v!=='');
+  const mySel=Array.from(document.querySelectorAll('#myTeam input')).map(i=>i.value.trim()).filter(v=>v!=='');
+  const enemySel=Array.from(document.querySelectorAll('#enemyTeam input')).map(i=>i.value.trim()).filter(v=>v!=='');
   const limits=stageLimits[stage-1];
   if(mySel.length<limits.my || enemySel.length<limits.enemy){
     alert(`⚠️ Обери ${limits.my} героїв у свою команду та ${limits.enemy} у команду суперника!`);
@@ -1354,7 +1361,6 @@ function nextStage(){
   }
   if(stage<5){ stage++; calculateBestPicks(); }
   else{
-    // розрахунок шансів
     let myScore=0, enemyScore=0;
     heroes.forEach(h=>{
       if(mySel.includes(h.name)){
@@ -1377,10 +1383,6 @@ function nextStage(){
 </script>
 </body>
 </html>
-
-
-
-
 
 
 
