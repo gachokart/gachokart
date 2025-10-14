@@ -1351,7 +1351,7 @@ function calculateBestPicks() {
   scores.sort((a, b) => b.score - a.score);
 
   console.log("Стадія драфту:", stage);
-  console.table(scores.slice(0, 10)); // топ-10 героїв у консолі
+  console.table(scores.slice(0, 3)); // топ-10 героїв у консолі
   return scores;
 }
 });
