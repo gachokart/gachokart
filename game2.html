@@ -1420,21 +1420,30 @@ function showFinalChance(){
   heroes.forEach(h=>{
     if(myTeam.includes(h.name)){
       enemyTeam.forEach(e=>{
-        if(h.BestCounters?.includes(e)) myScore+=1;
-        if(h.commonCounters?.includes(e)) myScore-=0.5;
+        if(h.BestCounters?.includes(e)) myScore+=2;
+        if(h.commonCounters?.includes(e)) myScore+=1;
       });
     }
     if(enemyTeam.includes(h.name)){
       myTeam.forEach(m=>{
-        if(h.BestCounters?.includes(m)) enemyScore+=1;
-        if(h.commonCounters?.includes(m)) enemyScore-=0.5;
+        if(h.BestCounters?.includes(m)) enemyScore+=2;
+        if(h.commonCounters?.includes(m)) enemyScore+=1;
       });
     }
   });
 
-  const myChance = Math.min(100,Math.max(0,50+(myScore-enemyScore)*10));
-  document.getElementById('results').innerHTML = `<h2>Шанс на перемогу моєї команди: ${myChance.toFixed(0)}%</h2>`;
+  const total = myScore + enemyScore;
+  const myChance = total > 0 ? (myScore / total) * 100 : 50;
+
+  document.getElementById('results').innerHTML = `
+    <h2>Шанс на перемогу моєї команди: ${myChance.toFixed(0)}%</h2>
+    <div style="background:#333; border:1px solid #660000; width:80%; margin:10px auto; height:20px;">
+      <div style="background:#ff0000; width:${myChance}%; height:100%;"></div>
+    </div>
+  `;
 }
+
+
 </script>
 </body>
 </html>
