@@ -5,76 +5,52 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Dota 2 Draft Helper</title>
 <style>
-  body { font-family: Arial, sans-serif; background: #121212; color: #fff; text-align: center; padding: 20px; }
-  h1 { color: #00ffcc; }
-  h2 { color: #00ccff; margin-top: 30px; }
-  select { width: 200px; margin: 5px; padding: 5px; border-radius: 5px; border: none; background: #1e1e1e; color: #fff; }
-  button { padding: 10px 20px; margin-top: 20px; font-size: 16px; cursor: pointer; background: #00ffcc; border: none; border-radius: 8px; transition: 0.3s; }
-  button:hover { background: #00cc99; }
-  .team-container { display: flex; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
-  .result { margin-top: 30px; }
-  .hero { background: #1e1e1e; border-radius: 8px; padding: 10px; margin: 10px; width: 200px; display: inline-block; }
-  .team-container select {
-  width: 130px;
-  font-size: 12px;
-  padding: 4px;
-  background-color: #ffffff;
-  color: #000000;
-  border: 1px solid #888;
-  border-radius: 4px;
-}
-  .select2-container {
-  width: 195px !important; /* 130px × 1.5 */
-}
-
-.select2-container--default .select2-selection--single {
-  font-family: 'Pacifico', cursive;
-  background-color: #ffffff;
-  color: #000000;
-  border: 1px solid #888;
-  font-size: 12px;
-  height: 30px;
-  border-radius: 4px;
-}
-
-.select2-container--default .select2-selection--single .select2-selection__rendered {
-  color: #000000;
-  line-height: 30px;
-}
-
-.select2-container--default .select2-selection--single .select2-selection__arrow {
-  height: 30px;
-}
-
-/* 🔥 Чорний текст у випадаючому списку */
-
-.select2-results__option {
-  font-family: 'Pacifico', cursive
-  color: #000000;
-  background-color: #ffffff !important ;
-}
-
-.select2-results__option--highlighted {
-  background-color: #e0e0e0;
-  color: #000000;
-}
-  .result { margin-top: 30px; }
-  .hero { background: #1e1e1e; border-radius: 8px; padding: 10px; margin: 10px; width: 200px; display: inline-block; }
+  body {
+    background: #1e1e1e;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    text-align: center;
+  }
+  h1 { color: #ffcc00; }
+  .team {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 10px;
+  }
+  select, input {
+    padding: 8px;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+    width: 180px;
+  }
+  button {
+    background: #ffcc00;
+    color: #000;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  button:hover { background: #ffaa00; }
+  .hero { background: #2e2e2e; margin: 5px auto; padding: 10px; border-radius: 10px; width: 220px; }
 </style>
 </head>
 <body>
 <h1>Dota 2 Draft Helper</h1>
 
 <h2>Моя команда</h2>
-<div id="myTeam" class="team-container"></div>
+<div id="myTeam" class="team"></div>
 
-<h2>Команда противника</h2>
-<div id="enemyTeam" class="team-container"></div>
+<h2>Команда суперника</h2>
+<div id="enemyTeam" class="team"></div>
 
-<button id="nextBtn">Наступний етап</button>
+<button id="nextBtn">Go</button>
+
 <div id="results"></div>
 
-<datalist id="heroesList"></datalist>
 <script>
 // =========================
 // 🔥 ВШИТИЙ heroes.json
@@ -1218,9 +1194,7 @@ const heroes = [
    // можеш додати всі інших героїв сюди
 ];
 
-// =========================
-// 🧩 Логіка драфту
-// =========================
+// 🔹 Етапи драфту
 const stageLimits = [
   { my: 2, enemy: 2 },
   { my: 2, enemy: 2 },
@@ -1229,124 +1203,141 @@ const stageLimits = [
 
 let stage = 1;
 
-// === ІНІЦІАЛІЗАЦІЯ ===
 document.addEventListener('DOMContentLoaded', () => {
-  createHeroList();
   createSelectors();
 });
 
-// === datalist для пошуку ===
-function createHeroList() {
-  const list = document.getElementById("heroesList");
-  list.innerHTML = heroes.map(h => `<option value="${h.name}">`).join('');
-}
-
-// === СТВОРЕННЯ СЕЛЕКТОРІВ (input) ===
 function createSelectors() {
   const myTeamDiv = document.getElementById('myTeam');
   const enemyTeamDiv = document.getElementById('enemyTeam');
-  const totalMy = stageLimits.map(s => s.my).reduce((a,b)=>a+b,0);
-  const totalEnemy = stageLimits.map(s => s.enemy).reduce((a,b)=>a+b,0);
 
-  for (let i=0;i<totalMy;i++){
-    const input=document.createElement('input');
-    input.setAttribute("list","heroesList");
-    input.placeholder="Введи героя...";
-    myTeamDiv.appendChild(input);
-  }
+  myTeamDiv.innerHTML = "";
+  enemyTeamDiv.innerHTML = "";
 
-  for (let i=0;i<totalEnemy;i++){
-    const input=document.createElement('input');
-    input.setAttribute("list","heroesList");
-    input.placeholder="Введи героя...";
-    enemyTeamDiv.appendChild(input);
-  }
+  const limits = stageLimits[stage - 1];
+  createTeamSelectors(myTeamDiv, limits.my);
+  createTeamSelectors(enemyTeamDiv, limits.enemy);
 
-  document.getElementById('nextBtn').addEventListener('click', nextStage);
-  document.querySelectorAll('input[list]').forEach(inp => inp.addEventListener('input', updateInputs));
+  updateSelects();
+  document.getElementById('nextBtn').onclick = nextStage;
 }
 
-// === БЛОКУВАННЯ ДУБЛІКАТІВ ===
-function updateInputs() {
-  const inputs = Array.from(document.querySelectorAll('input[list]'));
-  const selected = inputs.map(i=>i.value.trim()).filter(v=>v!=='');
-  inputs.forEach(inp=>{
-    if (selected.filter(v=>v===inp.value).length>1) {
-      inp.value = ''; // очистити дубльований
-      alert("⚠️ Цей герой вже вибраний!");
-    }
+function createTeamSelectors(container, count) {
+  const heroOptions = ['<option value="">Вибери героя</option>']
+    .concat(heroes.map(h => `<option value="${h.name}">${h.name}</option>`))
+    .join('');
+
+  for (let i = 0; i < count; i++) {
+    const wrapper = document.createElement('div');
+    const select = document.createElement('select');
+    select.innerHTML = heroOptions;
+    select.addEventListener('change', updateSelects);
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'Пиши героя...';
+    input.addEventListener('input', () => {
+      const val = input.value.trim();
+      const opt = Array.from(select.options).find(o => o.text.toLowerCase() === val.toLowerCase());
+      if (opt) select.value = opt.value;
+      updateSelects();
+    });
+
+    wrapper.appendChild(input);
+    wrapper.appendChild(select);
+    container.appendChild(wrapper);
+  }
+}
+
+// 🔹 Блокуємо повтори
+function updateSelects() {
+  const selects = Array.from(document.querySelectorAll('select'));
+  const selectedHeroes = selects.map(s => s.value).filter(v => v !== '');
+  selects.forEach(select => {
+    const current = select.value;
+    Array.from(select.options).forEach(opt => {
+      if (opt.value === '') opt.disabled = false;
+      else opt.disabled = selectedHeroes.includes(opt.value) && opt.value !== current;
+    });
   });
 }
 
-// === ВАГОВІ КОЕФІЦІЄНТИ ===
-function getWeightsByStage(stage){
-  switch(stage){
-    case 1: case 2: return { synergy:0.40, counters:0.25, winrate:0.15, pickrate:0.10, roles:0.10 };
-    case 3: case 4: return { synergy:0.30, counters:0.30, winrate:0.20, pickrate:0.10, roles:0.10 };
-    case 5: default: return { synergy:0.20, counters:0.45, winrate:0.15, pickrate:0.05, roles:0.15 };
-  }
+// 🔹 Основна функція
+function calculateBestPicks() {
+  const myHeroes = getSelectedHeroes('#myTeam');
+  const enemyHeroes = getSelectedHeroes('#enemyTeam');
+  const stageNow = Math.min(stage, 3);
+  const weights = getWeightsByStage(stageNow);
+  const roleCount = countRoles(myHeroes);
+
+  let scores = [];
+
+  heroes.forEach(hero => {
+    if (myHeroes.includes(hero.name) || enemyHeroes.includes(hero.name)) return;
+
+    let score = 0;
+    const winNorm = (hero.winrate - 0.5) / 0.5;
+    const pickNorm = Math.log(1 + hero.pickrate * 100) / Math.log(101);
+    score += weights.winrate * winNorm + weights.pickrate * pickNorm;
+
+    let counterScore = 0;
+    enemyHeroes.forEach(enemy => {
+      if (hero.BestCounters?.includes(enemy)) counterScore += 1.5;
+      if (hero.commonCounters?.includes(enemy)) counterScore += 0.7;
+    });
+    score += counterScore * weights.counters;
+
+    let synergyScore = 0;
+    myHeroes.forEach(my => {
+      const ally = heroes.find(h => h.name === my);
+      if (ally && ally.roles.some(r => hero.roles.includes(r))) synergyScore += 1;
+    });
+    score += synergyScore * weights.synergy;
+
+    hero.roles.forEach(r => {
+      if (roleCount[r] && roleCount[r] > 1) score -= 1.2 * (roleCount[r] - 1);
+    });
+
+    const uniqueRoles = Object.keys(roleCount).length;
+    if (uniqueRoles < 5 && hero.roles.some(r => !roleCount[r])) score += weights.roles;
+
+    scores.push({ hero: hero.name, score: Number(score.toFixed(4)) });
+  });
+
+  scores.sort((a, b) => b.score - a.score);
+  displayTop(scores);
 }
 
-// === РОЗРАХУНОК НАЙКРАЩИХ ПІКІВ ===
-function calculateBestPicks(){
-  const myHeroes = Array.from(document.querySelectorAll('#myTeam input')).map(i=>i.value).filter(v=>v!=='');
-  const enemyHeroes = Array.from(document.querySelectorAll('#enemyTeam input')).map(i=>i.value).filter(v=>v!=='');
-  const stage = Math.min(myHeroes.length + enemyHeroes.length + 1, 5);
-  const weights = getWeightsByStage(stage);
+function displayTop(scores) {
+  const resultDiv = document.getElementById('results');
+  resultDiv.innerHTML = `<h2>Топ герої для наступного піку:</h2>` +
+    scores.slice(0, 5).map(t => `
+      <div class="hero">
+        <h3>${t.hero}</h3>
+        <p>Оцінка: ${t.score.toFixed(3)}</p>
+      </div>`).join('');
+}
 
-  const W = { counterStrong:1.5, counterWeak:0.7, duplicatePenalty:1.2 };
+function getSelectedHeroes(selector) {
+  return Array.from(document.querySelectorAll(selector + ' select'))
+    .map(s => s.value).filter(v => v !== '');
+}
+
+function countRoles(myHeroes) {
   const roleCount = {};
-  myHeroes.forEach(m=>{
-    const h=heroes.find(x=>x.name===m);
-    if(h) h.roles.forEach(r=>roleCount[r]=(roleCount[r]||0)+1);
+  myHeroes.forEach(my => {
+    const h = heroes.find(x => x.name === my);
+    if (h) h.roles.forEach(r => roleCount[r] = (roleCount[r] || 0) + 1);
   });
+  return roleCount;
+}
 
-  const idealRoles = { Carry:1, Mid:1, Offlane:1, Support:2 };
-  let scores=[];
-
-  heroes.forEach(hero=>{
-    if(myHeroes.includes(hero.name)||enemyHeroes.includes(hero.name))return;
-    let score=0;
-
-    const winNorm=(hero.winrate-0.5)/0.5;
-    const pickNorm=Math.log(1+hero.pickrate*100)/Math.log(101);
-    score+=weights.winrate*winNorm+weights.pickrate*pickNorm;
-
-    let counterScore=0;
-    enemyHeroes.forEach(e=>{
-      if(hero.BestCounters?.includes(e))counterScore+=W.counterStrong;
-      if(hero.commonCounters?.includes(e))counterScore+=W.counterWeak;
-    });
-    score+=counterScore*weights.counters;
-
-    let synergy=0;
-    myHeroes.forEach(m=>{
-      const ally=heroes.find(h=>h.name===m);
-      if(ally&&ally.roles.some(r=>hero.roles.includes(r)))synergy+=1;
-    });
-    score+=synergy*weights.synergy;
-
-    let rolePenalty=0;
-    for(const [role,count] of Object.entries(roleCount)){
-      const ideal=idealRoles[role]||0;
-      if(count>ideal)rolePenalty+=(count-ideal)*1.5;
-      if(count<ideal)rolePenalty+=(ideal-count)*0.5;
-    }
-    score-=rolePenalty*weights.roles;
-
-    const uniqueRoles=Object.keys(roleCount).length;
-    if(uniqueRoles<5 && hero.roles.some(r=>!roleCount[r]))score+=weights.roles;
-
-    scores.push({hero:hero.name,score:Number(score.toFixed(4))});
-  });
-
-  scores.sort((a,b)=>b.score-a.score);
-  const top=scores.slice(0,5);
-  document.getElementById('results').innerHTML=
-    `<h2>Топ-герої для наступного піку:</h2>`+
-    top.map(t=>`<div class="hero"><h3>${t.hero}</h3><p>Оцінка: ${t.score.toFixed(3)}</p></div>`).join('');
-  console.table(top);
-  return scores;
+function getWeightsByStage(stage) {
+  switch (stage) {
+    case 1: return { synergy: 0.4, counters: 0.25, winrate: 0.15, pickrate: 0.1, roles: 0.1 };
+    case 2: return { synergy: 0.3, counters: 0.3, winrate: 0.2, pickrate: 0.1, roles: 0.1 };
+    default: return { synergy: 0.2, counters: 0.45, winrate: 0.15, pickrate: 0.05, roles: 0.15 };
+  }
 }
 
 // 🔹 Перехід по етапах
@@ -1396,16 +1387,6 @@ function showFinalChance() {
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
 
 
 
