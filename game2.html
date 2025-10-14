@@ -1309,6 +1309,9 @@ function calculateBestPicks() {
     duplicatePenalty: 1.2
   };
 
+  const idealRoles = { Carry:1, Mid:1, Offlane:1, Support:2 };
+  let scores=[];
+
   // Підрахунок кількості ролей у своїй команді
   const roleCount = {};
   myHeroes.forEach(my => {
@@ -1342,19 +1345,19 @@ function calculateBestPicks() {
     score += synergyScore * weights.synergy;
 
     // 4️⃣ штраф за дублювання ролей
-    hero.roles.forEach(r => {
-      if (roleCount[r] && roleCount[r] > 1) {
-        score -= W.duplicatePenalty * (roleCount[r] - 1);
-      }
-    });
-
-    // 5️⃣ бонус за покращення балансу ролей
-    const uniqueRoles = Object.keys(roleCount).length;
-    if (uniqueRoles < 5 && hero.roles.some(r => !roleCount[r])) {
-      score += weights.roles;
+    let rolePenalty=0;
+    for(const [role,count] of Object.entries(roleCount)){
+      const ideal=idealRoles[role]||0;
+      if(count>ideal)rolePenalty+=(count-ideal)*1.5;
+      if(count<ideal)rolePenalty+=(ideal-count)*0.5;
     }
+    score-=rolePenalty*weights.roles;
 
-    scores.push({ hero: hero.name, score: Number(score.toFixed(4)) });
+    // 5️⃣ бонус за нову унікальну роль
+    const uniqueRoles=Object.keys(roleCount).length;
+    if(uniqueRoles<5 && hero.roles.some(r=>!roleCount[r]))score+=weights.roles;
+
+    scores.push({hero:hero.name,score:Number(score.toFixed(4))});
   });
 
   // 🔹 Сортуємо героїв за рейтингом
