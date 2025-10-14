@@ -1309,6 +1309,55 @@ function calculateBestPicks() {
   const roleCount = countRoles(myHeroes);
 
   let scores = [];
+  
+  // 🔹 Ваги ролей за важливістю у драфті
+const roleWeights = {
+  Carry: 1.0,
+  Disabler: 0.9,
+  Durable: 0.8,
+  Initiator: 0.9,
+  Escape: 0.6,
+  Nuker: 0.7,
+  Pusher: 0.8,
+  Support: 0.9,
+  Ranged: 0.5,
+  Melee: 0.5
+};
+
+// 🔹 Підрахунок ролей у своїй команді
+const roleCount = {};
+myHeroes.forEach(my => {
+  const h = heroes.find(x => x.name === my);
+  if (h) {
+    h.roles.forEach(r => {
+      roleCount[r] = (roleCount[r] || 0) + 1;
+    });
+  }
+});
+
+// 🔹 Функції для підрахунку бонусів/штрафів за ролі
+function getSynergyScore(hero, allies) {
+  let score = 0;
+  allies.forEach(my => {
+    const ally = heroes.find(h => h.name === my);
+    if (ally) {
+      ally.roles.forEach(r => {
+        if (hero.roles.includes(r)) score += (roleWeights[r] || 1);
+      });
+    }
+  });
+  return score;
+}
+
+function getDuplicatePenalty(hero) {
+  let penalty = 0;
+  hero.roles.forEach(r => {
+    if (roleCount[r] && roleCount[r] > 1) {
+      penalty += (roleWeights[r] || 1) * (roleCount[r] - 1);
+    }
+  });
+  return penalty;
+}
 
   heroes.forEach(hero => {
     if (myHeroes.includes(hero.name) || enemyHeroes.includes(hero.name)) return;
@@ -1330,7 +1379,8 @@ function calculateBestPicks() {
       const ally = heroes.find(h => h.name === my);
       if (ally && ally.roles.some(r => hero.roles.includes(r))) synergyScore += 1;
     });
-    score += synergyScore * weights.synergy;
+    score += getSynergyScore(hero, myHeroes) * weights.synergy;
+
 
     hero.roles.forEach(r => {
       if (roleCount[r] && roleCount[r] > 1) score -= 1.2 * (roleCount[r] - 1);
