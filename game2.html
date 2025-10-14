@@ -5,122 +5,116 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Dota 2 Draft Helper</title>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
-<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Playwrite+DE+SAS:wght@100..400&family=Press+Start+2P&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;600&display=swap" rel="stylesheet" />
 
 <style>
-  body body {
-  background: url('flags/LOGO9.png') no-repeat center center fixed;
-  background-size: cover;
-  color: #e0e0e0;
-  font-family: 'Press Start 2P', monospace;
-  text-align: center;
-  margin: 0;
-  padding: 0;
-  background-color: #0d0d0d; /* запасний чорний фон */
-}
+  body {
+    margin: 0;
+    padding: 0;
+    background: url('flags/LOGO9.png') no-repeat center center fixed,
+                linear-gradient(to bottom, #000000, #4d0000);
+    background-size: cover;
+    color: #e0e0e0;
+    font-family: 'Press Start 2P', monospace;
+    text-align: center;
+  }
 
-/* Заголовок */
-h1 {
-  color: #ff1a1a;
-  font-size: 32px;
-  letter-spacing: 3px;
-  text-shadow: 0 0 15px #ff0000, 0 0 30px #660000;
-  margin-top: 25px;
-  border-bottom: 3px solid #660000;
-  display: inline-block;
-  padding-bottom: 5px;
-}
+  /* 🔴 Заголовок */
+  h1 {
+    color: #ff1a1a;
+    font-size: 36px;
+    letter-spacing: 2px;
+    margin-top: 25px;
+    text-shadow: 0 0 12px #ff0000, 0 0 25px #660000, 0 0 40px #330000;
+    border-bottom: 3px solid #660000;
+    display: inline-block;
+    padding-bottom: 5px;
+  }
 
-/* Підзаголовки */
-h2 {
-  color: #f5f5f5;
-  font-size: 18px;
-  text-shadow: 0 0 8px #000, 0 0 15px #660000;
-  margin: 20px 0 10px 0;
-  font-weight: bold;
-  border-left: 4px solid #ff0000;
-  padding-left: 10px;
-  display: inline-block;
-}
+  /* ⚪ Підзаголовки */
+  h2 {
+    color: #ffffff;
+    font-size: 18px;
+    margin: 20px 0 10px 0;
+    text-shadow: 0 0 8px #000, 0 0 15px #660000;
+    border-left: 4px solid #ff0000;
+    padding-left: 10px;
+    display: inline-block;
+  }
 
-/* Команди */
-.team {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  margin: 15px;
-}
+  .team {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 15px;
+  }
 
-/* Селектори */
-select, input {
-  padding: 10px;
-  border-radius: 6px;
-  border: 2px solid #660000;
-  font-size: 13px;
-  width: 180px;
-  text-align: center;
-  font-family: 'Fira Sans', sans-serif;
-  background: #1a1a1a;
-  color: #fff;
-  box-shadow: inset 0 0 8px #000;
-}
+  select, input {
+    padding: 10px;
+    border-radius: 6px;
+    border: 2px solid #660000;
+    font-size: 13px;
+    width: 180px;
+    text-align: center;
+    font-family: 'Fira Sans', sans-serif;
+    background: #1a1a1a;
+    color: #fff;
+    box-shadow: inset 0 0 8px #000;
+  }
 
-select:focus, input:focus {
-  outline: none;
-  border-color: #ff0000;
-  box-shadow: 0 0 10px #ff0000;
-}
+  select:focus, input:focus {
+    outline: none;
+    border-color: #ff0000;
+    box-shadow: 0 0 10px #ff0000;
+  }
 
-/* Кнопка */
-button {
-  background: linear-gradient(145deg, #ff0000, #660000);
-  color: #fff;
-  border: 2px solid #990000;
-  padding: 12px 30px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-  font-family: 'Fira Sans', sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  box-shadow: 0 0 15px #330000;
-  transition: all 0.2s ease-in-out;
-}
+  button {
+    background: linear-gradient(145deg, #ff0000, #660000);
+    color: #fff;
+    border: 2px solid #990000;
+    padding: 12px 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-family: 'Fira Sans', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 0 15px #330000;
+    transition: all 0.2s ease-in-out;
+  }
 
-button:hover {
-  background: linear-gradient(145deg, #ff3333, #990000);
-  box-shadow: 0 0 20px #ff0000;
-}
+  button:hover {
+    background: linear-gradient(145deg, #ff3333, #990000);
+    box-shadow: 0 0 20px #ff0000;
+  }
 
-/* Блок героя */
-.hero {
-  background: rgba(20, 20, 20, 0.9);
-  margin: 5px auto;
-  padding: 12px;
-  border-radius: 8px;
-  width: 220px;
-  border: 2px solid #660000;
-  box-shadow: 0 0 10px #000;
-  transition: transform 0.2s ease-in-out;
-}
+  .hero {
+    background: rgba(20, 20, 20, 0.9);
+    margin: 5px auto;
+    padding: 12px;
+    border-radius: 8px;
+    width: 220px;
+    border: 2px solid #660000;
+    box-shadow: 0 0 10px #000;
+    transition: transform 0.2s ease-in-out;
+  }
 
-.hero:hover {
-  transform: scale(1.05);
-  border-color: #ff0000;
-  box-shadow: 0 0 15px #ff0000;
-}
+  .hero:hover {
+    transform: scale(1.05);
+    border-color: #ff0000;
+    box-shadow: 0 0 15px #ff0000;
+  }
 
-/* Результати */
-#results {
-  margin-top: 25px;
-  padding: 15px;
-  background: rgba(10, 10, 10, 0.85);
-  border: 2px solid #660000;
-  border-radius: 10px;
-  box-shadow: 0 0 15px #000;
-  font-size: 14px;
-  line-height: 1.6;
-}
+  #results {
+    margin-top: 25px;
+    padding: 15px;
+    background: rgba(10, 10, 10, 0.85);
+    border: 2px solid #660000;
+    border-radius: 10px;
+    box-shadow: 0 0 15px #000;
+    font-size: 14px;
+    line-height: 1.6;
+  }
 </style>
 </head>
 <body>
