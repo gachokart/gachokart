@@ -4,27 +4,54 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Dota 2 Draft Helper</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Playwrite+DE+SAS:wght@100..400&family=Press+Start+2P&display=swap" rel="stylesheet">
+
 <style>
   body {
-    background: #1e1e1e;
+    background: url('flags/LOGO9.png') no-repeat center center fixed;
+    background-size: cover;
     color: #fff;
-    font-family: Arial, sans-serif;
+    font-family: 'Press Start 2P';
     text-align: center;
   }
-  h1 { color: #ffcc00; }
+
+  /* 🔴 Заголовок "Dota 2 Analyst" */
+  h1 {
+    color: #ff0000; /* яскраво-червоний */
+    font-family: 'Press Start 2P';
+    font-size: 28px;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px #ff0000, 0 0 20px #aa0000;
+    margin-top: 20px;
+  }
+
+  /* ⚪ Назви команд "Моя команда" і "Суперник" */
+  h2 {
+    color: #ffffff;
+    font-family: 'Press Start 2P';
+    font-size: 16px;
+    text-shadow: 0 0 5px #000;
+    margin: 15px 0 5px 0;
+  }
+
   .team {
     display: flex;
     justify-content: center;
     gap: 10px;
     margin: 10px;
   }
+
   select, input {
     padding: 8px;
     border-radius: 8px;
     border: none;
-    font-size: 14px;
+    font-size: 12px;
     width: 180px;
+    text-align: center;
+    font-family: 'Fira Sans';
   }
+
   button {
     background: #ffcc00;
     color: #000;
@@ -33,9 +60,20 @@
     border-radius: 10px;
     cursor: pointer;
     font-weight: bold;
+    font-family: 'Fira Sans';
   }
-  button:hover { background: #ffaa00; }
-  .hero { background: #2e2e2e; margin: 5px auto; padding: 10px; border-radius: 10px; width: 220px; }
+
+  button:hover {
+    background: #ffaa00;
+  }
+
+  .hero {
+    background: rgba(46, 46, 46, 0.85);
+    margin: 5px auto;
+    padding: 10px;
+    border-radius: 10px;
+    width: 220px;
+  }
 </style>
 </head>
 <body>
