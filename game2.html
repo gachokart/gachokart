@@ -1527,10 +1527,9 @@ function nextStage() {
 
 // ====================== ФІНАЛ ======================
 // ====================== ФІНАЛ ======================
-function showFinalChance(){
-  const myTeam = getSelectedHeroes('#myTeam');
-  const enemyTeam = getSelectedHeroes('#enemyTeam');
-  let myScore=0, enemyScore=0;
+function showFinalChance(myTeam = allMyHeroes, enemyTeam = allEnemyHeroes) {
+  let myScore = 0, enemyScore = 0;
+  // далі логіка без змін
 
   heroes.forEach(h=>{
     if(myTeam.includes(h.name)){
