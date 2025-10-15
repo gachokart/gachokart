@@ -120,6 +120,23 @@
     <ul id="enemyTeamList"></ul>
   </div>
 </div>
+  <div id="draftSummary" style="display:none;">
+  <div id="summaryContainer" 
+       style="display:flex; justify-content:space-between; align-items:center; 
+              background:url('LOGO9.png') center/cover no-repeat; 
+              padding:20px; border-radius:15px; color:#fff; margin:20px auto; max-width:900px;">
+    <ul id="summaryMyTeam" style="list-style:none; padding:0; text-align:center;"></ul>
+    <div id="summaryCenter" style="text-align:center;">
+      <h2 id="summaryChance" style="margin-bottom:10px;"></h2>
+      <div style="background:rgba(0,0,0,0.5); border-radius:10px; overflow:hidden; width:150px; height:20px; margin:0 auto;">
+        <div id="summaryBar" style="background:#ff0000; width:0%; height:100%;"></div>
+      </div>
+      <p id="summaryBehavior" style="margin-top:10px;"></p>
+    </div>
+    <ul id="summaryEnemyTeam" style="list-style:none; padding:0; text-align:center;"></ul>
+  </div>
+</div>
+
 
 
 <script>
@@ -1529,19 +1546,18 @@ function nextStage() {
 // ====================== ФІНАЛ ======================
 function showFinalChance(myTeam = allMyHeroes, enemyTeam = allEnemyHeroes) {
   let myScore = 0, enemyScore = 0;
-  // далі логіка без змін
 
-  heroes.forEach(h=>{
-    if(myTeam.includes(h.name)){
-      enemyTeam.forEach(e=>{
-        if(h.BestCounters?.includes(e)) myScore+=2;
-        if(h.commonCounters?.includes(e)) myScore+=1;
+  heroes.forEach(h => {
+    if (myTeam.includes(h.name)) {
+      enemyTeam.forEach(e => {
+        if (h.BestCounters?.includes(e)) myScore += 2;
+        if (h.commonCounters?.includes(e)) myScore += 1;
       });
     }
-    if(enemyTeam.includes(h.name)){
-      myTeam.forEach(m=>{
-        if(h.BestCounters?.includes(m)) enemyScore+=2;
-        if(h.commonCounters?.includes(m)) enemyScore+=1;
+    if (enemyTeam.includes(h.name)) {
+      myTeam.forEach(m => {
+        if (h.BestCounters?.includes(m)) enemyScore += 2;
+        if (h.commonCounters?.includes(m)) enemyScore += 1;
       });
     }
   });
@@ -1550,28 +1566,31 @@ function showFinalChance(myTeam = allMyHeroes, enemyTeam = allEnemyHeroes) {
   let myChance = total > 0 ? (myScore / total) * 100 : 50;
   let behaviorMsg = '';
 
-  // поведінкові фактори у фіналі
   if (document.getElementById('behaviorMode').checked) {
-    const stability = getPlayerStability();       // 0.6–1.0
-    const influence = getRandomPlayerInfluence(); // -0.3..+0.2
+    const stability = getPlayerStability();
+    const influence = getRandomPlayerInfluence();
     const rawChance = myChance * stability * (1 + influence);
-
-    // стабільність шансів у межах
     myChance = Math.max(5, Math.min(95, rawChance));
 
-    // повідомлення гравцю
     if (influence > 0.15) behaviorMsg = "💪 У команді є бустер!";
     else if (influence < -0.25) behaviorMsg = "💀 Обережно, у команді руїнер!";
     else if (stability < 0.75) behaviorMsg = "⚠️ Нестабільна гра команди.";
     else behaviorMsg = "🙂 Команда стабільна.";
   }
 
-  document.getElementById('results').innerHTML = `
-    <h2>Шанс на перемогу моєї команди: ${myChance.toFixed(0)}%</h2>
-    <div style="background:#333; border:1px solid #660000; width:80%; margin:10px auto; height:20px;">
-      <div style="background:#ff0000; width:${myChance}%; height:100%;"></div>
-    </div>
-    ${behaviorMsg ? `<p style="text-align:center; margin-top:10px;">${behaviorMsg}</p>` : ''}
+  // 🟢 оновлюємо Draft Summary
+  document.getElementById('summaryMyTeam').innerHTML = myTeam.map(h => `<li style="margin:5px 0;">🟩 ${h}</li>`).join('');
+  document.getElementById('summaryEnemyTeam').innerHTML = enemyTeam.map(h => `<li style="margin:5px 0;">🟥 ${h}</li>`).join('');
+  document.getElementById('summaryChance').textContent = `Шанс на перемогу: ${myChance.toFixed(0)}%`;
+  document.getElementById('summaryBar').style.width = `${myChance}%`;
+  document.getElementById('summaryBehavior').textContent = behaviorMsg;
+
+  // 🟢 показуємо блок
+  document.getElementById('draftSummary').style.display = 'block';
+
+  // ховаємо попередній results
+  document.getElementById('results').style.display = 'none';}
+
   `;
 
    updateTeamDisplays();
