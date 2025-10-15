@@ -58,22 +58,23 @@
     font-size: 14px;
   }
 
-  button {
-    background: #ffcc00;
-    color: #000;
-    border: none;
-    padding: 10px 25px;
-    border-radius: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: 'Fira Sans';
-    transition: all 0.2s ease;
-  }
+ button {
+  background: linear-gradient(to bottom, #ffcc00, #cc9900);
+  color: #000;
+  border: 2px solid #000;
+  padding: 12px 30px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-family: 'Fira Sans';
+  box-shadow: 0 0 10px #ffcc00;
+  transition: all 0.2s ease;
+}
 
-  button:hover {
-    background: #ffaa00;
-    transform: scale(1.05);
-  }
+button:hover {
+  background: linear-gradient(to bottom, #ffaa00, #cc7700);
+  transform: scale(1.05);
+  box-shadow: 0 0 15px #ffaa00;
+}
 
   #results {
     margin-top: 20px;
