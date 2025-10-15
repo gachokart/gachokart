@@ -1542,8 +1542,8 @@ function nextStage() {
 // ====================== ФІНАЛ ======================
 // ====================== ФІНАЛ ======================
 function showFinalChance(){
-    const myTeam = getSelectedHeroes('#myTeam');
-    const enemyTeam = getSelectedHeroes('#enemyTeam');
+    const myTeam = allMyHeroes;    // беремо всі герої обрані на всіх стадіях
+    const enemyTeam = allEnemyHeroes;
     let myScore=0, enemyScore=0;
 
     heroes.forEach(h=>{
