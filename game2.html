@@ -1663,52 +1663,51 @@ function nextStage() {
 
 // ====================== ФІНАЛ ======================
 // ====================== ФІНАЛ ======================
-function showFinalChance(){
-    const myTeam = allMyHeroes;    // беремо всі герої обрані на всіх стадіях
+function showFinalChance() {
+    const myTeam = allMyHeroes;
     const enemyTeam = allEnemyHeroes;
-    let myScore=0, enemyScore=0;
 
-    heroes.forEach(h=>{
-        if(myTeam.includes(h.name)){
-            enemyTeam.forEach(e=>{
-                if(h.BestCounters?.includes(e)) myScore+=2;
-                if(h.commonCounters?.includes(e)) myScore+=1;
+    let myScore = 0, enemyScore = 0;
+
+    heroes.forEach(h => {
+        if (myTeam.includes(h.name)) {
+            enemyTeam.forEach(e => {
+                if (h.BestCounters?.includes(e)) myScore += 2;
+                if (h.commonCounters?.includes(e)) myScore += 1;
             });
+            myScore += h.winrate; // додаємо winrate
         }
-        if(enemyTeam.includes(h.name)){
-            myTeam.forEach(m=>{
-                if(h.BestCounters?.includes(m)) enemyScore+=2;
-                if(h.commonCounters?.includes(m)) enemyScore+=1;
+        if (enemyTeam.includes(h.name)) {
+            myTeam.forEach(m => {
+                if (h.BestCounters?.includes(m)) enemyScore += 2;
+                if (h.commonCounters?.includes(m)) enemyScore += 1;
             });
+            enemyScore += h.winrate;
         }
     });
 
-    const total = myScore + enemyScore;
-    let myChance = total > 0 ? (myScore / total) * 100 : 50;
-    let behaviorMsg = '';
+    // синергія команд
+    myScore *= getTeamHarmony(myTeam);
+    enemyScore *= getTeamHarmony(enemyTeam);
 
-    if(document.getElementById('behaviorMode').checked){
+    let myChance = (myScore + enemyScore > 0) ? (myScore / (myScore + enemyScore)) * 100 : 50;
+
+    // поведінкові фактори
+    if (document.getElementById('behaviorMode').checked){
         const stability = getPlayerStability();
         const influence = getRandomPlayerInfluence();
-        const rawChance = myChance * stability * (1 + influence);
-        myChance = Math.max(5, Math.min(95, rawChance));
-
-        if (influence > 0.15) behaviorMsg = "💪 У команді є бустер!";
-        else if (influence < -0.25) behaviorMsg = "💀 Обережно, у команді руїнер!";
-        else if (stability < 0.75) behaviorMsg = "⚠️ Нестабільна гра команди.";
-        else behaviorMsg = "🙂 Команда стабільна.";
+        myChance *= stability * (1 + influence);
+        myChance = Math.max(5, Math.min(95, myChance));
     }
 
-    // 🟢 оновлюємо Draft Summary
-    document.getElementById('summaryMyTeam').innerHTML = myTeam.map(h=>`<li style="margin:5px 0;">🟩 ${h}</li>`).join('');
-    document.getElementById('summaryEnemyTeam').innerHTML = enemyTeam.map(h=>`<li style="margin:5px 0;">🟥 ${h}</li>`).join('');
+    // відображення
+    document.getElementById('summaryMyTeam').innerHTML = myTeam.map(h=>`<li>🟩 ${h}</li>`).join('');
+    document.getElementById('summaryEnemyTeam').innerHTML = enemyTeam.map(h=>`<li>🟥 ${h}</li>`).join('');
     document.getElementById('summaryChance').textContent = `Шанс на перемогу: ${myChance.toFixed(0)}%`;
     document.getElementById('summaryBar').style.width = `${myChance}%`;
-    document.getElementById('summaryBehavior').textContent = behaviorMsg;
-
-    // 🟢 показуємо блок і ховаємо старий results
     document.getElementById('draftSummary').style.display = 'block';
     document.getElementById('results').style.display = 'none';
+
 
     updateTeamDisplays(false); // залишаємо останні вибрані герої в списках
 }
