@@ -41,6 +41,20 @@
     gap: 10px;
     margin: 10px;
   }
+  
+  #teamsDisplay ul {
+  list-style:none;
+  padding:0;
+  margin:0;
+  font-size:16px;
+}
+
+#teamsDisplay h3 {
+  margin-bottom:8px;
+  font-family:'Press Start 2P', monospace;
+  font-size:14px;
+  color:#ffcc00;
+}
 
   select, input {
     padding: 8px;
@@ -95,6 +109,18 @@
     🎭 Увімкнути поведінковий фактор
   </label>
 </div>
+
+  <div id="teamsDisplay" style="display:flex; justify-content:space-between; margin-top:20px;">
+  <div id="myTeamDisplay" style="width:45%; text-align:left;">
+    <h3>🟦 Моя команда</h3>
+    <ul id="myTeamList"></ul>
+  </div>
+  <div id="enemyTeamDisplay" style="width:45%; text-align:right;">
+    <h3>🟥 Суперники</h3>
+    <ul id="enemyTeamList"></ul>
+  </div>
+</div>
+
 
 <script>
 // =========================
@@ -1316,6 +1342,22 @@ function getSelectedHeroes(selector) {
   return Array.from(document.querySelectorAll(selector + ' select'))
     .map(s => s.value).filter(v => v !== '');
 }
+  function updateTeamDisplays() {
+  const myTeam = getSelectedHeroes('#myTeam');
+  const enemyTeam = getSelectedHeroes('#enemyTeam');
+
+  const myTeamList = document.getElementById('myTeamList');
+  const enemyTeamList = document.getElementById('enemyTeamList');
+
+  myTeamList.innerHTML = myTeam.length 
+    ? myTeam.map(h => `<li style="margin:4px 0;">🟩 ${h}</li>`).join('')
+    : '<li style="opacity:0.6;">(поки не вибрано)</li>';
+
+  enemyTeamList.innerHTML = enemyTeam.length 
+    ? enemyTeam.map(h => `<li style="margin:4px 0;">🟥 ${h}</li>`).join('')
+    : '<li style="opacity:0.6;">(поки не вибрано)</li>';
+}
+
 
 // ====================== ПОВЕДІНКОВІ ФАКТОРИ ======================
 function getTeamHarmony(myHeroes) {
@@ -1453,6 +1495,7 @@ function nextStage() {
   if(stage<3){
     stage++;
     createSelectors(mySelected,enemySelected);
+    updateTeamDisplays(); 
     calculateBestPicks();
   } else {
     showFinalChance();
