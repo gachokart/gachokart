@@ -1521,16 +1521,15 @@ function nextStage() {
   allMyHeroes.push(...mySelected);
   allEnemyHeroes.push(...enemySelected);
 
-  if (stage < 3) {
+ if (stage < 3) {
     stage++;
-    // 🟢 Лише оновлюємо блокування повторів і список, не створюємо нові селектори
     updateSelects();
     updateTeamDisplays();
     calculateBestPicks();
 } else {
-    // 🟢 фінальна стадія
     showFinalChance();
 }
+
 
 
 
