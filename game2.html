@@ -1514,27 +1514,25 @@ function nextStage() {
     const enemySelected = getSelectedHeroes('#enemyTeam');
     const limits = stageLimits[stage - 1];
 
+    // перевіряємо, чи обрано потрібну кількість героїв
     if (mySelected.length < limits.my || enemySelected.length < limits.enemy) {
         alert(`⚠️ Обери ${limits.my} героїв у свою команду та ${limits.enemy} у суперника!`);
         return;
     }
 
-    // Зберігаємо вибраних героїв
+    // зберігаємо вибраних героїв
     allMyHeroes.push(...mySelected);
     allEnemyHeroes.push(...enemySelected);
 
     if (stage < 3) {
-        stage++;
-
-        // Оновлюємо селектори без повного перезавантаження
-        updateSelects();
-        updateTeamDisplays();
+        stage++; // переходимо на наступну стадію
+        createSelectors(allMyHeroes, allEnemyHeroes); // створюємо нові селектори тільки для нових пік стадії
         calculateBestPicks();
-
     } else {
-        showFinalChance();
+        showFinalChance(); // фінальна стадія
     }
 }
+
 
 
 
