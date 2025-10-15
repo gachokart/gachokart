@@ -88,6 +88,13 @@
 <button id="nextBtn">Go</button>
 
 <div id="results"></div>
+  
+<div id="controls">
+  <label>
+    <input type="checkbox" id="behaviorMode">
+    🎭 Увімкнути поведінковий фактор
+  </label>
+</div>
 
 <script>
 // =========================
@@ -1232,27 +1239,26 @@ const heroes = [
    // можеш додати всі інших героїв сюди
 ];
 
+
+// ====================== ВАГИ РОЛЕЙ ======================
 const roleWeights = { Carry: 1.0, Disabler: 0.9, Durable: 0.8, Initiator: 0.9, Escape: 0.6, Nuker: 0.7, Pusher: 0.8, Support: 0.9, Ranged: 0.5, Melee: 0.5 };
 
-// ====================== Етапи драфту ======================
+// ====================== ЕТАПИ ======================
 const stageLimits = [ { my: 2, enemy: 2 }, { my: 2, enemy: 2 }, { my: 1, enemy: 1 } ];
 let stage = 1;
 
-// ====================== Ініціалізація ======================
+// ====================== ІНІЦІАЛІЗАЦІЯ ======================
 document.addEventListener('DOMContentLoaded', () => { createSelectors(); });
 
-// ====================== Створення селекторів ======================
+// ====================== СЕЛЕКТОРИ ======================
 function createSelectors(savedMy = [], savedEnemy = []) {
   const myTeamDiv = document.getElementById('myTeam');
   const enemyTeamDiv = document.getElementById('enemyTeam');
-
   myTeamDiv.innerHTML = "<h2>Моя команда</h2>";
   enemyTeamDiv.innerHTML = "<h2>Суперник</h2>";
-
   const limits = stageLimits[stage - 1];
   createTeamSelectors(myTeamDiv, limits.my, savedMy);
   createTeamSelectors(enemyTeamDiv, limits.enemy, savedEnemy);
-
   updateSelects();
   document.getElementById('nextBtn').onclick = nextStage;
 }
@@ -1261,15 +1267,12 @@ function createTeamSelectors(container, count, saved = []) {
   const heroOptions = ['<option value="">Вибери героя</option>']
     .concat(heroes.map(h => `<option value="${h.name}">${h.name}</option>`))
     .join('');
-
   for (let i = 0; i < count; i++) {
     const wrapper = document.createElement('div');
-
     const select = document.createElement('select');
     select.innerHTML = heroOptions;
     if (saved[i]) select.value = saved[i];
     select.addEventListener('change', updateSelects);
-
     const input = document.createElement('input');
     input.type = 'text';
     input.placeholder = 'Пиши героя...';
@@ -1279,14 +1282,13 @@ function createTeamSelectors(container, count, saved = []) {
       if (opt) select.value = opt.value;
       updateSelects();
     });
-
     wrapper.appendChild(input);
     wrapper.appendChild(select);
     container.appendChild(wrapper);
   }
 }
 
-// ====================== Блокування повторів ======================
+// ====================== БЛОКУВАННЯ ПОВТОРІВ ======================
 function updateSelects() {
   const selects = Array.from(document.querySelectorAll('select'));
   const selectedHeroes = selects.map(s => s.value).filter(v => v !== '');
@@ -1300,7 +1302,7 @@ function updateSelects() {
   });
 }
 
-// ====================== Ваги для стадій ======================
+// ====================== ВАГИ СТАДІЙ ======================
 function getWeightsByStage(stage) {
   switch (stage) {
     case 1: return { synergy: 0.4, counters: 0.25, winrate: 0.15, pickrate: 0.1, roles: 0.1 };
@@ -1309,18 +1311,52 @@ function getWeightsByStage(stage) {
   }
 }
 
+// ====================== ДОПОМІЖНІ ======================
 function getSelectedHeroes(selector) {
   return Array.from(document.querySelectorAll(selector + ' select'))
     .map(s => s.value).filter(v => v !== '');
 }
 
-// ====================== Розрахунок топ героїв ======================
+// ====================== ПОВЕДІНКОВІ ФАКТОРИ ======================
+function getTeamHarmony(myHeroes) {
+  const roleCount = {};
+  myHeroes.forEach(h => {
+    const hero = heroes.find(x => x.name === h);
+    if (hero) hero.roles.forEach(r => roleCount[r] = (roleCount[r] || 0) + 1);
+  });
+  const carryDup = Math.max(0, (roleCount['Carry'] || 0) - 1);
+  const supportDup = Math.max(0, (roleCount['Support'] || 0) - 1);
+  return 1 - 0.15 * (carryDup + supportDup);
+}
+
+function getToxicityRisk(hero) {
+  const toxicHeroes = ['Invoker', 'Meepo', 'Tinker', 'Techies', 'Broodmother'];
+  return toxicHeroes.includes(hero.name) ? 0.9 : 1.0;
+}
+
+function getPlayerStability() {
+  return Math.random() * 0.4 + 0.6; // 0.6–1.0
+}
+
+function getRandomPlayerInfluence() {
+  const profiles = [
+    { type: "booster", influence: +0.2 },
+    { type: "smurf", influence: +0.1 },
+    { type: "ruiner", influence: -0.3 },
+    { type: "tilter", influence: -0.15 },
+    { type: "calm", influence: +0.05 },
+  ];
+  const avgInfluence = Array.from({length:5},()=>profiles[Math.floor(Math.random()*profiles.length)].influence)
+    .reduce((a,b)=>a+b,0)/5;
+  return avgInfluence;
+}
+
+// ====================== РОЗРАХУНОК ======================
 function calculateBestPicks() {
   const myHeroes = getSelectedHeroes('#myTeam');
   const enemyHeroes = getSelectedHeroes('#enemyTeam');
   const stageNow = Math.min(stage, 3);
   const weights = getWeightsByStage(stageNow);
-
   const keyRoles = ['Carry', 'Support', 'Disabler', 'Initiator'];
   const stageRoleMultiplier = stageNow === 1 ? 1.2 : stageNow === 2 ? 1.1 : 1.0;
 
@@ -1366,6 +1402,11 @@ function calculateBestPicks() {
     return score;
   }
 
+  const behaviorMode = document.getElementById('behaviorMode').checked;
+  const stability = behaviorMode ? getPlayerStability() : 1.0;
+  const influence = behaviorMode ? getRandomPlayerInfluence() : 0.0;
+  const harmony = behaviorMode ? getTeamHarmony(myHeroes) : 1.0;
+
   let scores = [];
   heroes.forEach(hero => {
     if (myHeroes.includes(hero.name) || enemyHeroes.includes(hero.name)) return;
@@ -1378,6 +1419,14 @@ function calculateBestPicks() {
     score -= getDuplicatePenalty(hero);
     score += getMissingRoleBonus(hero)*weights.roles;
 
+    // застосовуємо поведінкові фактори
+    if (behaviorMode) {
+      score *= getToxicityRisk(hero);
+      score *= harmony;
+      score *= stability;
+      score *= (1 + influence);
+    }
+
     scores.push({hero: hero.name, score: Number(score.toFixed(4))});
   });
 
@@ -1385,23 +1434,22 @@ function calculateBestPicks() {
   displayTop(scores);
 }
 
+// ====================== ВІДОБРАЖЕННЯ ======================
 function displayTop(scores){
   const resultDiv = document.getElementById('results');
   resultDiv.innerHTML = `<h2>Топ герої для наступного піку:</h2>`+
     scores.slice(0,5).map(t=>`<div class="hero"><h3>${t.hero}</h3><p>Оцінка: ${t.score.toFixed(3)}</p></div>`).join('');
 }
 
-// ====================== Перехід по етапах ======================
+// ====================== ЕТАПИ ======================
 function nextStage() {
   const mySelected = getSelectedHeroes('#myTeam');
   const enemySelected = getSelectedHeroes('#enemyTeam');
   const limits = stageLimits[stage-1];
-
   if(mySelected.length<limits.my || enemySelected.length<limits.enemy){
     alert(`⚠️ Обери ${limits.my} героїв у свою команду та ${limits.enemy} у суперника!`);
     return;
   }
-
   if(stage<3){
     stage++;
     createSelectors(mySelected,enemySelected);
@@ -1411,7 +1459,7 @@ function nextStage() {
   }
 }
 
-// ====================== Кінець драфту ======================
+// ====================== ФІНАЛ ======================
 function showFinalChance(){
   const myTeam = getSelectedHeroes('#myTeam');
   const enemyTeam = getSelectedHeroes('#enemyTeam');
@@ -1435,6 +1483,14 @@ function showFinalChance(){
   const total = myScore + enemyScore;
   const myChance = total > 0 ? (myScore / total) * 100 : 50;
 
+  // поведінкові фактори у фіналі
+  if (document.getElementById('behaviorMode').checked) {
+    const stability = getPlayerStability();
+    const influence = getRandomPlayerInfluence();
+    myChance *= stability * (1 + influence);
+    myChance = Math.max(5, Math.min(95, myChance));
+  }
+
   document.getElementById('results').innerHTML = `
     <h2>Шанс на перемогу моєї команди: ${myChance.toFixed(0)}%</h2>
     <div style="background:#333; border:1px solid #660000; width:80%; margin:10px auto; height:20px;">
@@ -1442,7 +1498,6 @@ function showFinalChance(){
     </div>
   `;
 }
-
 
 </script>
 </body>
