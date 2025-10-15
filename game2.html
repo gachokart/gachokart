@@ -1503,6 +1503,8 @@ function nextStage() {
     // 🟢 Створюємо нові селектори, передаючи вже вибраних
     createSelectors(mySelected, enemySelected);
 
+    setTimeout(updateTeamDisplays, 50);
+
     // 🟢 Відновлюємо блокування повторів
     updateSelects();
 
