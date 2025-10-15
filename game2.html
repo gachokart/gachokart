@@ -1523,22 +1523,16 @@ function nextStage() {
 
   if (stage < 3) {
     stage++;
-
-    // 🟢 передаємо вже вибраних на всіх попередніх етапах
-    createSelectors(allMyHeroes, allEnemyHeroes);
-
-    // 🟡 даємо DOM оновитись, потім відображаємо список і блокуємо дублікати
-    setTimeout(() => {
-      updateSelects();
-      updateTeamDisplays();
-      calculateBestPicks();
-    }, 50);
-
-  } else {
-    // 🟢 у фіналі використовуємо повні команди
-    showFinalChance(allMyHeroes, allEnemyHeroes);
-  }
+    // 🟢 Лише оновлюємо блокування повторів і список, не створюємо нові селектори
+    updateSelects();
+    updateTeamDisplays();
+    calculateBestPicks();
+} else {
+    // 🟢 фінальна стадія
+    showFinalChance();
 }
+
+
 
 
 
