@@ -1487,6 +1487,9 @@ function displayTop(scores){
 }
 
 // ====================== ЕТАПИ ======================
+let allMyHeroes = [];
+let allEnemyHeroes = [];
+
 function nextStage() {
   const mySelected = getSelectedHeroes('#myTeam');
   const enemySelected = getSelectedHeroes('#enemyTeam');
@@ -1497,25 +1500,26 @@ function nextStage() {
     return;
   }
 
+  // 🟢 додаємо вибраних героїв до глобальних списків
+  allMyHeroes.push(...mySelected);
+  allEnemyHeroes.push(...enemySelected);
+
   if (stage < 3) {
     stage++;
 
-    // 🟢 Створюємо нові селектори, передаючи вже вибраних
-    createSelectors(mySelected, enemySelected);
+    // 🟢 передаємо вже вибраних на всіх попередніх етапах
+    createSelectors(allMyHeroes, allEnemyHeroes);
 
-    setTimeout(updateTeamDisplays, 50);
-
-    // 🟢 Відновлюємо блокування повторів
-    updateSelects();
-
-    // 🟢 Відновлюємо бокові списки (зліва і справа)
-    updateTeamDisplays();
-
-    // 🟢 Одразу обчислюємо рекомендації
-    calculateBestPicks();
+    // 🟡 даємо DOM оновитись, потім відображаємо список і блокуємо дублікати
+    setTimeout(() => {
+      updateSelects();
+      updateTeamDisplays();
+      calculateBestPicks();
+    }, 50);
 
   } else {
-    showFinalChance();
+    // 🟢 у фіналі використовуємо повні команди
+    showFinalChance(allMyHeroes, allEnemyHeroes);
   }
 }
 
@@ -1570,6 +1574,8 @@ function showFinalChance(){
     </div>
     ${behaviorMsg ? `<p style="text-align:center; margin-top:10px;">${behaviorMsg}</p>` : ''}
   `;
+
+   updateTeamDisplays();
 }
 
 </script>
