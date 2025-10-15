@@ -1299,15 +1299,18 @@ function createTeamSelectors(container, count, saved = []) {
     select.innerHTML = heroOptions;
     if (saved[i]) select.value = saved[i];
     select.addEventListener('change', updateSelects);
+    select.addEventListener('change', updateTeamDisplays);
     const input = document.createElement('input');
     input.type = 'text';
     input.placeholder = 'Пиши героя...';
     input.addEventListener('input', () => {
-      const val = input.value.trim();
-      const opt = Array.from(select.options).find(o => o.text.toLowerCase() === val.toLowerCase());
-      if (opt) select.value = opt.value;
-      updateSelects();
-    });
+  const val = input.value.trim();
+  const opt = Array.from(select.options).find(o => o.text.toLowerCase() === val.toLowerCase());
+  if (opt) select.value = opt.value;
+  updateSelects();
+  updateTeamDisplays(); // 🟢 оновлення списку зліва/справа
+});
+
     wrapper.appendChild(input);
     wrapper.appendChild(select);
     container.appendChild(wrapper);
@@ -1487,20 +1490,27 @@ function displayTop(scores){
 function nextStage() {
   const mySelected = getSelectedHeroes('#myTeam');
   const enemySelected = getSelectedHeroes('#enemyTeam');
-  const limits = stageLimits[stage-1];
-  if(mySelected.length<limits.my || enemySelected.length<limits.enemy){
+  const limits = stageLimits[stage - 1];
+
+  if (mySelected.length < limits.my || enemySelected.length < limits.enemy) {
     alert(`⚠️ Обери ${limits.my} героїв у свою команду та ${limits.enemy} у суперника!`);
     return;
   }
-  if(stage<3){
+
+  if (stage < 3) {
     stage++;
-    createSelectors(mySelected,enemySelected);
-    updateTeamDisplays(); 
+    createSelectors(mySelected, enemySelected);
+
+    // 🟢 Додаємо ці 2 виклики після створення селекторів:
+    updateSelects();
+    updateTeamDisplays();
+
     calculateBestPicks();
   } else {
     showFinalChance();
   }
 }
+
 
 // ====================== ФІНАЛ ======================
 // ====================== ФІНАЛ ======================
