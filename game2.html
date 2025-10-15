@@ -1295,16 +1295,19 @@ document.addEventListener('DOMContentLoaded', () => { createSelectors(); updateT
 
 // ====================== СЕЛЕКТОРИ ======================
 function createSelectors(savedMy = [], savedEnemy = []) {
-  const myTeamDiv = document.getElementById('myTeam');
-  const enemyTeamDiv = document.getElementById('enemyTeam');
-  myTeamDiv.innerHTML = "<h2>Моя команда</h2>";
-  enemyTeamDiv.innerHTML = "<h2>Суперник</h2>";
-  const limits = stageLimits[stage - 1];
-  createTeamSelectors(myTeamDiv, limits.my, savedMy);
-  createTeamSelectors(enemyTeamDiv, limits.enemy, savedEnemy);
-  updateSelects();
-  document.getElementById('nextBtn').onclick = nextStage;
+    const myTeamDiv = document.getElementById('myTeam');
+    const enemyTeamDiv = document.getElementById('enemyTeam');
+    myTeamDiv.innerHTML = "<h2>Моя команда</h2>";
+    enemyTeamDiv.innerHTML = "<h2>Суперник</h2>";
+    const limits = stageLimits[stage - 1];
+
+    createTeamSelectors(myTeamDiv, limits.my, savedMy);
+    createTeamSelectors(enemyTeamDiv, limits.enemy, savedEnemy);
+
+    updateSelects();
+    document.getElementById('nextBtn').onclick = nextStage;
 }
+
 
 function createTeamSelectors(container, count, saved = []) {
   const heroOptions = ['<option value="">Вибери героя</option>']
@@ -1508,27 +1511,32 @@ let allMyHeroes = [];
 let allEnemyHeroes = [];
 
 function nextStage() {
-  const mySelected = getSelectedHeroes('#myTeam');
-  const enemySelected = getSelectedHeroes('#enemyTeam');
-  const limits = stageLimits[stage - 1];
+    const mySelected = getSelectedHeroes('#myTeam');
+    const enemySelected = getSelectedHeroes('#enemyTeam');
+    const limits = stageLimits[stage - 1];
 
-  if (mySelected.length < limits.my || enemySelected.length < limits.enemy) {
-    alert(`⚠️ Обери ${limits.my} героїв у свою команду та ${limits.enemy} у суперника!`);
-    return;
-  }
+    if (mySelected.length < limits.my || enemySelected.length < limits.enemy) {
+        alert(`⚠️ Обери ${limits.my} героїв у свою команду та ${limits.enemy} у суперника!`);
+        return;
+    }
 
-  // 🟢 додаємо вибраних героїв до глобальних списків
-  allMyHeroes.push(...mySelected);
-  allEnemyHeroes.push(...enemySelected);
+    // 🟢 зберігаємо вибраних героїв у глобальних списках
+    allMyHeroes.push(...mySelected);
+    allEnemyHeroes.push(...enemySelected);
 
- if (stage < 3) {
-    stage++;
-    updateSelects();
-    updateTeamDisplays();
-    calculateBestPicks();
-} else {
-    showFinalChance();
-}
+    if (stage < 3) {
+        stage++;
+
+        // 🟢 при переході на нову стадію відновлюємо попередній вибір
+        createSelectors(allMyHeroes, allEnemyHeroes); 
+        updateSelects();
+        updateTeamDisplays();
+        calculateBestPicks();
+
+    } else {
+        showFinalChance();
+    }
+} // <-- закриваємо nextStage
 
 
 
