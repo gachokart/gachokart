@@ -1481,18 +1481,22 @@ function getSelectedHeroes(selector) {
   return Array.from(document.querySelectorAll(selector + ' select'))
     .map(s => s.value).filter(v => v !== '');
 }
-  function updateTeamDisplays() {
+  function updateTeamDisplays(currentOnly = true) {
     const myTeamList = document.getElementById('myTeamList');
     const enemyTeamList = document.getElementById('enemyTeamList');
 
-    myTeamList.innerHTML = allMyHeroes.length
-        ? allMyHeroes.map(h => `<li style="margin:4px 0;">🟩 ${h}</li>`).join('')
+    const myHeroes = currentOnly ? getSelectedHeroes('#myTeam') : allMyHeroes;
+    const enemyHeroes = currentOnly ? getSelectedHeroes('#enemyTeam') : allEnemyHeroes;
+
+    myTeamList.innerHTML = myHeroes.length
+        ? myHeroes.map(h => `<li style="margin:4px 0;">🟩 ${h}</li>`).join('')
         : '<li style="opacity:0.6;">(поки не вибрано)</li>';
 
-    enemyTeamList.innerHTML = allEnemyHeroes.length
-        ? allEnemyHeroes.map(h => `<li style="margin:4px 0;">🟥 ${h}</li>`).join('')
+    enemyTeamList.innerHTML = enemyHeroes.length
+        ? enemyHeroes.map(h => `<li style="margin:4px 0;">🟥 ${h}</li>`).join('')
         : '<li style="opacity:0.6;">(поки не вибрано)</li>';
 }
+
 
 
 
@@ -1642,6 +1646,7 @@ function nextStage() {
 
     if (stage < 3) {
         stage++; // переходимо на наступну стадію
+        updateTeamDisplays(true);
         createSelectors(allMyHeroes, allEnemyHeroes); // створюємо нові селектори тільки для нових пік стадії
         calculateBestPicks();
     } else {
@@ -1704,7 +1709,7 @@ function showFinalChance(){
     document.getElementById('draftSummary').style.display = 'block';
     document.getElementById('results').style.display = 'none';
 
-    updateTeamDisplays(); // залишаємо останні вибрані герої в списках
+    updateTeamDisplays(false); // залишаємо останні вибрані герої в списках
 }
 
 
