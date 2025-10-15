@@ -156,25 +156,31 @@ button:hover {
 </head>
 <body>
 
-<!-- Моя команда -->
-<div class="team" id="myTeamContainer">
-  <h2>Моя команда</h2>
-  <div id="myTeam"></div>
+<h1>Dota 2 Draft Helper</h1>
+
+<div class="team-container">
+  <div class="team" id="myTeamContainer">
+    <h2>Моя команда</h2>
+    <div id="myTeam"></div>
+  </div>
+
+  <div class="team" id="enemyTeamContainer">
+    <h2>Команда суперника</h2>
+    <div id="enemyTeam"></div>
+  </div>
 </div>
 
-<!-- Команда суперника -->
-<div class="team" id="enemyTeamContainer">
-  <h2>Команда суперника</h2>
-  <div id="enemyTeam"></div>
-</div>
-
-<!-- Кнопка Go -->
 <button id="nextBtn">Go</button>
 
-<!-- Результати -->
+<div id="controls">
+  <label>
+    <input type="checkbox" id="behaviorMode">
+    🎭 Увімкнути поведінковий фактор
+  </label>
+</div>
+
 <div id="results"></div>
 
-<!-- Дисплей команд -->
 <div id="teamsDisplay">
   <div id="myTeamDisplay">
     <h3>🟦 Моя команда</h3>
@@ -186,7 +192,6 @@ button:hover {
   </div>
 </div>
 
-<!-- Підсумковий драфт -->
 <div id="draftSummary">
   <div id="summaryContainer">
     <ul id="summaryMyTeam"></ul>
@@ -198,6 +203,54 @@ button:hover {
       <p id="summaryBehavior"></p>
     </div>
     <ul id="summaryEnemyTeam"></ul>
+  </div>
+</div>
+</style>
+</head>
+<body>
+<h1>Dota 2 Draft Helper</h1>
+
+<h2>Моя команда</h2>
+<div id="myTeam" class="team"></div>
+
+<h2>Команда суперника</h2>
+<div id="enemyTeam" class="team"></div>
+
+<button id="nextBtn">Go</button>
+
+<div id="results"></div>
+  
+<div id="controls">
+  <label>
+    <input type="checkbox" id="behaviorMode">
+    🎭 Увімкнути поведінковий фактор
+  </label>
+</div>
+
+  <div id="teamsDisplay" style="display:flex; justify-content:space-between; margin-top:20px;">
+  <div id="myTeamDisplay" style="width:45%; text-align:left;">
+    <h3>🟦 Моя команда</h3>
+    <ul id="myTeamList"></ul>
+  </div>
+  <div id="enemyTeamDisplay" style="width:45%; text-align:right;">
+    <h3>🟥 Суперники</h3>
+    <ul id="enemyTeamList"></ul>
+  </div>
+</div>
+  <div id="draftSummary" style="display:none;">
+  <div id="summaryContainer" 
+       style="display:flex; justify-content:space-between; align-items:center; 
+              background:url('LOGO9.png') center/cover no-repeat; 
+              padding:20px; border-radius:15px; color:#fff; margin:20px auto; max-width:900px;">
+    <ul id="summaryMyTeam" style="list-style:none; padding:0; text-align:center;"></ul>
+    <div id="summaryCenter" style="text-align:center;">
+      <h2 id="summaryChance" style="margin-bottom:10px;"></h2>
+      <div style="background:rgba(0,0,0,0.5); border-radius:10px; overflow:hidden; width:150px; height:20px; margin:0 auto;">
+        <div id="summaryBar" style="background:#ff0000; width:0%; height:100%;"></div>
+      </div>
+      <p id="summaryBehavior" style="margin-top:10px;"></p>
+    </div>
+    <ul id="summaryEnemyTeam" style="list-style:none; padding:0; text-align:center;"></ul>
   </div>
 </div>
 
@@ -1665,6 +1718,43 @@ function showFinalChance(){
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
 
 
 
