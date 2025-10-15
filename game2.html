@@ -1460,6 +1460,7 @@ function nextStage() {
 }
 
 // ====================== ФІНАЛ ======================
+// ====================== ФІНАЛ ======================
 function showFinalChance(){
   const myTeam = getSelectedHeroes('#myTeam');
   const enemyTeam = getSelectedHeroes('#enemyTeam');
@@ -1481,14 +1482,23 @@ function showFinalChance(){
   });
 
   const total = myScore + enemyScore;
-  const myChance = total > 0 ? (myScore / total) * 100 : 50;
+  let myChance = total > 0 ? (myScore / total) * 100 : 50;
+  let behaviorMsg = '';
 
   // поведінкові фактори у фіналі
   if (document.getElementById('behaviorMode').checked) {
-    const stability = getPlayerStability();
-    const influence = getRandomPlayerInfluence();
-    myChance *= stability * (1 + influence);
-    myChance = Math.max(5, Math.min(95, myChance));
+    const stability = getPlayerStability();       // 0.6–1.0
+    const influence = getRandomPlayerInfluence(); // -0.3..+0.2
+    const rawChance = myChance * stability * (1 + influence);
+
+    // стабільність шансів у межах
+    myChance = Math.max(5, Math.min(95, rawChance));
+
+    // повідомлення гравцю
+    if (influence > 0.15) behaviorMsg = "💪 У команді є бустер!";
+    else if (influence < -0.25) behaviorMsg = "💀 Обережно, у команді руїнер!";
+    else if (stability < 0.75) behaviorMsg = "⚠️ Нестабільна гра команди.";
+    else behaviorMsg = "🙂 Команда стабільна.";
   }
 
   document.getElementById('results').innerHTML = `
@@ -1496,6 +1506,7 @@ function showFinalChance(){
     <div style="background:#333; border:1px solid #660000; width:80%; margin:10px auto; height:20px;">
       <div style="background:#ff0000; width:${myChance}%; height:100%;"></div>
     </div>
+    ${behaviorMsg ? `<p style="text-align:center; margin-top:10px;">${behaviorMsg}</p>` : ''}
   `;
 }
 
