@@ -1544,54 +1544,55 @@ function nextStage() {
 
 // ====================== ФІНАЛ ======================
 // ====================== ФІНАЛ ======================
-function showFinalChance(myTeam = allMyHeroes, enemyTeam = allEnemyHeroes) {
-  let myScore = 0, enemyScore = 0;
+function showFinalChance(){
+    const myTeam = getSelectedHeroes('#myTeam');
+    const enemyTeam = getSelectedHeroes('#enemyTeam');
+    let myScore=0, enemyScore=0;
 
-  heroes.forEach(h => {
-    if (myTeam.includes(h.name)) {
-      enemyTeam.forEach(e => {
-        if (h.BestCounters?.includes(e)) myScore += 2;
-        if (h.commonCounters?.includes(e)) myScore += 1;
-      });
+    heroes.forEach(h=>{
+        if(myTeam.includes(h.name)){
+            enemyTeam.forEach(e=>{
+                if(h.BestCounters?.includes(e)) myScore+=2;
+                if(h.commonCounters?.includes(e)) myScore+=1;
+            });
+        }
+        if(enemyTeam.includes(h.name)){
+            myTeam.forEach(m=>{
+                if(h.BestCounters?.includes(m)) enemyScore+=2;
+                if(h.commonCounters?.includes(m)) enemyScore+=1;
+            });
+        }
+    });
+
+    const total = myScore + enemyScore;
+    let myChance = total > 0 ? (myScore / total) * 100 : 50;
+    let behaviorMsg = '';
+
+    if(document.getElementById('behaviorMode').checked){
+        const stability = getPlayerStability();
+        const influence = getRandomPlayerInfluence();
+        const rawChance = myChance * stability * (1 + influence);
+        myChance = Math.max(5, Math.min(95, rawChance));
+
+        if (influence > 0.15) behaviorMsg = "💪 У команді є бустер!";
+        else if (influence < -0.25) behaviorMsg = "💀 Обережно, у команді руїнер!";
+        else if (stability < 0.75) behaviorMsg = "⚠️ Нестабільна гра команди.";
+        else behaviorMsg = "🙂 Команда стабільна.";
     }
-    if (enemyTeam.includes(h.name)) {
-      myTeam.forEach(m => {
-        if (h.BestCounters?.includes(m)) enemyScore += 2;
-        if (h.commonCounters?.includes(m)) enemyScore += 1;
-      });
-    }
-  });
 
-  const total = myScore + enemyScore;
-  let myChance = total > 0 ? (myScore / total) * 100 : 50;
-  let behaviorMsg = '';
+    // 🟢 оновлюємо Draft Summary
+    document.getElementById('summaryMyTeam').innerHTML = myTeam.map(h=>`<li style="margin:5px 0;">🟩 ${h}</li>`).join('');
+    document.getElementById('summaryEnemyTeam').innerHTML = enemyTeam.map(h=>`<li style="margin:5px 0;">🟥 ${h}</li>`).join('');
+    document.getElementById('summaryChance').textContent = `Шанс на перемогу: ${myChance.toFixed(0)}%`;
+    document.getElementById('summaryBar').style.width = `${myChance}%`;
+    document.getElementById('summaryBehavior').textContent = behaviorMsg;
 
-  if (document.getElementById('behaviorMode').checked) {
-    const stability = getPlayerStability();
-    const influence = getRandomPlayerInfluence();
-    const rawChance = myChance * stability * (1 + influence);
-    myChance = Math.max(5, Math.min(95, rawChance));
+    // 🟢 показуємо блок і ховаємо старий results
+    document.getElementById('draftSummary').style.display = 'block';
+    document.getElementById('results').style.display = 'none';
 
-    if (influence > 0.15) behaviorMsg = "💪 У команді є бустер!";
-    else if (influence < -0.25) behaviorMsg = "💀 Обережно, у команді руїнер!";
-    else if (stability < 0.75) behaviorMsg = "⚠️ Нестабільна гра команди.";
-    else behaviorMsg = "🙂 Команда стабільна.";
-  }
-
-  // 🟢 оновлюємо Draft Summary
-  document.getElementById('summaryMyTeam').innerHTML = myTeam.map(h => `<li style="margin:5px 0;">🟩 ${h}</li>`).join('');
-  document.getElementById('summaryEnemyTeam').innerHTML = enemyTeam.map(h => `<li style="margin:5px 0;">🟥 ${h}</li>`).join('');
-  document.getElementById('summaryChance').textContent = `Шанс на перемогу: ${myChance.toFixed(0)}%`;
-  document.getElementById('summaryBar').style.width = `${myChance}%`;
-  document.getElementById('summaryBehavior').textContent = behaviorMsg;
-
-  // 🟢 показуємо блок
-  document.getElementById('draftSummary').style.display = 'block';
-
-  // ховаємо попередній results
-  document.getElementById('results').style.display = 'none';
-  updateTeamDisplays();
-
+    updateTeamDisplays(); // залишаємо останні вибрані герої в списках
+}
 </script>
 </body>
 </html>
