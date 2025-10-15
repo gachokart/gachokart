@@ -1274,7 +1274,7 @@ const stageLimits = [ { my: 2, enemy: 2 }, { my: 2, enemy: 2 }, { my: 1, enemy: 
 let stage = 1;
 
 // ====================== ІНІЦІАЛІЗАЦІЯ ======================
-document.addEventListener('DOMContentLoaded', () => { createSelectors(); });
+document.addEventListener('DOMContentLoaded', () => { createSelectors(); updateTeamDisplays()});
 
 // ====================== СЕЛЕКТОРИ ======================
 function createSelectors(savedMy = [], savedEnemy = []) {
@@ -1499,17 +1499,24 @@ function nextStage() {
 
   if (stage < 3) {
     stage++;
+
+    // 🟢 Створюємо нові селектори, передаючи вже вибраних
     createSelectors(mySelected, enemySelected);
 
-    // 🟢 Додаємо ці 2 виклики після створення селекторів:
+    // 🟢 Відновлюємо блокування повторів
     updateSelects();
+
+    // 🟢 Відновлюємо бокові списки (зліва і справа)
     updateTeamDisplays();
 
+    // 🟢 Одразу обчислюємо рекомендації
     calculateBestPicks();
+
   } else {
     showFinalChance();
   }
 }
+
 
 
 // ====================== ФІНАЛ ======================
