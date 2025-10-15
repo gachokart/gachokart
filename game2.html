@@ -1366,20 +1366,18 @@ function getSelectedHeroes(selector) {
     .map(s => s.value).filter(v => v !== '');
 }
   function updateTeamDisplays() {
-  const myTeam = getSelectedHeroes('#myTeam');
-  const enemyTeam = getSelectedHeroes('#enemyTeam');
+    const myTeamList = document.getElementById('myTeamList');
+    const enemyTeamList = document.getElementById('enemyTeamList');
 
-  const myTeamList = document.getElementById('myTeamList');
-  const enemyTeamList = document.getElementById('enemyTeamList');
+    myTeamList.innerHTML = allMyHeroes.length
+        ? allMyHeroes.map(h => `<li style="margin:4px 0;">🟩 ${h}</li>`).join('')
+        : '<li style="opacity:0.6;">(поки не вибрано)</li>';
 
-  myTeamList.innerHTML = myTeam.length 
-    ? myTeam.map(h => `<li style="margin:4px 0;">🟩 ${h}</li>`).join('')
-    : '<li style="opacity:0.6;">(поки не вибрано)</li>';
-
-  enemyTeamList.innerHTML = enemyTeam.length 
-    ? enemyTeam.map(h => `<li style="margin:4px 0;">🟥 ${h}</li>`).join('')
-    : '<li style="opacity:0.6;">(поки не вибрано)</li>';
+    enemyTeamList.innerHTML = allEnemyHeroes.length
+        ? allEnemyHeroes.map(h => `<li style="margin:4px 0;">🟥 ${h}</li>`).join('')
+        : '<li style="opacity:0.6;">(поки не вибрано)</li>';
 }
+
 
 
 // ====================== ПОВЕДІНКОВІ ФАКТОРИ ======================
@@ -1507,6 +1505,7 @@ function displayTop(scores){
 }
 
 // ====================== ЕТАПИ ======================
+let stage = 1;
 let allMyHeroes = [];
 let allEnemyHeroes = [];
 
@@ -1520,23 +1519,23 @@ function nextStage() {
         return;
     }
 
-    // 🟢 зберігаємо вибраних героїв у глобальних списках
+    // Зберігаємо вибраних героїв
     allMyHeroes.push(...mySelected);
     allEnemyHeroes.push(...enemySelected);
 
     if (stage < 3) {
         stage++;
 
-        // 🟢 при переході на нову стадію відновлюємо попередній вибір
-        createSelectors(allMyHeroes, allEnemyHeroes); 
+        // Оновлюємо селектори без повного перезавантаження
         updateSelects();
         updateTeamDisplays();
         calculateBestPicks();
 
     } else {
         showFinalChance();
-    
-} // <-- закриваємо nextStage
+    }
+}
+
 
 
 
