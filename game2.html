@@ -220,7 +220,7 @@ const stageLimits = [ { my: 2, enemy: 2 }, { my: 2, enemy: 2 }, { my: 1, enemy: 
 
 
 // ====================== ІНІЦІАЛІЗАЦІЯ ======================
-document.addEventListener('DOMContentLoaded', () => { createSelectors(); updateTeamDisplays()});
+document.addEventListener('DOMContentLoaded', async () => {
  try {
     const res = await fetch('heroes.json'); // 👈 шлях до файлу (той самий каталог)
     heroes = await res.json();
