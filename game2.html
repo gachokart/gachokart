@@ -1714,8 +1714,32 @@ function showFinalChance(){
 }
 
 
+  // ======== Автопідсвітка героїв при вводі ========
+  const searchInput = document.getElementById('heroSearch');
 
-</script>
+  // При введенні тексту
+  searchInput.addEventListener('input', () => {
+    const query = searchInput.value.toLowerCase().trim();
+    if (!query) return;
+
+    // шукаємо селектори в обох командах
+    const selects = document.querySelectorAll('#myTeam select, #enemyTeam select');
+    for (let select of selects) {
+      let matched = false;
+      for (let option of select.options) {
+        const text = option.text.toLowerCase();
+        if (text.includes(query)) {
+          select.value = option.value;
+          select.style.boxShadow = "0 0 10px #ffcc00";
+          matched = true;
+          break;
+        }
+      }
+      if (!matched) {
+        select.style.boxShadow = "none";
+      }
+    }
+ </script>
 </body>
 </html>
 
