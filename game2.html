@@ -76,18 +76,33 @@ button:hover {
   box-shadow: 0 0 15px #ffaa00;
 }
 
-  #results {
-    margin-top: 20px;
-  }
+ #results {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
 
-  .hero {
-    background: rgba(0,0,0,0.7);
-    margin: 8px auto;
-    padding: 10px;
-    border-radius: 12px;
-    width: 200px;
-    box-shadow: 0 0 10px #ffcc00;
-  }
+.hero {
+  background: rgba(0, 0, 0, 0.7);
+  padding: 6px;
+  border-radius: 10px;
+  width: 45px; /* Було 200px — тепер у 4 рази менше */
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  text-align: center;
+  box-shadow: 0 0 5px #ffcc00;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hero:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 10px #ffaa00;
+}
 
   #teamsDisplay {
     display: flex;
