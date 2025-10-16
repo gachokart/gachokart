@@ -270,7 +270,7 @@
     "commonCounters": ["Phantom Lancer",	"Arc Warden",	"Tinker",	"Brewmaster",	"Storm Spirit",	"Enigma",	"Windranger",	"Dark Seer",	"Lycan",	"Terrorblade"]
   },
    {
-    "id": 31,
+    
     "name": "Necrophos",
     "roles": ["Ranged", "Carry", "Disabler", "Durable", "Nuker"],
     "winrate": 0.5144,
@@ -279,7 +279,7 @@
     "commonCounters": ["Skywrath Mage",	"Muerta",	"Ancient Apparition",	"Death Prophet",	"Doom"	,"Shadow Fiend",	"Leshrac",	"Pugna",	"Oracle",	"Viper"]
   },
    {
-    "id": 32,
+    
     "name": "Phantom Lancer",
     "roles": ["Melee", "Carry", "Escape", "Nuker", "Pusher"],
     "winrate": 0.5137,
@@ -288,7 +288,7 @@
     "commonCounters": ["Sand King",	"Sven",	"Lina",	"Earthshaker"	,"Necrophos"	,"Underlord",	"Warlock","Axe",	"Crystal Maiden",	"Kunkka"]
   },
   {
-    "id": 33,
+    
     "name": "Undying",
     "roles": ["Melee", "Disabler", "Durable", "Nuker", "Support"],
     "winrate": 0.5135,
@@ -297,7 +297,7 @@
     "commonCounters": ["Medusa",	"Elder Titan",	"Clinkz",	"Dark Seer","Bloodseeker",	"Keeper of the Light",	"Naga Siren",	"Meepo"	,"Troll Warlord",	"Ancient Apparition"]
   },
   {
-    "id": 34,
+    
     "name": "Axe",
     "roles": ["Melee", "Carry", "Disabler", "Durable", "Initiator"],
     "winrate": 0.5130,
@@ -306,7 +306,7 @@
     "commonCounters": ["Abaddon",	"Timbersaw",	"Tinker",	"Tiny",	"Spectre","Primal Beast",	"Batrider",	"Pudge"	,"Keeper of the Light",	"Venomancer"]
   },
   {
-    "id": 35,
+    
     "name": "Brewmaster",
     "roles": ["Melee", "Carry", "Disabler", "Durable", "Initiator", "Nuker"],
     "winrate": 0.5129,
@@ -315,7 +315,7 @@
     "commonCounters": ["Chen",	"Naga Siren",	"Shadow Demon",	"Dark Seer",	"Lycan",	"Oracle",	"Gyrocopter",	"Doom",	"Muerta",	"Bristleback"]
   },
   {
-    "id": 36,
+    
     "name": "Anti-Mage",
     "roles": ["Melee", "Carry", "Escape", "Nuker"],
     "winrate": 0.5120,
@@ -324,7 +324,7 @@
     "commonCounters": ["Meepo",	"Huskar",	"Troll Warlord",	"Axe",	"Bloodseeker",	"Phantom Assassin",	"Lone Druid"	,"Legion Commander"	,"Slardar",	"Sven"]
   },
   {
-    "id": 37,
+    
     "name": "Centaur Warrunner",
     "roles": ["Melee", "Disabler", "Durable", "Escape", "Initiator", "Nuker"],
     "winrate": 0.5124,
@@ -333,7 +333,7 @@
     "commonCounters": ["Chen",	"Underlord",	"Bristleback"	,"Juggernaut",	"Meepo",	"Dazzle",	"Lone Druid",	"Templar Assassin",	"Lifestealer","Witch Doctor"]
   },
   {
-    "id": 38,
+    
     "name": "Shadow Shaman",
     "roles": ["Ranged", "Disabler", "Initiator", "Nuker", "Pusher", "Support"],
     "winrate": 0.5120,
@@ -342,7 +342,7 @@
     "commonCounters": ["Terrorblade",	"Phantom Lancer",	"Medusa",	"Naga Siren",	"Lone Druid",	"Visage"	,"Meepo"	,"Razor",	"Wraith King",	"Dawnbreaker"]
   },
   {
-    "id": 39,
+    
     "name": "Clockwerk",
     "roles": ["Melee", "Disabler", "Durable", "Initiator", "Nuker"],
     "winrate": 0.5119,
@@ -351,7 +351,7 @@
     "commonCounters": ["Chen",	"Huskar",	"Meepo",	"Storm Spirit",	"Morphling"	,"Phantom Lancer",	"Ember Spirit"	,"Queen of Pain"	,"Beastmaster","Visage"]
   },
   {
-    "id": 40,
+    
     "name": "Witch Doctor",
     "roles": ["Ranged", "Disabler", "Nuker", "Support"],
     "winrate": 0.5110,
@@ -360,7 +360,7 @@
     "commonCounters": ["Medusa",	"Muerta",	"Chen",	"Pangolier",	"Bristleback",	"Keeper of the Light",	"Morphling",	"Puck",	"Faceless Void",	"Broodmother"]
   },
   {
-    "id": 41,
+    
     "name": "Lone Druid",
     "roles": ["Ranged", "Carry", "Durable", "Pusher"],
     "winrate": 0.5105,
@@ -369,7 +369,7 @@
     "commonCounters": ["Batrider",	"Elder Titan","Huskar",	"Monkey King"	,"Dark Seer",	"Razor"	,"Naga Siren",	"Phantom Assassin",	"Dark Willow",	"Tinker"]
   },
   {
-    "id": 42,
+    
     "name": "Skywrath Mage",
     "roles": ["Ranged", "Disabler", "Nuker", "Support"],
     "winrate": 0.5092,
@@ -378,7 +378,7 @@
     "commonCounters": ["Lycan",	"Templar Assassin",	"Night Stalker",	"Medusa",	"Tusk",	"Shadow Demon",	"Lone Druid",	"Bristleback",	"Riki",	"Beastmaster"]
   },
   {
-    "id": 43,
+    
     "name": "Spectre",
     "roles": ["Melee", "Carry", "Durable", "Escape"],
     "winrate": 0.5090,
@@ -387,7 +387,7 @@
     "commonCounters": ["Meepo",	"Undying",	"Abaddon",	"Io",	"Bounty Hunter",	"Sven",	"Slardar",	"Underlord",	"Beastmaster",	"Phantom Lancer"]
   },
   {
-    "id": 44,
+    
     "name": "Drow Ranger",
     "roles": ["Ranged", "Carry", "Disabler", "Pusher"],
     "winrate": 0.5090,
@@ -396,7 +396,7 @@
     "commonCounters": ["Phantom Lancer",	"Earth Spirit",	"Zeus",	"Mars",	"Pudge",	"Primal Beast",	"Muerta",	"Spectre",	"Dark Seer",	"Storm Spirit"]
   },
   {
-    "id": 45,
+    
     "name": "Arc Warden",
     "roles": ["Ranged", "Carry", "Escape", "Nuker"],
     "winrate": 0.5090,
@@ -405,7 +405,7 @@
     "commonCounters": ["Chen",	"Broodmother",	"Meepo",	"Dark Seer",	"Omniknight",	"Naga Siren",	"Shadow Demon",	"Lycan",	"Phantom Lancer",	"Beastmaster"]
   },
   {
-    "id": 46,
+    
     "name": "Ogre Magi",
     "roles": ["Melee", "Disabler", "Durable", "Initiator", "Nuker", "Support"],
     "winrate": 0.5090,
@@ -414,7 +414,7 @@
     "commonCounters": ["Phantom Lancer",	"Anti-Mage",	"Beastmaster",	"Chaos Knight",	"Terrorblade"	,"Warlock",	"Broodmother",	"Enigma",	"Shadow Demon",	"Slark"]
   },
   {
-    "id": 47,
+    
     "name": "Spirit Breaker",
     "roles": ["Melee", "Carry", "Disabler", "Durable", "Escape", "Initiator"],
     "winrate": 0.5083,
@@ -423,7 +423,7 @@
     "commonCounters": ["Underlord",	"Enchantress",	"Tiny",	"Necrophos"	,"Dark Willow",	"Batrider",	"Clockwerk",	"Mars",	"Venomancer",	"Sand King"]
   },
   {
-    "id": 48,
+    
     "name": "Night Stalker",
     "roles": ["Melee", "Carry", "Disabler", "Durable", "Initiator", "Nuker"],
     "winrate": 0.5081,
@@ -432,7 +432,7 @@
     "commonCounters": ["Broodmother",	"Beastmaster",	"Lone Druid","Terrorblade",	"Bloodseeker",	"Phantom Lancer",	"Naga Siren","Spirit Breaker",	"Arc Warden",	"Bristleback"]
   },
   {
-    "id": 49,
+    
     "name": "Disruptor",
     "roles": ["Ranged", "Disabler", "Initiator", "Nuker", "Support"],
     "winrate": 0.5080,
@@ -441,7 +441,7 @@
     "commonCounters": ["Nature's Prophet",	"Pugna"	,"Bloodseeker",	"Drow Ranger","Sniper",	"Medusa"	,"Oracle",	"Legion Commander",	"Undying",	"Viper"]
   },
   {
-    "id": 50,
+    
     "name": "Mirana",
     "roles": ["Ranged", "Carry", "Disabler", "Escape", "Nuker", "Support"],
     "winrate": 0.5077,
@@ -450,7 +450,7 @@
     "commonCounters": ["Bloodseeker",	"Keeper of the Light",	"Bounty Hunter",	"Nyx Assassin",	"Mars",	"Elder Titan","Phantom Lancer",	"Terrorblade",	"Morphling"	,"Bane"]
   },
   {
-    "id": 51,
+    
     "name": "Zeus",
     "roles": ["Ranged", "Carry", "Nuker"],
     "winrate": 0.5072,
@@ -459,7 +459,7 @@
     "commonCounters": ["Meepo",	"Broodmother",	"Visage",	"Huskar",	"Ember Spirit",	"Storm Spirit",	"Brewmaster",	"Lycan",	"Io",	"Spectre"]
   },
   {
-    "id": 52,
+    
     "name": "Lycan",
     "roles": ["Melee", "Carry", "Durable", "Escape", "Pusher"],
     "winrate": 0.5071,
@@ -468,7 +468,7 @@
     "commonCounters": ["Chen",	"Naga Siren",	"Underlord",	"Tidehunter",	"Bristleback",	"Dark Seer",	"Phantom Lancer",	"Crystal Maiden",	"Enchantress",	"Spirit Breaker"]
   },
   {
-    "id": 53,
+    
     "name": "Alchemist",
     "roles": ["Melee", "Carry", "Disabler", "Durable", "Initiator", "Nuker", "Support"],
     "winrate": 0.5062,
@@ -477,7 +477,7 @@
     "commonCounters": ["Slark"	,"Timbersaw",	"Anti-Mage",	"Io",	"Doom",	"Storm Spirit",	"Slardar",	"Chen",	"Marci",	"Leshrac"]
   },
   {
-    "id": 54,
+    
     "name": "Pudge",
     "roles": ["Melee", "Disabler", "Durable", "Initiator", "Nuker"],
     "winrate": 0.5057,
@@ -486,7 +486,7 @@
     "commonCounters": ["Pangolier",	"Beastmaster",	"Monkey King",	"Terrorblade",	"Ringmaster",	"Kez"	,"Grimstroke",	"Timbersaw",	"Bristleback",	"Batrider"]
   },
   {
-    "id": 55,
+    
     "name": "Bounty Hunter",
     "roles": ["Melee", "Escape", "Nuker"],
     "winrate": 0.5047,
@@ -495,7 +495,7 @@
     "commonCounters": ["Naga Siren",	"Chen",	"Brewmaster",	"Phantom Lancer",	"Abaddon",	"Shadow Shaman",	"Omniknight",	"Clockwerk",	"Doom",	"Slark"]
   },
   {
-    "id": 56,
+    
     "name": "Queen of Pain",
     "roles": ["Ranged", "Carry", "Escape", "Nuker"],
     "winrate": 0.5040,
@@ -504,7 +504,7 @@
     "commonCounters": ["Huskar",	"Puck",	"Ember Spirit",	"Elder Titan",	"Legion Commander",	"Pugna",	"Riki",	"Medusa",	"Meepo",	"Tinker"]
   },
   {
-    "id": 57,
+    
     "name": "Earth Spirit",
     "roles": ["Melee", "Disabler", "Durable", "Escape", "Initiator", "Nuker"],
     "winrate": 0.5034,
@@ -513,7 +513,7 @@
     "commonCounters": ["Enigma",	"Phoenix",	"Huskar",	"Io"	,"Lone Druid",	"Tidehunter",	"Abaddon",	"Pangolier",	"Legion Commander",	"Shadow Shaman"]
   },
   {
-    "id":58,
+    
     "name": "Troll Warlord",
     "roles": ["Ranged", "Carry", "Disabler", "Durable", "Pusher"],
     "winrate": 0.5018,
@@ -522,7 +522,7 @@
     "commonCounters": ["Chen",	"Naga Siren",	"Dark Seer","Doom",	"Axe",	"Dark Willow",	"Muerta",	"Razor",	"Slark","Outworld Destroyer"]
   },
   {
-    "id": 59,
+    
     "name": "Snapfire",
     "roles": ["Ranged", "Disabler", "Escape", "Nuker", "Support"],
     "winrate": 0.5006,
@@ -531,7 +531,7 @@
     "commonCounters": ["Elder Titan",	"Pangolier",	"Templar Assassin",	"Bloodseeker",	"Keeper of the Light",	"Bane"	,"Io",	"Morphling"	,"Kez",	"Outworld Destroyer"]
   },
   {
-    "id": 60,
+    
     "name": "Dragon Knight",
     "roles": ["Melee", "Carry", "Disabler", "Durable", "Initiator", "Nuker", "Pusher"],
     "winrate": 0.5005,
@@ -540,7 +540,7 @@
     "commonCounters": ["Viper",	"Dark Seer",	"Chen",	"Terrorblade",	"Muerta",	"Batrider",	"Venomancer",	"Doom",	"Timbersaw",	"Bane"]
   },
   {
-    "id": 61,
+    
     "name": "Ancient Apparition",
     "roles": ["Ranged", "Disabler", "Nuker", "Support"],
     "winrate": 0.4999,
@@ -549,7 +549,7 @@
     "commonCounters": ["Pangolier",	"Phantom Lancer",	"Weaver",	"Storm Spirit",	"Puck",	"Windranger"	,"Void Spirit"	,"Anti-Mage",	"Outworld Destroyer",	"Batrider"]
   },
   {
-    "id": 62,
+    
     "name": "Phoenix",
     "roles": ["Ranged", "Disabler", "Escape", "Initiator", "Nuker", "Support"],
     "winrate": 0.4996,
@@ -558,7 +558,7 @@
     "commonCounters": ["Huskar",	"Juggernaut",	"Bloodseeker",	"Lina",	"Io",	"Keeper of the Light",	"Arc Warden",	"Mirana",	"Marci",	"Bane"]
   },
   {
-    "id": 63,
+    
     "name": "Enigma",
     "roles": ["Ranged", "Disabler", "Initiator", "Pusher"],
     "winrate": 0.4982,
@@ -567,7 +567,7 @@
     "commonCounters": ["Rubick",	"Medusa",	"Gyrocopter",	"Bloodseeker",	"Wraith King",	"Bristleback"	,"Warlock",	"Dawnbreaker",	"Alchemist",	"Muerta"]
   },
   {
-    "id": 64,
+    
     "name": "Chaos Knight",
     "roles": ["Melee", "Carry", "Disabler", "Durable", "Initiator", "Pusher"],
     "winrate": 0.4972,
@@ -576,7 +576,7 @@
     "commonCounters": ["Sand King","Phantom Lancer","Dark Seer","Naga Siren","Winter Wyvern","Tidehunter","Warlock","Phoenix","Underlord","Timbersaw"]
   },
   {
-    "id": 65,
+    
     "name": "Keeper of the Light",
     "roles": ["Ranged", "Disabler", "Nuker", "Support"],
     "winrate": 0.4964,
@@ -585,7 +585,7 @@
     "commonCounters": ["Chen","Dark Seer","Lycan","Naga Siren","Clinkz","Storm Spirit","Dark Willow","Doom","Omniknight","Slardar"]
   },
   {
-    "id": 66,
+    
     "name": "Treant Protector",
     "roles": ["Melee", "Disabler", "Durable", "Escape", "Initiator", "Support"],
     "winrate": 0.4955,
@@ -594,7 +594,7 @@
     "commonCounters": ["Chen","Dark Seer","Lycan","Naga Siren","Underlord","Muerta","Doom","Elder Titan","Oracle","Necrophos"]
   },
   {
-    "id": 67,
+    
     "name": "Bloodseeker",
     "roles": ["Melee", "Carry", "Disabler", "Initiator", "Nuker"],
     "winrate": 0.4950,
@@ -603,7 +603,7 @@
     "commonCounters": ["Chaos Knight","Dragon Knight","Centaur Warrunner","Medusa","Chen","Dawnbreaker","Lifestealer","Legion Commander","Doom","Dark Willow"]
   },
   {
-    "id": 68,
+    
     "name": "Lion",
     "roles": ["Ranged", "Disabler", "Initiator", "Nuker", "Support"],
     "winrate": 0.4949,
@@ -612,7 +612,7 @@
     "commonCounters": ["Beastmaster","Chen","Rubick","Gyrocopter","Templar Assassin","Elder Titan","Tiny","Brewmaster","Pangolier","Doom"	]
   },
   {
-    "id": 69,
+    
     "name": "Tidehunter",
     "roles": ["Melee", "Carry", "Disabler", "Durable", "Initiator", "Nuker"],
     "winrate": 0.4945,
@@ -621,7 +621,7 @@
     "commonCounters": ["Timbersaw","Juggernaut","Monkey King","Razor","Necrophos","Slark","Elder Titan","Muerta","Tinker","Undying"]
   },
   {
-    "id": 70,
+    
     "name": "Marci",
     "roles": ["Melee", "Carry", "Disabler", "Escape", "Initiator", "Support"],
     "winrate": 0.4942,
@@ -630,7 +630,7 @@
     "commonCounters": ["Troll Warlord","Batrider","Magnus","Sand King","Techies","Dark Willow","Lich","Axe","Beastmaster","Phantom Assassin"]
   },
   {
-    "id": 71,
+    
     "name": "Weaver",
     "roles": ["Ranged", "Carry", "Escape"],
     "winrate": 0.4935,
@@ -639,7 +639,7 @@
     "commonCounters": ["Faceless Void","Morphling","Phantom Lancer","Naga Siren","Broodmother","Rubick","Puck","Bounty Hunter","Muerta","Visage"]
   },
   {
-    "id": 72,
+    
     "name": "Magnus",
     "roles": ["Melee", "Disabler", "Escape", "Initiator", "Nuker"],
     "winrate": 0.4925,
@@ -648,7 +648,7 @@
     "commonCounters": ["Enigma","Puck","Batrider","Elder Titan","Ember Spirit","Earthshaker","Rubick","Faceless Void","Juggernaut","Mars"]
   },
   {
-    "id": 73,
+    
     "name": "Warlock",
     "roles": ["Ranged", "Disabler", "Initiator", "Support"],
     "winrate": 0.4924,
@@ -657,7 +657,7 @@
     "commonCounters": [,"Dark Seer","Keeper of the Light","Tidehunter","Sand King","Weaver","Chen","Bristleback","Pangolier","Lycan","Muerta"]
   },
   {
-    "id": 74,
+    
     "name": "Sand King",
     "roles": ["Melee", "Disabler", "Escape", "Initiator", "Nuker", "Support"],
     "winrate": 0.4905,
@@ -666,7 +666,7 @@
     "commonCounters": ["Zeus","Lifestealer","Queen of Pain","Leshrac","Juggernaut","Phoenix","Faceless Void","Centaur Warrunner","Void Spirit","Ember Spirit"]
   },
   {
-    "id": 75,
+    
     "name": "Invoker",
     "roles": ["Ranged", "Carry", "Disabler", "Escape", "Nuker", "Pusher"],
     "winrate": 0.4905,
@@ -675,7 +675,7 @@
     "commonCounters": ["Puck","Kez","Bristleback","Lycan","Void Spirit","Templar Assassin","Bounty Hunter","Beastmaster","Phantom Lancer","Chen"]
   },
   {
-    "id": 76,
+    
     "name": "Puck",
     "roles": ["Ranged", "Disabler", "Escape", "Initiator", "Nuker"],
     "winrate": 0.4893,
@@ -684,7 +684,7 @@
     "commonCounters": [,"Broodmother","Riki","Night Stalker","Io","Huskar","Lone Druid","Spectre","Dragon Knight","Arc Warden","Tiny"]
   },
   {
-    "id": 77,
+    
     "name": "Razor",
     "roles": ["Ranged", "Carry", "Durable", "Nuker", "Pusher"],
     "winrate": 0.4866,
@@ -693,7 +693,7 @@
     "commonCounters": ["Chen","Terrorblade","Elder Titan","Brewmaster","Lycan","Naga Siren","Dark Seer","Weaver","Anti-Mage","Queen of Pain"]
   },
   {
-    "id": 78,
+    
     "name": "Faceless Void",
     "roles": ["Melee", "Carry", "Disabler", "Durable", "Escape", "Initiator"],
     "winrate": 0.4865,
@@ -702,7 +702,7 @@
     "commonCounters": ["Chaos Knight","Bane","Broodmother","Naga Siren","Beastmaster","Death Prophet","Spectre","Huskar","Lone Druid","Axe"]
   },
   {
-    "id": 79,
+    
     "name": "Templar Assassin",
     "roles": ["Ranged", "Carry", "Escape"],
     "winrate": 0.4864,
@@ -711,7 +711,7 @@
     "commonCounters": ["Naga Siren","Terrorblade","Phantom Lancer","Chen","Brewmaster","Batrider","Dark Seer","Sand King","Lycan","Troll Warlord"]
   },
   {
-    "id": 80,
+    
     "name": "Dark Willow",
     "roles": ["Ranged", "Disabler", "Escape", "Nuker", "Support"],
     "winrate": 0.4859,
@@ -720,7 +720,7 @@
     "commonCounters": ["Puck","Juggernaut","Axe","Faceless Void","Phantom Lancer","Primal Beast","Techies","Queen of Pain","Pugna","Visage"]
   },
   {
-    "id": 81,
+    
     "name": "Grimstroke",
     "roles": ["Ranged", "Disabler", "Escape", "Nuker", "Support"],
     "winrate": 0.4857,
@@ -729,7 +729,7 @@
     "commonCounters": ["Chen","Lycan","Enchantress","Doom","Naga Siren","Dark Willow","Gyrocopter","Lone Druid","Beastmaster","Razor"]
   },
   {
-    "id": 82,
+    
     "name": "Shadow Demon",
     "roles": ["Ranged", "Disabler", "Initiator", "Nuker", "Support"],
     "winrate": 0.4854,
@@ -738,7 +738,7 @@
     "commonCounters": ["Chen","Riki","Pangolier","Undying","Sand King","Monkey King","Storm Spirit","Earth Spirit","Visage","Ember Spirit"]
   },
   {
-    "id": 83,
+    
     "name": "Riki",
     "roles": ["Melee", "Carry", "Disabler", "Escape"],
     "winrate": 0.4852,
@@ -747,7 +747,7 @@
     "commonCounters": ["Naga Siren","Lycan","Bloodseeker","Phantom Assassin","Underlord","Leshrac","Drow Ranger","Batrider","Night Stalker","Wraith King"]
   },
   {
-    "id": 84,
+    
     "name": "Ember Spirit",
     "roles": ["Melee", "Carry", "Disabler", "Escape", "Initiator", "Nuker"],
     "winrate": 0.4845,
@@ -756,7 +756,7 @@
     "commonCounters": ["Huskar","Slark","Broodmother","Chen","Meepo","Troll Warlord","Muerta","Legion Commander","Monkey King","Oracle"]
   },
   {
-    "id": 85,
+    
     "name": "Windranger",
     "roles": ["Ranged", "Carry", "Disabler", "Escape", "Nuker", "Support"],
     "winrate": 0.4841,
@@ -765,7 +765,7 @@
     "commonCounters": ["Bane","Bloodseeker","Centaur Warrunner","Axe","Mars","Faceless Void","Spectre","Naga Siren","Puck","Tiny"]
   },
   {
-    "id": 86,
+    
     "name": "Primal Beast",
     "roles": ["Ranged", "Carry", "Escape", "Nuker", "Pusher"],
     "winrate": 0.4838,
@@ -774,7 +774,7 @@
     "commonCounters": ["Huskar","Grimstroke","Viper","Keeper of the Light","Death Prophet","Tiny","Skywrath Mage","Lone Druid","Sven","Lycan"]
   },
   {
-    "id": 87,
+   
     "name": "Enchantress",
     "roles": ["Ranged", "Disabler", "Durable", "Pusher", "Support"],
     "winrate": 0.4831,
@@ -783,7 +783,7 @@
     "commonCounters": ["Io","Phantom Assassin","Marci","Bristleback","Pudge","Morphling","Naga Siren","Phantom Lancer","Crystal Maiden","Enigma"]
   },
   {
-    "id": 88,
+    
     "name": "Nature's Prophet",
     "roles": ["Melee", "Carry", "Disabler", "Durable", "Initiator"],
     "winrate": 0.4827,
@@ -792,7 +792,7 @@
     "commonCounters": ["Primal Beast","Templar Assassin","Batrider","Morphling","Spectre","Treant Protector","Terrorblade","Tinker","Pangolier","Phantom Assassin"]
   },
   {
-    "id": 89,
+    
     "name": "Timbersaw",
     "roles": ["Melee", "Durable", "Escape", "Nuker"],
     "winrate": 0.4821,
@@ -801,7 +801,7 @@
     "commonCounters": ["Pugna","Bloodseeker","Silencer","Outworld Destroyer","Medusa","Templar Assassin","Arc Warden","Faceless Void","Ursa","Skywrath Mage"]
   },
   {
-    "id": 90,
+   
     "name": "Luna",
     "roles": ["Ranged", "Carry", "Nuker", "Pusher"],
     "winrate": 0.4819,
@@ -810,7 +810,7 @@
     "commonCounters": ["Underlord","Kunkka","Rubick","Queen of Pain","Enigma","Phoenix","Bristleback","Centaur Warrunner","Sand King","Dark Seer"]
   },
   {
-    "id": 91,
+    
     "name": "Sven",
     "roles": ["Melee", "Carry", "Disabler", "Durable", "Initiator", "Nuker"],
     "winrate": 0.4817,
@@ -819,7 +819,7 @@
     "commonCounters": ["Templar Assassin","Troll Warlord","Slardar","Lifestealer","Batrider","Dragon Knight","Clinkz","Wraith King","Phoenix","Shadow Shaman"]
   },
   {
-    "id": 92,
+    
     "name": "Hoodwink",
     "roles": ["Ranged", "Disabler", "Escape", "Nuker", "Support"],
     "winrate": 0.4817,
@@ -828,7 +828,7 @@
     "commonCounters": ["Timbersaw","Omniknight","Spirit Breaker","Primal Beast","Queen of Pain","Shadow Demon","Kunkka","Mars","Ogre Magi","Axe"]
   },
   {
-    "id": 93,
+    
     "name": "Kunkka",
     "roles": ["Melee", "Carry", "Disabler", "Durable", "Initiator", "Nuker", "Support"],
     "winrate": 0.4808,
@@ -837,7 +837,7 @@
     "commonCounters": ["Lifestealer","Ancient Apparition","Morphling","Timbersaw","Chen","Earth Spirit","Faceless Void","Venomancer","Pangolier","Winter Wyvern"]
   },
   {
-    "id": 94,
+    
     "name": "Crystal Maiden",
     "roles": ["Ranged", "Disabler", "Nuker", "Support"],
     "winrate": 0.4798,
@@ -846,7 +846,7 @@
     "commonCounters": ["Phoenix","Rubick","Monkey King","Juggernaut","Pudge","Dawnbreaker","Pangolier","Witch Doctor","Muerta","Shadow Fiend"]
   },
   {
-    "id": 95,
+    
     "name": "Death Prophet",
     "roles": ["Ranged", "Carry", "Disabler", "Nuker", "Pusher"],
     "winrate": 0.4791,
@@ -855,7 +855,7 @@
     "commonCounters": ["Arc Warden","Drow Ranger","Undying","Bloodseeker","Weaver","Broodmother","Razor","Bounty Hunter","Mirana","Terrorblade"]
   },
   {
-    "id": 96,
+    
     "name": "Sniper",
     "roles": ["Ranged", "Carry", "Nuker"],
     "winrate": 0.4774,
@@ -864,7 +864,7 @@
     "commonCounters": ["Storm Spirit","Morphling","Lycan","Earth Spirit","Pudge","Primal Beast","Mars","Spectre","Arc Warden","Meepo"]
   },
   {
-    "id": 97,
+    
     "name": "Gyrocopter",
     "roles": ["Ranged", "Carry", "Disabler", "Nuker"],
     "winrate": 0.4772,
@@ -873,7 +873,7 @@
     "commonCounters": ["Ancient Apparition","Morphling","Viper","Underlord","Juggernaut","Clinkz","Bristleback","Venomancer","Pangolier","Mirana"]
   },
   {
-    "id": 98,
+    
     "name": "Rubick",
     "roles": ["Ranged", "Disabler", "Nuker", "Support"],
     "winrate": 0.4764,
@@ -882,7 +882,7 @@
     "commonCounters": ["Ember Spirit","Elder Titan","Tusk","Templar Assassin","Batrider","Keeper of the Light","Dazzle","Razor","Phantom Assassin","Kez"]
   },
   {
-    "id": 99,
+    
     "name": "Underlord",
     "roles": ["Melee", "Disabler", "Durable", "Escape", "Nuker", "Support"],
     "winrate": 0.4760,
@@ -891,7 +891,7 @@
     "commonCounters": ["Rubick","Keeper of the Light","Juggernaut","Outworld Destroyer","Lifestealer","Viper","Ursa","Elder Titan","Bloodseeker","Ancient Apparition"]
   },
   {
-    "id": 100,
+    
     "name": "Kez",
     "roles": ["Melee", "Carry", "Disabler", "Escape"],
     "winrate": 0.4760,
@@ -900,7 +900,7 @@
     "commonCounters": ["Muerta","Tidehunter","Bristleback","Dragon Knight","Monkey King","Necrophos","Windranger","Io","Gyrocopter","Morphling"]
   },
   {
-    "id": 101,
+    
     "name": "Storm Spirit",
     "roles": ["Ranged", "Carry", "Disabler", "Escape", "Initiator", "Nuker"],
     "winrate": 0.4754,
@@ -909,7 +909,7 @@
     "commonCounters": ["Meepo","Anti-Mage","Riki","Pugna","Huskar","Grimstroke","Troll Warlord","Night Stalker","Omniknight","Lion"]
   },
   {
-    "id": 102,
+    
     "name": "Tusk",
     "roles": ["Melee", "Disabler", "Initiator", "Nuker"],
     "winrate": 0.4750,
@@ -918,7 +918,7 @@
     "commonCounters": ["Chen","Dark Seer","Underlord","Terrorblade","Omniknight","Muerta","Troll Warlord","Pugna","Riki","Phoenix"]
   },
   {
-    "id": 103,
+    
     "name": "Mars",
     "roles": ["Melee", "Carry", "Disabler", "Durable", "Initiator"],
     "winrate": 0.4743,
@@ -927,7 +927,7 @@
     "commonCounters": ["Kez","Queen of Pain","Enigma","Phantom Lancer","Anti-Mage","Faceless Void","Storm Spirit","Lone Druid","Meepo","Visage"]
   },
   {
-    "id": 104,
+    
     "name": "Shadow Fiend",
     "roles": ["Ranged", "Carry", "Nuker"],
     "winrate": 0.4739,
@@ -936,7 +936,7 @@
     "commonCounters": ["Keeper of the Light","Zeus","Bristleback","Tiny","Batrider","Brewmaster","Dark Seer","Medusa","Troll Warlord","Kunkka"]
   },
   {
-    "id": 105,
+    
     "name": "Dark Seer",
     "roles": ["Melee", "Disabler", "Escape", "Initiator"],
     "winrate": 0.4721,
@@ -945,7 +945,7 @@
     "commonCounters": ["Ember Spirit","Sven","Shadow Demon","Ursa","Gyrocopter","Weaver","Primal Beast","Enchantress","Batrider","Faceless Void"]
   },
   {
-    "id": 106,
+    
     "name": "Jakiro",
     "roles": ["Ranged", "Disabler", "Nuker", "Pusher", "Support"],
     "winrate": 0.4702,
@@ -954,7 +954,7 @@
     "commonCounters": ["Rubick","Pangolier","Muerta","Keeper of the Light","Tidehunter","Pugna","Oracle","Faceless Void","Slark","Morphling"]
   },
   {
-    "id": 107,
+    
     "name": "Tinker",
     "roles": ["Ranged", "Carry", "Nuker", "Pusher"],
     "winrate": 0.4700,
@@ -963,7 +963,7 @@
     "commonCounters": ["Anti-Mage","Elder Titan","Leshrac","Grimstroke","Pugna","Visage","Pudge","Sand King","Enigma","Vengeful Spirit"]
   },
   {
-    "id": 108,
+    
     "name": "Muerta",
     "roles": ["Ranged", "Carry", "Disabler", "Nuker"],
     "winrate": 0.4679,
@@ -972,7 +972,7 @@
     "commonCounters": ["Rubick","Spectre","Axe","Bristleback","Nyx Assassin","Ringmaster","Dark Seer","Invoker","Skywrath Mage","Pudge"]
   },
   {
-    "id": 109,
+    
     "name": "Ringmaster",
     "roles": ["Ranged", "Disabler", "Escape", "Nuker", "Support"],
     "winrate": 0.4626,
@@ -981,7 +981,7 @@
     "commonCounters": ["Elder Titan","Omniknight","Oracle","Arc Warden","Dark Seer","Lycan","Shadow Demon","Juggernaut","Batrider","Void Spirit"]
   },
   {
-    "id": 110,
+    
     "name": "Techies",
     "roles": ["Ranged", "Disabler", "Nuker"],
     "winrate": 0.4623,
@@ -990,7 +990,7 @@
     "commonCounters": ["Medusa","Templar Assassin","Lifestealer","Bristleback","Spectre","Bane","Pudge","Elder Titan","Mars","Enigma"]
   },
   {
-    "id": 111,
+    
     "name": "Slark",
     "roles": ["Melee", "Carry", "Disabler", "Escape", "Nuker"],
     "winrate": 0.4620,
@@ -999,7 +999,7 @@
     "commonCounters": ["Grimstroke","Leshrac","Disruptor","Mars","Bloodseeker","Necrophos","Clockwerk","Tiny","Techies","Ringmaster"]
   },
   {
-    "id": 112,
+    
     "name": "Morphling",
     "roles": ["Ranged", "Carry", "Disabler", "Durable", "Escape", "Nuker"],
     "winrate": 0.4619,
@@ -1008,7 +1008,7 @@
     "commonCounters": ["Axe","Nyx Assassin","Bane","Rubick","Outworld Destroyer","Chaos Knight","Phantom Lancer","Lion","Dragon Knight","Zeus"]
   },
   {
-    "id": 113,
+    
     "name": "Lina",
     "roles": ["Ranged", "Carry", "Disabler", "Nuker", "Support"],
     "winrate": 0.4606,
@@ -1017,7 +1017,7 @@
     "commonCounters": ["Tidehunter","Phantom Assassin","Rubick","Windranger","Pangolier","Mars","Sven","Axe","Brewmaster","Bristleback"]
   },
   {
-    "id": 114,
+    
     "name": "Chen",
     "roles": ["Ranged", "Pusher", "Support"],
     "winrate": 0.4601,
@@ -1026,7 +1026,7 @@
     "commonCounters": ["Marci","Visage","Io","Spirit Breaker","Ursa","Kez","Phoenix","Weaver","Magnus","Earthshaker"]
   },
   {
-    "id": 115,
+    
     "name": "Terrorblade",
     "roles": ["Melee", "Carry", "Nuker", "Pusher"],
     "winrate": 0.4591,
@@ -1035,7 +1035,7 @@
     "commonCounters": ["Dark Seer","Phantom Lancer","Sand King","Warlock","Brewmaster","Axe","Winter Wyvern","Phoenix","Earthshaker","Elder Titan"]
   },
   {
-    "id": 116,
+    
     "name": "Phantom Assassin",
     "roles": ["Melee", "Carry", "Escape"],
     "winrate": 0.4586,
@@ -1044,7 +1044,7 @@
     "commonCounters": ["Axe","Pudge","Treant Protector","Techies","Bristleback","Nyx Assassin","Timbersaw","Troll Warlord","Centaur Warrunner","Primal Beast"]
   },
   {
-    "id": 117,
+    
     "name": "Beastmaster",
     "roles": ["Melee", "Disabler", "Durable", "Initiator", "Nuker"],
     "winrate": 0.4576,
@@ -1053,7 +1053,7 @@
     "commonCounters": ["Chen","Elder Titan","Medusa","Jakiro","Gyrocopter","Kunkka","Kez","Sand King","Lone Druid","Bloodseeker"]
   },
    {
-    "id": 118,
+    
     "name": "Tiny",
     "roles": ["Melee", "Carry", "Disabler", "Durable", "Initiator", "Nuker", "Pusher"],
     "winrate": 0.4503,
@@ -1062,7 +1062,7 @@
     "commonCounters": ["Lifestealer","Brewmaster","Viper","Dark Willow","Dark Seer","Necrophos","Templar Assassin","Lycan","Sven","Enchantress"]
   },
   {
-    "id": 119,
+    
     "name": "Batrider",
     "roles": ["Ranged", "Disabler", "Escape", "Initiator"],
     "winrate": 0.4484,
@@ -1071,7 +1071,7 @@
     "commonCounters": ["Terrorblade","Puck","Bloodseeker","Elder Titan","Chen","Abaddon","Queen of Pain","Visage","Viper","Tidehunter"]
   },
   {
-    "id": 120,
+    
     "name": "Naga Siren",
     "roles": ["Melee", "Carry", "Disabler", "Escape", "Initiator", "Pusher", "Support"],
     "winrate": 0.4475,
@@ -1080,7 +1080,7 @@
     "commonCounters": ["Sand King","Necrophos","Tidehunter","Dawnbreaker","Crystal Maiden","Earthshaker","Winter Wyvern","Sven","Alchemist","Pudge"]
   },
   {
-    "id": 121,
+    
     "name": "Pangolier",
     "roles": ["Melee", "Carry", "Disabler", "Durable", "Escape", "Initiator", "Nuker"],
     "winrate": 0.4464,
@@ -1089,7 +1089,7 @@
     "commonCounters": ["Huskar","Primal Beast","Bane","Bloodseeker","Weaver","Monkey King","Timbersaw","Grimstroke","Leshrac","Phantom Lancer"]
   },
   {
-    "id": 122,
+    
     "name": "Bristleback",
     "roles": ["Melee", "Carry", "Durable", "Initiator", "Nuker"],
     "winrate": 0.4336,
@@ -1098,7 +1098,7 @@
     "commonCounters": ["Slark","Juggernaut","Legion Commander","Timbersaw","Anti-Mage","Hoodwink","Viper","Venomancer","Monkey King","Morphling"]
   },
   {
-    "id": 123,
+    
     "name": "Monkey King",
     "roles": ["Melee", "Carry", "Disabler", "Escape", "Initiator"],
     "winrate": 0.4281,
@@ -1107,7 +1107,7 @@
     "commonCounters": ["Muerta","Elder Titan","Batrider","Queen of Pain","Phoenix","Keeper of the Light","Windranger","Techies","Venomancer","Doom"]
   },
   {
-    "id": 124,
+    
     "name": "Doom",
     "roles": ["Melee", "Carry", "Disabler", "Durable", "Initiator", "Nuker"],
     "winrate": 0.4171,
@@ -1116,7 +1116,7 @@
     "commonCounters": ["Medusa","Wraith King","Nature's Prophet","Naga Siren","Windranger","Rubick","Venomancer","Luna","Anti-Mage","Ringmaster"]
   },
   {
-    "id": 125,
+    
     "name": "Spectre",
     "roles": ["Melee", "Carry", "Durable", "Escape"],
     "winrate": 0.5093,
@@ -1125,7 +1125,7 @@
     "commonCounters": ["Meepo","Abaddon","Undying","Lycan","Underlord","Beastmaster","Slardar","Bounty Hunter","Sven","Io"]
   },
   {
-    "id": 126,
+    
     "name": "Void Spirit",
     "roles": ["Melee", "Carry", "Disabler", "Escape", "Nuker"],
     "winrate": 0.5108,
