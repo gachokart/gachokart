@@ -10,7 +10,7 @@
   body {
     margin: 0;
     padding: 0;
-    background: url('flags/LOGO11.png') no-repeat center center fixed;
+    background: url('flags/LOGO9.png') no-repeat center center fixed;
     background-size: cover;
     font-family: 'Fira Sans', sans-serif;
     color: #fff;
@@ -1714,32 +1714,8 @@ function showFinalChance(){
 }
 
 
-  // ======== Автопідсвітка героїв при вводі ========
-  const searchInput = document.getElementById('heroSearch');
 
-  // При введенні тексту
-  searchInput.addEventListener('input', () => {
-    const query = searchInput.value.toLowerCase().trim();
-    if (!query) return;
-
-    // шукаємо селектори в обох командах
-    const selects = document.querySelectorAll('#myTeam select, #enemyTeam select');
-    for (let select of selects) {
-      let matched = false;
-      for (let option of select.options) {
-        const text = option.text.toLowerCase();
-        if (text.includes(query)) {
-          select.value = option.value;
-          select.style.boxShadow = "0 0 10px #ffcc00";
-          matched = true;
-          break;
-        }
-      }
-      if (!matched) {
-        select.style.boxShadow = "none";
-      }
-    }
- </script>
+</script>
 </body>
 </html>
 
@@ -1773,33 +1749,6 @@ function showFinalChance(){
 
 
   
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
 
 
 
