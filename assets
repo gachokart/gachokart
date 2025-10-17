@@ -1,5 +1,0 @@
-mkdir assets
-mv heroes.json assets/
-git add assets/heroes.json
-git commit -m "Переніс heroes.json у папку assets"
-git push origin main
