@@ -4,209 +4,102 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dota 2 Draft Helper</title>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fira+Sans:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
   body {
     margin: 0;
     padding: 0;
-    background: url('flags/LOGO9.png') no-repeat center center fixed;
+    height: 100vh;
+    background: url('1230.png') no-repeat center center;
     background-size: cover;
-    font-family: 'Fira Sans', sans-serif;
-    color: #fff;
+    font-family: 'Press Start 2P', sans-serif;
+    color: yellow;
+  }
+
+  .stage {
+    position: absolute;
+    top: 8%;
+    left: 45%;
+    font-size: 22px;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px black;
+  }
+
+  .hero-slot, .team-box, .button, .other-box {
+    border: 2px solid white;
+    position: absolute;
+    padding: 6px;
     text-align: center;
+    color: yellow;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px black;
   }
 
-  h1 {
-    font-family: 'Press Start 2P';
-    font-size: 28px;
-    color: #ff0000;
-    text-shadow: 0 0 10px #ff0000, 0 0 20px #aa0000;
-    margin: 20px 0;
-  }
-
-  h2 {
-    font-family: 'Press Start 2P';
-    font-size: 16px;
-    margin: 10px 0;
-    color: #fff;
-    text-shadow: 0 0 5px #000;
-  }
-
-  .team-container {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-  }
-
-  .team {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .team select, .team input {
-    margin: 5px 0;
-    padding: 8px;
-    border-radius: 8px;
-    border: none;
-    width: 180px;
-    text-align: center;
-    font-family: 'Fira Sans';
-    font-size: 14px;
-  }
-
- button {
-  background: linear-gradient(to bottom, #ffcc00, #cc9900);
-  color: #000;
-  border: 2px solid #000;
-  padding: 12px 30px;
-  border-radius: 8px;
-  font-weight: bold;
-  font-family: 'Fira Sans';
-  box-shadow: 0 0 10px #ffcc00;
-  transition: all 0.2s ease;
-}
-
-button:hover {
-  background: linear-gradient(to bottom, #ffaa00, #cc7700);
-  transform: scale(1.05);
-  box-shadow: 0 0 15px #ffaa00;
-}
-
-  #results {
-    margin-top: 20px;
-  }
-  
-
-
-  .hero {
+  select {
+    width: 100%;
+    padding: 4px;
     background: rgba(0,0,0,0.7);
-    margin: 8px auto;
-    padding: 10px;
-    border-radius: 12px;
-    width: 200px;
-    box-shadow: 0 0 10px #ffcc00;
+    color: yellow;
+    border: 1px solid white;
+    font-family: inherit;
   }
 
-  #teamsDisplay {
-    display: flex;
-    justify-content: space-between;
-    max-width: 900px;
-    margin: 20px auto;
-  }
+  /* Позиції елементів */
+  #hero1 { top: 13%; left: 15%; width: 20%; height: 6%; }
+  #hero2 { top: 23%; left: 15%; width: 20%; height: 6%; }
+  #myTeam { top: 35%; left: 15%; width: 20%; height: 18%; }
 
-  #teamsDisplay ul {
-    list-style: none;
-    padding: 0;
-    font-size: 14px;
-  }
+  #hero3 { top: 13%; right: 15%; width: 20%; height: 6%; }
+  #hero4 { top: 23%; right: 15%; width: 20%; height: 6%; }
+  #enemyTeam { top: 35%; right: 15%; width: 20%; height: 18%; }
 
-  #teamsDisplay h3 {
-    font-family: 'Press Start 2P';
-    font-size: 14px;
-    margin-bottom: 10px;
-    color: #ffcc00;
-    text-shadow: 0 0 5px #000;
-  }
+  #topHero { top: 18%; left: 42%; width: 18%; height: 12%; }
 
-  #draftSummary {
-    display: none;
-    max-width: 900px;
-    margin: 20px auto;
-    padding: 20px;
-    background: rgba(46,46,46,0.85);
-    border-radius: 15px;
-    text-align: center;
-  }
+  #other { bottom: 10%; left: 15%; width: 70%; height: 10%; }
 
-  #summaryContainer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-  }
+  #back { bottom: 10%; left: 42%; width: 8%; height: 6%; cursor: pointer; }
+  #go { bottom: 10%; right: 42%; width: 8%; height: 6%; cursor: pointer; }
 
-  #summaryMyTeam, #summaryEnemyTeam {
-    list-style: none;
-    padding: 0;
-    width: 40%;
+  .button:hover {
+    background: rgba(255,255,0,0.2);
+    transform: scale(1.05);
   }
-
-  #summaryCenter {
-    width: 20%;
-  }
-
-  #summaryBar {
-    height: 20px;
-    background: #ff0000;
-    width: 0%;
-    border-radius: 10px;
-  }
-
-  #controls {
-    margin: 15px 0;
-  }
-
-  #controls input {
-    margin-right: 5px;
-  }
-
 </style>
 </head>
 
 <body>
-<h1>Dota 2 Draft Helper</h1>
+  <div class="stage" id="stageLabel">STAGE I</div>
 
-
-<div id="myTeam" class="team"></div>
-
-
-<div id="enemyTeam" class="team"></div>
-
-<button id="nextBtn">Go</button>
-
-<div id="results"></div>
- <div id="missingRolesInfo" style="margin-top:10px; font-family:'Fira Sans'; font-size:16px;"></div> 
-<div id="controls">
-  <label>
-    <input type="checkbox" id="behaviorMode">
-    🎭 Увімкнути поведінковий фактор
-  </label>
-</div>
-
-  <div id="teamsDisplay" style="display:flex; justify-content:space-between; margin-top:20px;">
-  <div id="myTeamDisplay" style="width:45%; text-align:left;">
-    <h3>🟦 Моя команда</h3>
-    <ul id="myTeamList"></ul>
+  <!-- HERO SELECTORS -->
+  <div class="hero-slot" id="hero1">
+    HERO 1<br>
+    <select id="heroSelect1"></select>
   </div>
-  <div id="enemyTeamDisplay" style="width:45%; text-align:right;">
-    <h3>🟥 Суперники</h3>
-    <ul id="enemyTeamList"></ul>
+  <div class="hero-slot" id="hero2">
+    HERO 2<br>
+    <select id="heroSelect2"></select>
   </div>
-</div>
-  <div id="draftSummary" style="display:none;">
-  <div id="summaryContainer" 
-       style="display:flex; justify-content:space-between; align-items:center; 
-              background:url('LOGO9.png') center/cover no-repeat; 
-              padding:20px; border-radius:15px; color:#fff; margin:20px auto; max-width:900px;">
-    <ul id="summaryMyTeam" style="list-style:none; padding:0; text-align:center;"></ul>
-    <div id="summaryCenter" style="text-align:center;">
-      <h2 id="summaryChance" style="margin-bottom:10px;"></h2>
-      <div style="background:rgba(0,0,0,0.5); border-radius:10px; overflow:hidden; width:150px; height:20px; margin:0 auto;">
-        <div id="summaryBar" style="background:#ff0000; width:0%; height:100%;"></div>
-      </div>
-      <p id="summaryBehavior" style="margin-top:10px;"></p>
-    </div>
-    <ul id="summaryEnemyTeam" style="list-style:none; padding:0; text-align:center;"></ul>
+  <div class="team-box" id="myTeam">MY TEAM</div>
+
+  <div class="hero-slot" id="hero3">
+    HERO 3<br>
+    <select id="heroSelect3"></select>
   </div>
-</div>
+  <div class="hero-slot" id="hero4">
+    HERO 4<br>
+    <select id="heroSelect4"></select>
+  </div>
+  <div class="team-box" id="enemyTeam">ENEMY TEAM</div>
 
+  <div class="team-box" id="topHero">TOP HERO</div>
 
+  <div class="other-box" id="other">OTHER</div>
 
-<script>
+  <div class="button" id="back">BACK</div>
+  <div class="button" id="go">GO</div>
+
+  <script>
+  
 // =========================
 // 🔥 ВШИТИЙ heroes.json
 // =========================
