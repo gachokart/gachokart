@@ -1,1 +1,139 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Contact Us - Blazkowicz Analyst</title>
+<link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+<!-- Favicon -->
+<link rel="icon" type="image/png" href="flags/LOGO.png" />
+<style>
+body, html { margin: 0; padding: 0; min-height: 100%; background: linear-gradient(to bottom, #000000, #600000); font-family: 'Press Start 2P', cursive; color: #fff; }
+header { display: flex; align-items: flex-start; gap: 20px; padding: 20px; position: relative; }
+.logo img { height: 100px; width: auto; display: block; transition: 0.3s ease; }
+.logo img:hover { filter: drop-shadow(0 0 15px #ff0000) brightness(1.2); transform: scale(1.08); }
+.title-block h1 { font-family: 'Press Start 2P', cursive; font-size: 48px; margin: 0; letter-spacing: 2px; color: #ff0000; text-shadow: 2px 2px #000; }
+.title-block h2 { font-family: 'Press Start 2P', cursive; font-size: 20px; margin: 5px 0 0; color: #ffffff; text-shadow: 1px 1px #000; }
+.language-selector { position: absolute; top: 20px; right: 20px; }
+.custom-select { position: relative; width: 180px; cursor: pointer; border: 2px solid #ff0000; background-color: #000; color: #fff; font-family: 'Press Start 2P', cursive; font-size: 10px; user-select: none; }
+.selected-option, .option { display: flex; align-items: center; padding: 5px 10px; }
+.selected-option img, .option img { width: 20px; height: 15px; margin-right: 8px; }
+.options { display: none; position: absolute; top: 100%; left: 0; width: 100%; background-color: #000; border: 2px solid #ff0000; z-index: 1000; }
+.option:hover { background-color: rgba(255, 0, 0, 0.5); cursor: pointer; }
+main { max-width: 800px; margin: 40px auto; padding: 20px; background: rgba(0,0,0,0.5); border: 2px solid #ff0000; border-radius: 10px; text-align: center; }
+main h2 { font-family: 'Press Start 2P', cursive; font-size: 28px; color: #ff0000; margin-bottom: 20px; }
+main p { font-size: 16px; line-height: 1.6; color: #fff; margin-bottom: 20px; }
+#extraInfo { font-family: 'Press Start 2P', cursive; font-size: 14px; color: #ffffff; margin-bottom: 20px; text-shadow: 1px 1px #000; }
+.social-icons { display: flex; justify-content: center; gap: 20px; margin: 20px 0; }
+.social-icons img { width: 40px; height: 40px; transition: transform 0.3s ease, filter 0.3s ease; }
+.social-icons img:hover { transform: scale(1.2); filter: drop-shadow(0 0 10px #ff0000); }
+main a.button { display: inline-block; padding: 10px 20px; border: 2px solid #ff0000; color: #fff; text-decoration: none; font-family: 'Press Start 2P', cursive; transition: 0.3s ease; }
+main a.button:hover { background-color: #ff0000; color: #000; }
+footer { text-align: center; padding: 20px; background-color: #110000; font-size: 12px; color: #888; }
+</style>
+</head>
+<body>
+<header>
+<div class="logo">
+<a href="https://gachokart.com" target="_blank">
+<img src="flags/LOGO1.png" alt="Logo"></a>
+</div>
+<div class="title-block">
+<h1>Blazkowicz</h1>
+<h2 id="analystText">Analyst</h2>
+</div>
+<div class="language-selector">
+<div class="custom-select" id="languageSelect">
+<div class="selected-option">
+<img src="flags/gb.png" alt="EN"> <span>English</span>
+</div>
+<div class="options">
+<div class="option" data-lang="ua"><img src="flags/ua.png" alt="UA"><span>Українська</span></div>
+<div class="option" data-lang="en"><img src="flags/gb.png" alt="EN"><span>English</span></div>
+<div class="option" data-lang="pl"><img src="flags/pl.png" alt="PL"><span>Polski</span></div>
+<div class="option" data-lang="de"><img src="flags/de.png" alt="DE"><span>Deutsch</span></div>
+</div>
+</div>
+</div>
+</header>
+<main>
+<h2>Contact Us</h2>
+<p id="extraInfo">На рахунок додаткової інформації звертайтесь:</p>
+<div class="social-icons">
+<a href="mailto:info@gachokart.com"><img src="flags/email.png" alt="Email"></a>
+<a href="https://t.me/gachokart" target="_blank"><img src="flags/telegram.png" alt="Telegram"></a>
+<a href="https://www.facebook.com/gachokart" target="_blank"><img src="flags/facebook.png" alt="Facebook"></a>
+<a href="https://www.instagram.com/gachokart" target="_blank"><img src="flags/instagram.png" alt="Instagram"></a>
+</div>
+<a href="index.html" class="button">Back to Home</a>
+</main>
+<footer>
+&copy; 2025 Blazkowicz Analyst. All rights reserved.
+</footer>
+<script>
+const translations = {
+ua: { contactTitle: "Зв'язок", extraInfo: "На рахунок додаткової інформації звертайтесь:", back: "Назад на головну" },
+en: { contactTitle: "Contact Us", extraInfo: "For additional information please contact us:", back: "Back to Home" },
+pl: { contactTitle: "Kontakt", extraInfo: "W sprawie dodatkowych informacji prosimy o kontakt:", back: "Powrót" },
+de: { contactTitle: "Kontakt", extraInfo: "Für weitere Informationen kontaktieren Sie uns bitte:", back: "Zur Startseite" }
+};
+
+const languageSelect = document.getElementById("languageSelect");
+const selectedOption = languageSelect.querySelector(".selected-option");
+const options = languageSelect.querySelector(".options");
+const allOptions = Array.from(options.querySelectorAll(".option"));
+
+function setLanguage(lang) {
+const mainTitle = document.querySelector("main h2");
+const extraInfo = document.getElementById("extraInfo");
+const backBtn = document.querySelector("main a.button");
+mainTitle.textContent = translations[lang].contactTitle;
+extraInfo.textContent = translations[lang].extraInfo;
+backBtn.textContent = translations[lang].back;
+}
+
+function updateOptions(currentLang) {
+allOptions.forEach(option => {
+option.style.display = option.getAttribute("data-lang") === currentLang ? "none" : "flex";
+});
+}
+
+// Збереження та отримання мови через localStorage
+window.addEventListener("load", () => {
+const savedLang = localStorage.getItem("selectedLanguage") || "en";
+setLanguage(savedLang);
+const flagMap = { ua: "ua", en: "gb", pl: "pl", de: "de" };
+const nameMap = { ua: "Українська", en: "English", pl: "Polski", de: "Deutsch" };
+selectedOption.innerHTML = `<img src="flags/${flagMap[savedLang]}.png" alt="${savedLang.toUpperCase()}"><span>${nameMap[savedLang]}</span>`;
+updateOptions(savedLang);
+});
+
+selectedOption.addEventListener("click", () => {
+options.style.display = options.style.display === "block" ? "none" : "block";
+});
+
+allOptions.forEach(option => {
+option.addEventListener("click", () => {
+const lang = option.getAttribute("data-lang");
+localStorage.setItem("selectedLanguage", lang);
+setLanguage(lang);
+const flagMap = { ua: "ua", en: "gb", pl: "pl", de: "de" };
+const nameMap = { ua: "Українська", en: "English", pl: "Polski", de: "Deutsch" };
+selectedOption.innerHTML = `<img src="flags/${flagMap[lang]}.png" alt="${lang.toUpperCase()}"><span>${nameMap[lang]}</span>`;
+updateOptions(lang);
+options.style.display = "none";
+});
+});
+
+document.addEventListener("click", (e) => {
+if (!languageSelect.contains(e.target)) {
+options.style.display = "none";
+}
+});
+</script>
+</body>
+</html>
+
+
 
