@@ -80,6 +80,9 @@ button:hover {
     margin-top: 20px;
   }
 
+  <div id="missingRolesInfo" style="margin-top:10px; font-family:'Fira Sans'; font-size:16px;"></div>
+
+
   .hero {
     background: rgba(0,0,0,0.7);
     margin: 8px auto;
@@ -1606,6 +1609,8 @@ function nextStage() {
         updateTeamDisplays(true);
         createSelectors(allMyHeroes, allEnemyHeroes); // створюємо нові селектори тільки для нових пік стадії
         calculateBestPicks();
+      showMissingRoles();
+
     } else {
         showFinalChance(); // фінальна стадія
     }
@@ -1641,6 +1646,41 @@ function showFinalChance() {
             enemyScore += h.winrate;
         }
     });
+// ====================== АНАЛІЗ БАЛАНСУ РОЛЕЙ ======================
+function showMissingRoles() {
+  const idealTeamRoles = {
+    Carry: 1,
+    Support: 1,
+    Disabler: 1,
+    Initiator: 1,
+    Durable: 1, // або заміни на іншу роль, якщо хочеш
+  };
+
+  // поточні ролі союзної команди
+  const myTeam = [...allMyHeroes, ...getSelectedHeroes('#myTeam')];
+  const roleCount = {};
+  myTeam.forEach(name => {
+    const hero = heroes.find(h => h.name === name);
+    if (hero) hero.roles.forEach(r => roleCount[r] = (roleCount[r] || 0) + 1);
+  });
+
+  // визначаємо, яких ролей бракує
+  const missing = [];
+  Object.keys(idealTeamRoles).forEach(r => {
+    if ((roleCount[r] || 0) < idealTeamRoles[r]) {
+      missing.push(r);
+    }
+  });
+
+  const infoDiv = document.getElementById('missingRolesInfo');
+  if (missing.length) {
+    infoDiv.innerHTML = `⚠️ Не вистачає ролей: <b>${missing.join(', ')}</b>`;
+    infoDiv.style.color = '#ff4444';
+  } else {
+    infoDiv.innerHTML = '✅ Команда має всі ключові ролі';
+    infoDiv.style.color = '#44ff44';
+  }
+}
 
     // синергія команд
     myScore *= getTeamHarmony(myTeam);
