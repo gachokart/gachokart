@@ -89,6 +89,14 @@ button:hover {
     box-shadow: 0 0 10px #ffcc00;
   }
 
+  #stageTitle {
+  font-family: 'Press Start 2P';
+  font-size: 18px;
+  color: #ffcc00;
+  text-shadow: 0 0 10px #000, 0 0 5px #ff0000;
+  margin-bottom: 15px;
+}
+
   #teamsDisplay {
     display: flex;
     justify-content: space-between;
@@ -157,6 +165,9 @@ button:hover {
 
 <body>
 <h1>Dota 2 Draft Helper</h1>
+  
+<!-- 🔹 Додаємо напис стадії -->
+<h2 id="stageTitle">Stage 1</h2>  
 
 
 <div id="myTeam" class="team"></div>
@@ -1666,6 +1677,19 @@ function showFinalChance() {
 
 
     updateTeamDisplays(false); // залишаємо останні вибрані герої в списках
+}
+  const stageTitle = document.getElementById('stageTitle');
+const nextBtn = document.getElementById('nextBtn');
+
+nextBtn.addEventListener('click', () => {
+  // Твоя логіка драфту тут...
+  stage++;
+  if (stage > 3) stage = 1;
+  updateStageTitle();
+});
+
+function updateStageTitle() {
+  stageTitle.textContent = `Stage ${stage}`;
 }
 
 
