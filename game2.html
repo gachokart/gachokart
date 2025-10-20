@@ -1661,34 +1661,48 @@ let allMyHeroes = [];
 let allEnemyHeroes = [];
 
 function nextStage() {
-    const mySelected = getSelectedHeroes('#myTeam');
-    const enemySelected = getSelectedHeroes('#enemyTeam');
-    const limits = stageLimits[stage - 1];
+  const mySelected = getSelectedHeroes('#myTeam');
+  const enemySelected = getSelectedHeroes('#enemyTeam');
+  const limits = stageLimits[stage - 1];
   const stageTitle = document.getElementById('stageTitle');
-function updateStageTitle() {
-  stageTitle.textContent = `Stage ${stage}`;
+
+  function updateStageTitle() {
+    stageTitle.textContent = `Stage ${stage}`;
+  }
+
+  // 🔹 Перевірка на потрібну кількість героїв
+  if (mySelected.length < limits.my || enemySelected.length < limits.enemy) {
+    alert(`⚠️ Обери ${limits.my} героїв у свою команду та ${limits.enemy} у суперника!`);
+    return;
+  }
+
+  // 🔹 Зберігаємо вибраних героїв поточної стадії
+  allMyHeroes.push(...mySelected);
+  allEnemyHeroes.push(...enemySelected);
+
+  // 🔹 Якщо ще є стадії
+  if (stage < 3) {
+    stage++;
+    updateStageTitle();
+
+    // 🧹 Очищаємо старі селектори (щоб не залишалися попередні)
+    document.getElementById('myTeam').innerHTML = '';
+    document.getElementById('enemyTeam').innerHTML = '';
+
+    // 🆕 Створюємо нові порожні селектори для наступної стадії
+    createSelectors(allMyHeroes, allEnemyHeroes);
+
+    // 🔒 Блокуємо вже вибраних героїв
+    updateSelects();
+
+    // 🔁 Оновлюємо команду і рекомендації
+    updateTeamDisplays(true);
+    calculateBestPicks();
+  } else {
+    showFinalChance(); // 🏁 Фінальна стадія
+  }
 }
 
-    // перевіряємо, чи обрано потрібну кількість героїв
-    if (mySelected.length < limits.my || enemySelected.length < limits.enemy) {
-        alert(`⚠️ Обери ${limits.my} героїв у свою команду та ${limits.enemy} у суперника!`);
-        return;
-    }
-
-    // зберігаємо вибраних героїв
-    allMyHeroes.push(...mySelected);
-    allEnemyHeroes.push(...enemySelected);
-
-    if (stage < 3) {
-        stage++; // переходимо на наступну стадію
-      updateStageTitle();
-        updateTeamDisplays(true);
-        createSelectors(allMyHeroes, allEnemyHeroes); // створюємо нові селектори тільки для нових пік стадії
-        calculateBestPicks();
-    } else {
-        showFinalChance(); // фінальна стадія
-    }
-}
 
 
 
