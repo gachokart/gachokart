@@ -1585,8 +1585,9 @@ function calculateBestPicks() {
   
 
 heroes.forEach(hero => {
-    const usedHeroes = [...allMyHeroes, ...allEnemyHeroes];
-if (usedHeroes.includes(hero.name)) return;
+    const usedHeroes = [...allMyHeroes, ...allEnemyHeroes, ...getSelectedHeroes('#myTeam'), ...getSelectedHeroes('#enemyTeam')];
+heroes.forEach(hero => {
+  if (usedHeroes.includes(hero.name)) return;
     let score = 0;
     const winNorm = (hero.winrate-0.5)/0.5;
     const pickNorm = Math.log(1+hero.pickrate*100)/Math.log(101);
