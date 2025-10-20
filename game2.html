@@ -1522,61 +1522,7 @@ function calculateBestPicks() {
     if (h) h.roles.forEach(r => roleCount[r] = (roleCount[r] || 0) + 1);
   });
 
-  function getSynergyScore(hero) {
-    let score = 0;
-    myHeroes.forEach(my => {
-      const ally = heroes.find(h => h.name === my);
-      if (ally) ally.roles.forEach(r => { if (hero.roles.includes(r)) { let m = keyRoles.includes(r)?stageRoleMultiplier:1; score += (roleWeights[r]||1)*m; }});
-    });
-    return score;
-  }
-
-  function getDuplicatePenalty(hero) {
-    let penalty = 0;
-    hero.roles.forEach(r => { if (roleCount[r] && roleCount[r]>1) penalty += (roleWeights[r]||1)*(roleCount[r]-1); });
-    return penalty;
-  }
-
-  function getMissingRoleBonus(hero) {
-    let bonus = 0;
-    Object.keys(roleWeights).forEach(r => {
-      if (!roleCount[r] && hero.roles.includes(r)) { let m = keyRoles.includes(r)?stageRoleMultiplier:1; bonus += roleWeights[r]*m; }
-    });
-    return bonus;
-  }
-
-  function getAdaptiveCounterScore(hero) {
-  if (!enemyHeroes.length) return 0;
-  let score = 0;
-
-  enemyHeroes.forEach(enemy => {
-    const bestList = hero.BestCounters || [];
-    const commonList = hero.commonCounters || [];
-
-    // шукаємо індекси ворогів у масивах
-    const bestIndex = bestList.indexOf(enemy);
-    const commonIndex = commonList.indexOf(enemy);
-
-    // якщо ворог у BestCounters — додаємо вагу, що спадає з позицією
-    if (bestIndex !== -1) {
-      const weight = 1 - (bestIndex / (bestList.length - 1 || 1)); // від 1 → 0
-      score += 2.0 * weight; // максимальна вага 2.0 для BestCounters
-    }
-
-    // якщо ворог у commonCounters — аналогічно, але менша базова вага
-    if (commonIndex !== -1) {
-      const weight = 1 - (commonIndex / (commonList.length - 1 || 1));
-      score += 1.0 * weight; // максимальна вага 1.0
-    }
-  });
-
-  // посилення для ключових ролей у певних стадіях
-  if (hero.roles.some(r => keyRoles.includes(r))) score *= stageRoleMultiplier;
-  return score;
-}
-
-
-  const behaviorMode = document.getElementById('behaviorMode').checked;
+  const behaviorMode = document.getElementById('behaviorMode')?.checked;
   const stability = behaviorMode ? getPlayerStability() : 1.0;
   const influence = behaviorMode ? getRandomPlayerInfluence() : 0.0;
   const harmony = behaviorMode ? getTeamHarmony(myHeroes) : 1.0;
@@ -1584,16 +1530,32 @@ function calculateBestPicks() {
   let scores = [];
   heroes.forEach(hero => {
     if ([...allMyHeroes, ...allEnemyHeroes].includes(hero.name)) return;
-    let score = 0;
-    const winNorm = (hero.winrate-0.5)/0.5;
-    const pickNorm = Math.log(1+hero.pickrate*100)/Math.log(101);
-    score += weights.winrate*winNorm + weights.pickrate*pickNorm;
-    score += getAdaptiveCounterScore(hero)*weights.counters;
-    score += getSynergyScore(hero)*weights.synergy;
-    score -= getDuplicatePenalty(hero);
-    score += getMissingRoleBonus(hero)*weights.roles;
 
-    // застосовуємо поведінкові фактори
+    let score = 0;
+    const winNorm = (hero.winrate - 0.5) / 0.5;
+    const pickNorm = Math.log(1 + hero.pickrate * 100) / Math.log(101);
+
+    score += weights.winrate * winNorm + weights.pickrate * pickNorm;
+    score += getAdaptiveCounterScore(hero) * weights.counters;
+
+    // Синергія та рольові бонуси
+    let synergy = 0, duplicatePenalty = 0, missingRoleBonus = 0;
+    myHeroes.forEach(my => {
+      const ally = heroes.find(h => h.name === my);
+      if (ally) ally.roles.forEach(r => {
+        if (hero.roles.includes(r)) {
+          let m = keyRoles.includes(r) ? stageRoleMultiplier : 1;
+          synergy += (roleWeights[r] || 1) * m;
+        }
+      });
+    });
+    hero.roles.forEach(r => { if (roleCount[r] && roleCount[r] > 1) duplicatePenalty += (roleWeights[r] || 1) * (roleCount[r] - 1); });
+    Object.keys(roleWeights).forEach(r => { if (!roleCount[r] && hero.roles.includes(r)) missingRoleBonus += (roleWeights[r] || 1) * (keyRoles.includes(r) ? stageRoleMultiplier : 1); });
+
+    score += synergy * weights.synergy;
+    score -= duplicatePenalty;
+    score += missingRoleBonus * weights.roles;
+
     if (behaviorMode) {
       score *= getToxicityRisk(hero);
       score *= harmony;
@@ -1601,71 +1563,52 @@ function calculateBestPicks() {
       score *= (1 + influence);
     }
 
-    scores.push({hero: hero.name, score: Number(score.toFixed(4))});
+    scores.push({ hero: hero.name, score: Number(score.toFixed(4)) });
   });
 
-  scores.sort((a,b)=>b.score-a.score);
+  scores.sort((a, b) => b.score - a.score);
   displayTop(scores);
 }
+
 
 // ====================== ВІДОБРАЖЕННЯ ======================
 function displayTop(scores) {
   const resultDiv = document.getElementById('results');
   resultDiv.innerHTML = `<h2>Топ герої для наступного піку:</h2>`;
 
-  // Розділяємо героїв за ролями
   const carryHeroes = scores
-    .map(s => ({
-      ...s,
-      heroData: heroes.find(h => h.name === s.hero)
-    }))
+    .map(s => ({ ...s, heroData: heroes.find(h => h.name === s.hero) }))
     .filter(s => s.heroData?.roles.includes('Carry'))
     .slice(0, 5);
 
   const supportHeroes = scores
-    .map(s => ({
-      ...s,
-      heroData: heroes.find(h => h.name === s.hero)
-    }))
+    .map(s => ({ ...s, heroData: heroes.find(h => h.name === s.hero) }))
     .filter(s => s.heroData?.roles.includes('Support'))
     .slice(0, 5);
 
-  // HTML структура у 2 колонки
   resultDiv.innerHTML += `
-    <div style="
-      display: flex; 
-      justify-content: space-around; 
-      align-items: flex-start; 
-      gap: 20px;
-      flex-wrap: wrap;
-    ">
+    <div style="display:flex;justify-content:space-around;align-items:flex-start;gap:20px;flex-wrap:wrap;">
       <div style="flex:1; min-width:200px;">
         <h3 style="color:#00ff88;">⚔️ Carry</h3>
-        ${carryHeroes.length
-          ? carryHeroes.map(t => `
-            <div class="hero">
-              <h4>${t.hero}</h4>
-              <p>Оцінка: ${t.score.toFixed(3)}</p>
-            </div>`).join('')
-          : '<p style="opacity:0.7;">(Немає Carry у топі)</p>'
-        }
+        ${carryHeroes.length ? carryHeroes.map(t => `<div class="hero"><h4>${t.hero}</h4><p>Оцінка: ${t.score.toFixed(3)}</p></div>`).join('') : '<p style="opacity:0.7;">(Немає Carry у топі)</p>'}
       </div>
-
       <div style="flex:1; min-width:200px;">
         <h3 style="color:#33aaff;">🩹 Support</h3>
-        ${supportHeroes.length
-          ? supportHeroes.map(t => `
-            <div class="hero">
-              <h4>${t.hero}</h4>
-              <p>Оцінка: ${t.score.toFixed(3)}</p>
-            </div>`).join('')
-          : '<p style="opacity:0.7;">(Немає Support у топі)</p>'
-        }
+        ${supportHeroes.length ? supportHeroes.map(t => `<div class="hero"><h4>${t.hero}</h4><p>Оцінка: ${t.score.toFixed(3)}</p></div>`).join('') : '<p style="opacity:0.7;">(Немає Support у топі)</p>'}
       </div>
     </div>
   `;
-}
 
+  if (behaviorMode) {
+    resultDiv.innerHTML += `
+      <div style="margin-top:10px;opacity:0.8;font-size:0.9em;">
+        🧠 Поведінковий режим активний:<br>
+        - Стабільність: ${(stability*100).toFixed(0)}%<br>
+        - Вплив: ${(influence*100).toFixed(1)}%<br>
+        - Гармонія команди: ${(harmony*100).toFixed(0)}%<br>
+      </div>`;
+  }
+}
 
 // ====================== ЕТАПИ ======================
 let stage = 1;
