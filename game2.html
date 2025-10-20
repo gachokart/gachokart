@@ -1373,30 +1373,12 @@ document.addEventListener('DOMContentLoaded', () => { createSelectors(); updateT
 function createSelectors(savedMy = [], savedEnemy = []) {
   const myTeamDiv = document.getElementById('myTeam');
   const enemyTeamDiv = document.getElementById('enemyTeam');
-
-  // ВИДАЛЯЄМО повторне додавання <h2>, вони вже є в HTML
-  // myTeamDiv.innerHTML = "<h2>Моя команда</h2>";
-  // enemyTeamDiv.innerHTML = "<h2>Суперник</h2>";
-
-  const limits = stageLimits[stage - 1];
-
-  createTeamSelectors(myTeamDiv, limits.my, savedMy);
-  createTeamSelectors(enemyTeamDiv, limits.enemy, savedEnemy);
-  updateSelects();
-  document.getElementById('nextBtn').onclick = nextStage;
-}
-
-function createSelectors(savedMy = [], savedEnemy = []) {
-  const myTeamDiv = document.getElementById('myTeam');
-  const enemyTeamDiv = document.getElementById('enemyTeam');
   myTeamDiv.innerHTML = "<h2>Моя команда</h2>";
   enemyTeamDiv.innerHTML = "<h2>Суперник</h2>";
   const limits = stageLimits[stage - 1];
 
   createTeamSelectors(myTeamDiv, limits.my, savedMy);
   createTeamSelectors(enemyTeamDiv, limits.enemy, savedEnemy);
-
-  // 🔹 Після створення селекторів одразу блокуємо вже вибраних героїв
   updateSelects();
   document.getElementById('nextBtn').onclick = nextStage;
 }
@@ -1413,6 +1395,7 @@ function createTeamSelectors(container, count, saved = []) {
 
     if (saved[i]) select.value = saved[i];
 
+    // 🔍 автопідсвічування при введенні
     input.placeholder = 'Пиши героя...';
     input.addEventListener('input', () => {
       const val = input.value.trim().toLowerCase();
@@ -1441,30 +1424,16 @@ function createTeamSelectors(container, count, saved = []) {
 // ====================== БЛОКУВАННЯ ПОВТОРІВ ======================
 function updateSelects() {
   const selects = Array.from(document.querySelectorAll('select'));
-
-  // 🔹 Враховуємо усіх героїв з попередніх стадій
-  const previouslySelected = [...allMyHeroes, ...allEnemyHeroes];
-
-  // 🔹 Поточні вибрані у цій стадії
-  const currentSelected = selects.map(s => s.value).filter(v => v !== '');
-
-  // 🔹 Разом усі заблоковані
-  const blocked = [...new Set([...previouslySelected, ...currentSelected])];
-
+  const selectedHeroes = selects.map(s => s.value).filter(v => v !== '');
   selects.forEach(select => {
     const current = select.value;
     Array.from(select.options).forEach(opt => {
-      if (opt.value === '') {
-        opt.disabled = false;
-        return;
-      }
-      // 🔹 якщо герой уже вибраний — блокуємо
-      opt.disabled = blocked.includes(opt.value) && opt.value !== current;
-      opt.style.color = opt.disabled ? '#777' : '#000';
+      if (opt.value === '') opt.disabled = false;
+      else opt.disabled = selectedHeroes.includes(opt.value) && opt.value !== current;
+      opt.style.color = opt.disabled ? '#aaa' : '#000';
     });
   });
 }
-
 
 // ====================== ВАГИ СТАДІЙ ======================
 function getWeightsByStage(stage) {
@@ -1619,44 +1588,9 @@ function calculateBestPicks() {
 // ====================== ВІДОБРАЖЕННЯ ======================
 function displayTop(scores){
   const resultDiv = document.getElementById('results');
-  
-  // відокремлюємо Carry та Support
-  const carryHeroes = [];
-  const supportHeroes = [];
-
-  for (let i = 0; i < scores.length; i++) {
-    const heroObj = scores[i];
-    const hero = heroes.find(h => h.name === heroObj.hero);
-
-    if (!hero) continue;
-
-    if (hero.roles.includes('Carry')) {
-      if (carryHeroes.length < 5) carryHeroes.push(heroObj);
-    } else if (hero.roles.includes('Support')) {
-      if (supportHeroes.length < 5) supportHeroes.push(heroObj);
-    }
-    
-    if (carryHeroes.length >=5 && supportHeroes.length >=5) break;
-  }
-
-  // якщо герой є і в Carry і в Support, переносимо в Carry, Support не дублюємо
-  const supportFiltered = supportHeroes.filter(s => !carryHeroes.some(c => c.hero === s.hero));
-
-  resultDiv.innerHTML = `
-    <h2>Топ герої для наступного піку:</h2>
-    <div style="display:flex; justify-content:space-around; flex-wrap:wrap;">
-      <div style="width:45%;">
-        <h3>🟩 Carry</h3>
-        ${carryHeroes.map(t=>`<div class="hero"><h4>${t.hero}</h4><p>Оцінка: ${t.score.toFixed(3)}</p></div>`).join('')}
-      </div>
-      <div style="width:45%;">
-        <h3>🟦 Support</h3>
-        ${supportFiltered.map(t=>`<div class="hero"><h4>${t.hero}</h4><p>Оцінка: ${t.score.toFixed(3)}</p></div>`).join('')}
-      </div>
-    </div>
-  `;
+  resultDiv.innerHTML = `<h2>Топ герої для наступного піку:</h2>`+
+    scores.slice(0,5).map(t=>`<div class="hero"><h3>${t.hero}</h3><p>Оцінка: ${t.score.toFixed(3)}</p></div>`).join('');
 }
-
 
 // ====================== ЕТАПИ ======================
 let stage = 1;
@@ -1667,11 +1601,10 @@ function nextStage() {
     const mySelected = getSelectedHeroes('#myTeam');
     const enemySelected = getSelectedHeroes('#enemyTeam');
     const limits = stageLimits[stage - 1];
-    const stageTitle = document.getElementById('stageTitle');
-
-    function updateStageTitle() {
-        stageTitle.textContent = `Stage ${stage}`;
-    }
+  const stageTitle = document.getElementById('stageTitle');
+function updateStageTitle() {
+  stageTitle.textContent = `Stage ${stage}`;
+}
 
     // перевіряємо, чи обрано потрібну кількість героїв
     if (mySelected.length < limits.my || enemySelected.length < limits.enemy) {
@@ -1683,25 +1616,17 @@ function nextStage() {
     allMyHeroes.push(...mySelected);
     allEnemyHeroes.push(...enemySelected);
 
-   if (stage < 3) {
-    stage++;
-    updateStageTitle();
-
-    // очищаємо селектори перед новими
-    const myTeamDiv = document.getElementById('myTeam');
-    const enemyTeamDiv = document.getElementById('enemyTeam');
-    myTeamDiv.innerHTML = '';
-    enemyTeamDiv.innerHTML = '';
-
-    // створюємо нові селектори
-    createSelectors(allMyHeroes, allEnemyHeroes);
-
-    // оновлюємо команду та рекомендації
-    updateTeamDisplays(true);
-    calculateBestPicks();  // <- тут не закрита дужка блоку if
-else {
-    showFinalChance();
+    if (stage < 3) {
+        stage++; // переходимо на наступну стадію
+      updateStageTitle();
+        updateTeamDisplays(true);
+        createSelectors(allMyHeroes, allEnemyHeroes); // створюємо нові селектори тільки для нових пік стадії
+        calculateBestPicks();
+    } else {
+        showFinalChance(); // фінальна стадія
+    }
 }
+
 
 
 
@@ -2910,199 +2835,6 @@ function showFinalChance() {
 
 
 
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
 
 
 
