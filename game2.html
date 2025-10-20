@@ -1592,8 +1592,45 @@ function calculateBestPicks() {
     scores.push({hero: hero.name, score: Number(score.toFixed(4))});
   });
 
-  scores.sort((a,b)=>b.score-a.score);
-  displayTop(scores);
+  // Додай невеликий розкид, щоб не було статичних результатів
+scores.forEach(s => {
+  s.score += (Math.random() - 0.5) * 0.05; // ±2.5% випадковість
+});
+
+// динамічне підсилення контрпік факторів, якщо ворогів уже більше двох
+if (enemyHeroes.length >= 2) {
+  scores.forEach(s => {
+    const hero = heroes.find(h => h.name === s.hero);
+    if (!hero) return;
+    let adaptiveBonus = 0;
+    enemyHeroes.forEach(enemy => {
+      if (hero.BestCounters?.includes(enemy)) adaptiveBonus += 0.5;
+      if (hero.commonCounters?.includes(enemy)) adaptiveBonus += 0.2;
+    });
+    s.score += adaptiveBonus;
+  });
+}
+
+// підсилення синергії після 1 стадії
+if (myHeroes.length >= 2) {
+  scores.forEach(s => {
+    const hero = heroes.find(h => h.name === s.hero);
+    if (!hero) return;
+    let synergyBoost = 0;
+    myHeroes.forEach(my => {
+      const ally = heroes.find(h => h.name === my);
+      if (!ally) return;
+      ally.roles.forEach(r => {
+        if (hero.roles.includes(r)) synergyBoost += 0.1;
+      });
+    });
+    s.score += synergyBoost;
+  });
+}
+
+scores.sort((a,b)=>b.score-a.score);
+displayTop(scores);
+
 }
 
 // ====================== ВІДОБРАЖЕННЯ ======================
