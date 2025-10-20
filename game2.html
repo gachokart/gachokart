@@ -1719,13 +1719,14 @@ function showFinalChance() {
 
     let myScore = 0, enemyScore = 0;
 
+    // базовий розрахунок
     heroes.forEach(h => {
         if (myTeam.includes(h.name)) {
             enemyTeam.forEach(e => {
                 if (h.BestCounters?.includes(e)) myScore += 2;
                 if (h.commonCounters?.includes(e)) myScore += 1;
             });
-            myScore += h.winrate; // додаємо winrate
+            myScore += h.winrate;
         }
         if (enemyTeam.includes(h.name)) {
             myTeam.forEach(m => {
@@ -1736,31 +1737,49 @@ function showFinalChance() {
         }
     });
 
-    // синергія команд
-    myScore *= getTeamHarmony(myTeam);
-    enemyScore *= getTeamHarmony(enemyTeam);
-
-    let myChance = (myScore + enemyScore > 0) ? (myScore / (myScore + enemyScore)) * 100 : 50;
-
     // поведінкові фактори
-    if (document.getElementById('behaviorMode').checked){
+    const behaviorMode = document.getElementById('behaviorMode').checked;
+    let behaviorText = '';
+    if (behaviorMode) {
         const stability = getPlayerStability();
         const influence = getRandomPlayerInfluence();
-        myChance *= stability * (1 + influence);
-        myChance = Math.max(5, Math.min(95, myChance));
+        const myHarmony = getTeamHarmony(myTeam);
+        const enemyHarmony = getTeamHarmony(enemyTeam);
+
+        // токсичність героїв у команді
+        const myToxicity = myTeam.reduce((acc, name) => {
+            const h = heroes.find(h => h.name === name);
+            return acc * (h ? getToxicityRisk(h) : 1);
+        }, 1);
+        const enemyToxicity = enemyTeam.reduce((acc, name) => {
+            const h = heroes.find(h => h.name === name);
+            return acc * (h ? getToxicityRisk(h) : 1);
+        }, 1);
+
+        // застосовуємо до рахунку
+        myScore *= stability * (1 + influence) * myHarmony * myToxicity;
+        enemyScore *= stability * (1 + influence) * enemyHarmony * enemyToxicity;
+
+        behaviorText = `Поведінковий фактор: стабільність ${stability.toFixed(2)}, вплив ${influence.toFixed(2)}, гармонія ${myHarmony.toFixed(2)}, токсичність ${myToxicity.toFixed(2)}`;
     }
 
-    // відображення
-    document.getElementById('summaryMyTeam').innerHTML = myTeam.map(h=>`<li>🟩 ${h}</li>`).join('');
-    document.getElementById('summaryEnemyTeam').innerHTML = enemyTeam.map(h=>`<li>🟥 ${h}</li>`).join('');
+    // шанс на перемогу
+    let myChance = (myScore + enemyScore > 0) ? (myScore / (myScore + enemyScore)) * 100 : 50;
+    myChance = Math.max(5, Math.min(95, myChance));
+
+    // відображення у HTML
+    document.getElementById('summaryMyTeam').innerHTML = myTeam.map(h => `<li>🟩 ${h}</li>`).join('');
+    document.getElementById('summaryEnemyTeam').innerHTML = enemyTeam.map(h => `<li>🟥 ${h}</li>`).join('');
     document.getElementById('summaryChance').textContent = `Шанс на перемогу: ${myChance.toFixed(0)}%`;
     document.getElementById('summaryBar').style.width = `${myChance}%`;
     document.getElementById('draftSummary').style.display = 'block';
     document.getElementById('results').style.display = 'none';
+    document.getElementById('summaryBehavior').textContent = behaviorText;
 
-
-    updateTeamDisplays(false); // залишаємо останні вибрані герої в списках
+    // залишаємо останні вибрані герої в списках
+    updateTeamDisplays(false);
 }
+
  
 
 
