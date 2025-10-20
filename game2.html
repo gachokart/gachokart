@@ -1585,28 +1585,30 @@ function calculateBestPicks() {
   
 
 heroes.forEach(hero => {
-    const usedHeroes = [...allMyHeroes, ...allEnemyHeroes, ...getSelectedHeroes('#myTeam'), ...getSelectedHeroes('#enemyTeam')];
+    const usedHeroes = [...allMyHeroes, ...allEnemyHeroes, ...myHeroes, ...enemyHeroes];
+
 heroes.forEach(hero => {
-  if (usedHeroes.includes(hero.name)) return;
+    if (usedHeroes.includes(hero.name)) return; // ❌ пропускаємо героїв, які вже обрані
+
     let score = 0;
-    const winNorm = (hero.winrate-0.5)/0.5;
-    const pickNorm = Math.log(1+hero.pickrate*100)/Math.log(101);
+    const winNorm = (hero.winrate - 0.5)/0.5;
+    const pickNorm = Math.log(1 + hero.pickrate*100)/Math.log(101);
     score += weights.winrate*winNorm + weights.pickrate*pickNorm;
     score += getAdaptiveCounterScore(hero)*weights.counters;
     score += getSynergyScore(hero)*weights.synergy;
     score -= getDuplicatePenalty(hero);
     score += getMissingRoleBonus(hero)*weights.roles;
 
-    // застосовуємо поведінкові фактори
+    // поведінкові фактори
     if (behaviorMode) {
-      score *= getToxicityRisk(hero);
-      score *= harmony;
-      score *= stability;
-      score *= (1 + influence);
+        score *= getToxicityRisk(hero);
+        score *= harmony;
+        score *= stability;
+        score *= (1 + influence);
     }
 
     scores.push({hero: hero.name, score: Number(score.toFixed(4))});
-  });
+});
 
   scores.sort((a,b)=>b.score-a.score);
   displayTop(scores);
