@@ -1601,6 +1601,10 @@ function nextStage() {
     const mySelected = getSelectedHeroes('#myTeam');
     const enemySelected = getSelectedHeroes('#enemyTeam');
     const limits = stageLimits[stage - 1];
+  const stageTitle = document.getElementById('stageTitle');
+function updateStageTitle() {
+  stageTitle.textContent = `Stage ${stage}`;
+}
 
     // перевіряємо, чи обрано потрібну кількість героїв
     if (mySelected.length < limits.my || enemySelected.length < limits.enemy) {
@@ -1614,6 +1618,7 @@ function nextStage() {
 
     if (stage < 3) {
         stage++; // переходимо на наступну стадію
+      updateStageTitle();
         updateTeamDisplays(true);
         createSelectors(allMyHeroes, allEnemyHeroes); // створюємо нові селектори тільки для нових пік стадії
         calculateBestPicks();
@@ -1678,19 +1683,7 @@ function showFinalChance() {
 
     updateTeamDisplays(false); // залишаємо останні вибрані герої в списках
 }
-  const stageTitle = document.getElementById('stageTitle');
-const nextBtn = document.getElementById('nextBtn');
-
-nextBtn.addEventListener('click', () => {
-  // Твоя логіка драфту тут...
-  stage++;
-  if (stage > 3) stage = 1;
-  updateStageTitle();
-});
-
-function updateStageTitle() {
-  stageTitle.textContent = `Stage ${stage}`;
-}
+ 
 
 
 
