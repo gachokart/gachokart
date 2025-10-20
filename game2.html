@@ -1546,17 +1546,35 @@ function calculateBestPicks() {
   }
 
   function getAdaptiveCounterScore(hero) {
-    if (!enemyHeroes.length) return 0;
-    let score = 0;
-    enemyHeroes.forEach(enemy => {
-      const enemyHero = heroes.find(h=>h.name===enemy);
-      if(!enemyHero) return;
-      if(hero.BestCounters?.includes(enemy)) score += 2.0;
-      if(hero.commonCounters?.includes(enemy)) score += 1.0;
-    });
-    if(hero.roles.some(r=>keyRoles.includes(r))) score *= stageRoleMultiplier;
-    return score;
-  }
+  if (!enemyHeroes.length) return 0;
+  let score = 0;
+
+  enemyHeroes.forEach(enemy => {
+    const bestList = hero.BestCounters || [];
+    const commonList = hero.commonCounters || [];
+
+    // шукаємо індекси ворогів у масивах
+    const bestIndex = bestList.indexOf(enemy);
+    const commonIndex = commonList.indexOf(enemy);
+
+    // якщо ворог у BestCounters — додаємо вагу, що спадає з позицією
+    if (bestIndex !== -1) {
+      const weight = 1 - (bestIndex / (bestList.length - 1 || 1)); // від 1 → 0
+      score += 2.0 * weight; // максимальна вага 2.0 для BestCounters
+    }
+
+    // якщо ворог у commonCounters — аналогічно, але менша базова вага
+    if (commonIndex !== -1) {
+      const weight = 1 - (commonIndex / (commonList.length - 1 || 1));
+      score += 1.0 * weight; // максимальна вага 1.0
+    }
+  });
+
+  // посилення для ключових ролей у певних стадіях
+  if (hero.roles.some(r => keyRoles.includes(r))) score *= stageRoleMultiplier;
+  return score;
+}
+
 
   const behaviorMode = document.getElementById('behaviorMode').checked;
   const stability = behaviorMode ? getPlayerStability() : 1.0;
