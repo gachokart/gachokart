@@ -1373,8 +1373,11 @@ document.addEventListener('DOMContentLoaded', () => { createSelectors(); updateT
 function createSelectors(savedMy = [], savedEnemy = []) {
   const myTeamDiv = document.getElementById('myTeam');
   const enemyTeamDiv = document.getElementById('enemyTeam');
-  myTeamDiv.innerHTML = "<h2>Моя команда</h2>";
-  enemyTeamDiv.innerHTML = "<h2>Суперник</h2>";
+
+  // ВИДАЛЯЄМО повторне додавання <h2>, вони вже є в HTML
+  // myTeamDiv.innerHTML = "<h2>Моя команда</h2>";
+  // enemyTeamDiv.innerHTML = "<h2>Суперник</h2>";
+
   const limits = stageLimits[stage - 1];
 
   createTeamSelectors(myTeamDiv, limits.my, savedMy);
