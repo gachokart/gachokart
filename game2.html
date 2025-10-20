@@ -1424,16 +1424,30 @@ function createTeamSelectors(container, count, saved = []) {
 // ====================== БЛОКУВАННЯ ПОВТОРІВ ======================
 function updateSelects() {
   const selects = Array.from(document.querySelectorAll('select'));
-  const selectedHeroes = selects.map(s => s.value).filter(v => v !== '');
+
+  // 🔹 усі вибрані герої з попередніх стадій
+  const previouslySelected = [...allMyHeroes, ...allEnemyHeroes];
+
+  // 🔹 вибрані зараз у поточній стадії
+  const currentlySelected = selects.map(s => s.value).filter(v => v !== '');
+
+  // 🔹 разом усі заблоковані
+  const blockedHeroes = [...new Set([...previouslySelected, ...currentlySelected])];
+
   selects.forEach(select => {
     const current = select.value;
     Array.from(select.options).forEach(opt => {
-      if (opt.value === '') opt.disabled = false;
-      else opt.disabled = selectedHeroes.includes(opt.value) && opt.value !== current;
-      opt.style.color = opt.disabled ? '#aaa' : '#000';
+      if (opt.value === '') {
+        opt.disabled = false;
+        return;
+      }
+      // 🔹 якщо герой вже десь вибраний (але не цей конкретний select)
+      opt.disabled = blockedHeroes.includes(opt.value) && opt.value !== current;
+      opt.style.color = opt.disabled ? '#777' : '#000';
     });
   });
 }
+
 
 // ====================== ВАГИ СТАДІЙ ======================
 function getWeightsByStage(stage) {
