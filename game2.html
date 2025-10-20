@@ -1609,11 +1609,63 @@ function calculateBestPicks() {
 }
 
 // ====================== ВІДОБРАЖЕННЯ ======================
-function displayTop(scores){
+function displayTop(scores) {
   const resultDiv = document.getElementById('results');
-  resultDiv.innerHTML = `<h2>Топ герої для наступного піку:</h2>`+
-    scores.slice(0,5).map(t=>`<div class="hero"><h3>${t.hero}</h3><p>Оцінка: ${t.score.toFixed(3)}</p></div>`).join('');
+  resultDiv.innerHTML = `<h2>Топ герої для наступного піку:</h2>`;
+
+  // Розділяємо героїв за ролями
+  const carryHeroes = scores
+    .map(s => ({
+      ...s,
+      heroData: heroes.find(h => h.name === s.hero)
+    }))
+    .filter(s => s.heroData?.roles.includes('Carry'))
+    .slice(0, 5);
+
+  const supportHeroes = scores
+    .map(s => ({
+      ...s,
+      heroData: heroes.find(h => h.name === s.hero)
+    }))
+    .filter(s => s.heroData?.roles.includes('Support'))
+    .slice(0, 5);
+
+  // HTML структура у 2 колонки
+  resultDiv.innerHTML += `
+    <div style="
+      display: flex; 
+      justify-content: space-around; 
+      align-items: flex-start; 
+      gap: 20px;
+      flex-wrap: wrap;
+    ">
+      <div style="flex:1; min-width:200px;">
+        <h3 style="color:#00ff88;">⚔️ Carry</h3>
+        ${carryHeroes.length
+          ? carryHeroes.map(t => `
+            <div class="hero">
+              <h4>${t.hero}</h4>
+              <p>Оцінка: ${t.score.toFixed(3)}</p>
+            </div>`).join('')
+          : '<p style="opacity:0.7;">(Немає Carry у топі)</p>'
+        }
+      </div>
+
+      <div style="flex:1; min-width:200px;">
+        <h3 style="color:#33aaff;">🩹 Support</h3>
+        ${supportHeroes.length
+          ? supportHeroes.map(t => `
+            <div class="hero">
+              <h4>${t.hero}</h4>
+              <p>Оцінка: ${t.score.toFixed(3)}</p>
+            </div>`).join('')
+          : '<p style="opacity:0.7;">(Немає Support у топі)</p>'
+        }
+      </div>
+    </div>
+  `;
 }
+
 
 // ====================== ЕТАПИ ======================
 let stage = 1;
