@@ -1683,22 +1683,17 @@ function nextStage() {
     allMyHeroes.push(...mySelected);
     allEnemyHeroes.push(...enemySelected);
 
-    if (stage < 3) {
-        stage++; // переходимо на наступну стадію
-        updateStageTitle();
+   if (stage < 3) {
+    stage++; // переходимо на наступну стадію
+    updateStageTitle();
+    updateTeamDisplays(true);
 
-        // очищаємо селектори перед новими
-        const myTeamDiv = document.getElementById('myTeam');
-        const enemyTeamDiv = document.getElementById('enemyTeam');
-        myTeamDiv.innerHTML = '';
-        enemyTeamDiv.innerHTML = '';
+    // Очистка селекторів для нової стадії
+    createSelectors([], []); // <-- Порожні масиви!
+    
+    calculateBestPicks();
+}
 
-        // створюємо нові селектори, передаючи вже вибраних героїв для блокування
-        createSelectors(allMyHeroes, allEnemyHeroes);
-
-        // оновлюємо команду та рекомендації
-        updateTeamDisplays(true);
-        calculateBestPicks();
     } else {
         showFinalChance(); // фінальна стадія
     }
