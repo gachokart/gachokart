@@ -1384,9 +1384,15 @@ function createSelectors(savedMy = [], savedEnemy = []) {
 }
 
 function createTeamSelectors(container, count, saved = []) {
+  const usedHeroes = [...allMyHeroes, ...allEnemyHeroes];
   const heroOptions = ['<option value="">Вибери героя</option>']
-    .concat(heroes.map(h => `<option value="${h.name}">${h.name}</option>`))
+    .concat(
+      heroes
+        .filter(h => !usedHeroes.includes(h.name)) // ❗ виключаємо вибраних
+        .map(h => `<option value="${h.name}">${h.name}</option>`)
+    )
     .join('');
+
   for (let i = 0; i < count; i++) {
     const wrapper = document.createElement('div');
     const input = document.createElement('input');
@@ -1395,7 +1401,6 @@ function createTeamSelectors(container, count, saved = []) {
 
     if (saved[i]) select.value = saved[i];
 
-    // 🔍 автопідсвічування при введенні
     input.placeholder = 'Пиши героя...';
     input.addEventListener('input', () => {
       const val = input.value.trim().toLowerCase();
@@ -1425,11 +1430,12 @@ function createTeamSelectors(container, count, saved = []) {
 function updateSelects() {
   const selects = Array.from(document.querySelectorAll('select'));
   const selectedHeroes = selects.map(s => s.value).filter(v => v !== '');
+  const globalUsed = [...allMyHeroes, ...allEnemyHeroes];
   selects.forEach(select => {
     const current = select.value;
     Array.from(select.options).forEach(opt => {
       if (opt.value === '') opt.disabled = false;
-      else opt.disabled = selectedHeroes.includes(opt.value) && opt.value !== current;
+      else opt.disabled = (selectedHeroes.includes(opt.value) || globalUsed.includes(opt.value)) && opt.value !== current;
       opt.style.color = opt.disabled ? '#aaa' : '#000';
     });
   });
