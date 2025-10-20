@@ -1383,6 +1383,21 @@ function createSelectors(savedMy = [], savedEnemy = []) {
   document.getElementById('nextBtn').onclick = nextStage;
 }
 
+function createSelectors(savedMy = [], savedEnemy = []) {
+  const myTeamDiv = document.getElementById('myTeam');
+  const enemyTeamDiv = document.getElementById('enemyTeam');
+  myTeamDiv.innerHTML = "<h2>Моя команда</h2>";
+  enemyTeamDiv.innerHTML = "<h2>Суперник</h2>";
+  const limits = stageLimits[stage - 1];
+
+  createTeamSelectors(myTeamDiv, limits.my, savedMy);
+  createTeamSelectors(enemyTeamDiv, limits.enemy, savedEnemy);
+
+  // 🔹 Після створення селекторів одразу блокуємо вже вибраних героїв
+  updateSelects();
+  document.getElementById('nextBtn').onclick = nextStage;
+}
+
 function createTeamSelectors(container, count, saved = []) {
   const heroOptions = ['<option value="">Вибери героя</option>']
     .concat(heroes.map(h => `<option value="${h.name}">${h.name}</option>`))
@@ -1395,7 +1410,6 @@ function createTeamSelectors(container, count, saved = []) {
 
     if (saved[i]) select.value = saved[i];
 
-    // 🔍 автопідсвічування при введенні
     input.placeholder = 'Пиши героя...';
     input.addEventListener('input', () => {
       const val = input.value.trim().toLowerCase();
@@ -1425,14 +1439,14 @@ function createTeamSelectors(container, count, saved = []) {
 function updateSelects() {
   const selects = Array.from(document.querySelectorAll('select'));
 
-  // 🔹 усі вибрані герої з попередніх стадій
+  // 🔹 Враховуємо усіх героїв з попередніх стадій
   const previouslySelected = [...allMyHeroes, ...allEnemyHeroes];
 
-  // 🔹 вибрані зараз у поточній стадії
-  const currentlySelected = selects.map(s => s.value).filter(v => v !== '');
+  // 🔹 Поточні вибрані у цій стадії
+  const currentSelected = selects.map(s => s.value).filter(v => v !== '');
 
-  // 🔹 разом усі заблоковані
-  const blockedHeroes = [...new Set([...previouslySelected, ...currentlySelected])];
+  // 🔹 Разом усі заблоковані
+  const blocked = [...new Set([...previouslySelected, ...currentSelected])];
 
   selects.forEach(select => {
     const current = select.value;
@@ -1441,8 +1455,8 @@ function updateSelects() {
         opt.disabled = false;
         return;
       }
-      // 🔹 якщо герой вже десь вибраний (але не цей конкретний select)
-      opt.disabled = blockedHeroes.includes(opt.value) && opt.value !== current;
+      // 🔹 якщо герой уже вибраний — блокуємо
+      opt.disabled = blocked.includes(opt.value) && opt.value !== current;
       opt.style.color = opt.disabled ? '#777' : '#000';
     });
   });
