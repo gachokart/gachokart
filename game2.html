@@ -1588,9 +1588,44 @@ function calculateBestPicks() {
 // ====================== ВІДОБРАЖЕННЯ ======================
 function displayTop(scores){
   const resultDiv = document.getElementById('results');
-  resultDiv.innerHTML = `<h2>Топ герої для наступного піку:</h2>`+
-    scores.slice(0,5).map(t=>`<div class="hero"><h3>${t.hero}</h3><p>Оцінка: ${t.score.toFixed(3)}</p></div>`).join('');
+  
+  // відокремлюємо Carry та Support
+  const carryHeroes = [];
+  const supportHeroes = [];
+
+  for (let i = 0; i < scores.length; i++) {
+    const heroObj = scores[i];
+    const hero = heroes.find(h => h.name === heroObj.hero);
+
+    if (!hero) continue;
+
+    if (hero.roles.includes('Carry')) {
+      if (carryHeroes.length < 5) carryHeroes.push(heroObj);
+    } else if (hero.roles.includes('Support')) {
+      if (supportHeroes.length < 5) supportHeroes.push(heroObj);
+    }
+    
+    if (carryHeroes.length >=5 && supportHeroes.length >=5) break;
+  }
+
+  // якщо герой є і в Carry і в Support, переносимо в Carry, Support не дублюємо
+  const supportFiltered = supportHeroes.filter(s => !carryHeroes.some(c => c.hero === s.hero));
+
+  resultDiv.innerHTML = `
+    <h2>Топ герої для наступного піку:</h2>
+    <div style="display:flex; justify-content:space-around; flex-wrap:wrap;">
+      <div style="width:45%;">
+        <h3>🟩 Carry</h3>
+        ${carryHeroes.map(t=>`<div class="hero"><h4>${t.hero}</h4><p>Оцінка: ${t.score.toFixed(3)}</p></div>`).join('')}
+      </div>
+      <div style="width:45%;">
+        <h3>🟦 Support</h3>
+        ${supportFiltered.map(t=>`<div class="hero"><h4>${t.hero}</h4><p>Оцінка: ${t.score.toFixed(3)}</p></div>`).join('')}
+      </div>
+    </div>
+  `;
 }
+
 
 // ====================== ЕТАПИ ======================
 let stage = 1;
