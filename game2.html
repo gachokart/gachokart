@@ -1527,21 +1527,33 @@ function calculateBestPicks() {
     let score = 0;
     myHeroes.forEach(my => {
       const ally = heroes.find(h => h.name === my);
-      if (ally) ally.roles.forEach(r => { if (hero.roles.includes(r)) { let m = keyRoles.includes(r)?stageRoleMultiplier:1; score += (roleWeights[r]||1)*m; }});
+      if (ally)
+        ally.roles.forEach(r => {
+          if (hero.roles.includes(r)) {
+            let m = keyRoles.includes(r) ? stageRoleMultiplier : 1;
+            score += (roleWeights[r] || 1) * m;
+          }
+        });
     });
     return score;
   }
 
   function getDuplicatePenalty(hero) {
     let penalty = 0;
-    hero.roles.forEach(r => { if (roleCount[r] && roleCount[r]>1) penalty += (roleWeights[r]||1)*(roleCount[r]-1); });
+    hero.roles.forEach(r => {
+      if (roleCount[r] && roleCount[r] > 1)
+        penalty += (roleWeights[r] || 1) * (roleCount[r] - 1);
+    });
     return penalty;
   }
 
   function getMissingRoleBonus(hero) {
     let bonus = 0;
     Object.keys(roleWeights).forEach(r => {
-      if (!roleCount[r] && hero.roles.includes(r)) { let m = keyRoles.includes(r)?stageRoleMultiplier:1; bonus += roleWeights[r]*m; }
+      if (!roleCount[r] && hero.roles.includes(r)) {
+        let m = keyRoles.includes(r) ? stageRoleMultiplier : 1;
+        bonus += roleWeights[r] * m;
+      }
     });
     return bonus;
   }
@@ -1550,12 +1562,12 @@ function calculateBestPicks() {
     if (!enemyHeroes.length) return 0;
     let score = 0;
     enemyHeroes.forEach(enemy => {
-      const enemyHero = heroes.find(h=>h.name===enemy);
-      if(!enemyHero) return;
-      if(hero.BestCounters?.includes(enemy)) score += 2.0;
-      if(hero.commonCounters?.includes(enemy)) score += 1.0;
+      const enemyHero = heroes.find(h => h.name === enemy);
+      if (!enemyHero) return;
+      if (hero.BestCounters?.includes(enemy)) score += 2.0;
+      if (hero.commonCounters?.includes(enemy)) score += 1.0;
     });
-    if(hero.roles.some(r=>keyRoles.includes(r))) score *= stageRoleMultiplier;
+    if (hero.roles.some(r => keyRoles.includes(r))) score *= stageRoleMultiplier;
     return score;
   }
 
@@ -1564,22 +1576,28 @@ function calculateBestPicks() {
   const influence = behaviorMode ? getRandomPlayerInfluence() : 0.0;
   const harmony = behaviorMode ? getTeamHarmony(myHeroes) : 1.0;
 
+  // 🧱 Головне: список усіх вибраних героїв для блокування
+  const takenHeroes = new Set([
+    ...allMyHeroes,
+    ...allEnemyHeroes,
+    ...myHeroes,
+    ...enemyHeroes
+  ]);
+
   let scores = [];
+
+  // 🧩 Розрахунок оцінки лише для доступних героїв
   heroes.forEach(hero => {
-    if (
-  allMyHeroes.includes(hero.name) ||
-  allEnemyHeroes.includes(hero.name) ||
-  myHeroes.includes(hero.name) ||
-  enemyHeroes.includes(hero.name)
-) return;
+    if (takenHeroes.has(hero.name)) return; // блокуємо вибраних героїв
+
     let score = 0;
-    const winNorm = (hero.winrate-0.5)/0.5;
-    const pickNorm = Math.log(1+hero.pickrate*100)/Math.log(101);
-    score += weights.winrate*winNorm + weights.pickrate*pickNorm;
-    score += getAdaptiveCounterScore(hero)*weights.counters;
-    score += getSynergyScore(hero)*weights.synergy;
+    const winNorm = (hero.winrate - 0.5) / 0.5;
+    const pickNorm = Math.log(1 + hero.pickrate * 100) / Math.log(101);
+    score += weights.winrate * winNorm + weights.pickrate * pickNorm;
+    score += getAdaptiveCounterScore(hero) * weights.counters;
+    score += getSynergyScore(hero) * weights.synergy;
     score -= getDuplicatePenalty(hero);
-    score += getMissingRoleBonus(hero)*weights.roles;
+    score += getMissingRoleBonus(hero) * weights.roles;
 
     // застосовуємо поведінкові фактори
     if (behaviorMode) {
@@ -1589,48 +1607,48 @@ function calculateBestPicks() {
       score *= (1 + influence);
     }
 
-    scores.push({hero: hero.name, score: Number(score.toFixed(4))});
+    // додаємо невелику варіативність, щоб рекомендації не повторювались
+    score += (Math.random() - 0.5) * 0.05; // ±2.5%
+
+    scores.push({ hero: hero.name, roles: hero.roles, score: Number(score.toFixed(4)) });
   });
 
-  // Додай невеликий розкид, щоб не було статичних результатів
-scores.forEach(s => {
-  s.score += (Math.random() - 0.5) * 0.05; // ±2.5% випадковість
-});
-
-// динамічне підсилення контрпік факторів, якщо ворогів уже більше двох
-if (enemyHeroes.length >= 2) {
-  scores.forEach(s => {
-    const hero = heroes.find(h => h.name === s.hero);
-    if (!hero) return;
-    let adaptiveBonus = 0;
-    enemyHeroes.forEach(enemy => {
-      if (hero.BestCounters?.includes(enemy)) adaptiveBonus += 0.5;
-      if (hero.commonCounters?.includes(enemy)) adaptiveBonus += 0.2;
-    });
-    s.score += adaptiveBonus;
-  });
-}
-
-// підсилення синергії після 1 стадії
-if (myHeroes.length >= 2) {
-  scores.forEach(s => {
-    const hero = heroes.find(h => h.name === s.hero);
-    if (!hero) return;
-    let synergyBoost = 0;
-    myHeroes.forEach(my => {
-      const ally = heroes.find(h => h.name === my);
-      if (!ally) return;
-      ally.roles.forEach(r => {
-        if (hero.roles.includes(r)) synergyBoost += 0.1;
+  // 🧠 Адаптивне підсилення при більшій кількості ворогів
+  if (enemyHeroes.length >= 2) {
+    scores.forEach(s => {
+      const hero = heroes.find(h => h.name === s.hero);
+      if (!hero) return;
+      let adaptiveBonus = 0;
+      enemyHeroes.forEach(enemy => {
+        if (hero.BestCounters?.includes(enemy)) adaptiveBonus += 0.5;
+        if (hero.commonCounters?.includes(enemy)) adaptiveBonus += 0.2;
       });
+      s.score += adaptiveBonus;
     });
-    s.score += synergyBoost;
-  });
-}
+  }
 
-scores.sort((a,b)=>b.score-a.score);
-displayTop(scores);
+  // ⚔️ Підсилення синергії після 1 стадії
+  if (myHeroes.length >= 2) {
+    scores.forEach(s => {
+      const hero = heroes.find(h => h.name === s.hero);
+      if (!hero) return;
+      let synergyBoost = 0;
+      myHeroes.forEach(my => {
+        const ally = heroes.find(h => h.name === my);
+        if (!ally) return;
+        ally.roles.forEach(r => {
+          if (hero.roles.includes(r)) synergyBoost += 0.1;
+        });
+      });
+      s.score += synergyBoost;
+    });
+  }
 
+  // 🏆 Сортуємо за результатом
+  scores.sort((a, b) => b.score - a.score);
+
+  // 🧭 Відображення — 5 Carry і 5 Support
+  displayTop(scores);
 }
 
 // ====================== ВІДОБРАЖЕННЯ ======================
