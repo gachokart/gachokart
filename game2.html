@@ -1560,7 +1560,12 @@ function calculateBestPicks() {
 
   let scores = [];
   heroes.forEach(hero => {
-    if (myHeroes.includes(hero.name) || enemyHeroes.includes(hero.name)) return;
+    if (
+  allMyHeroes.includes(hero.name) ||
+  allEnemyHeroes.includes(hero.name) ||
+  myHeroes.includes(hero.name) ||
+  enemyHeroes.includes(hero.name)
+) return;
     let score = 0;
     const winNorm = (hero.winrate-0.5)/0.5;
     const pickNorm = Math.log(1+hero.pickrate*100)/Math.log(101);
@@ -1590,8 +1595,26 @@ function displayTop(scores){
   const resultDiv = document.getElementById('results');
   
   // відокремлюємо Carry та Support
-  const carryHeroes = [];
-  const supportHeroes = [];
+ const usedHeroes = [...allMyHeroes, ...allEnemyHeroes];
+
+const carryHeroes = scores
+  .filter(s => !usedHeroes.includes(s.hero))
+  .map(s => ({
+    ...s,
+    heroData: heroes.find(h => h.name === s.hero)
+  }))
+  .filter(s => s.heroData?.roles.includes('Carry'))
+  .slice(0, 5);
+
+const supportHeroes = scores
+  .filter(s => !usedHeroes.includes(s.hero))
+  .map(s => ({
+    ...s,
+    heroData: heroes.find(h => h.name === s.hero)
+  }))
+  .filter(s => s.heroData?.roles.includes('Support'))
+  .slice(0, 5);
+
 
   for (let i = 0; i < scores.length; i++) {
     const heroObj = scores[i];
