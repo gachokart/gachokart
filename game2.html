@@ -1588,53 +1588,66 @@ function calculateBestPicks() {
 // ====================== ВІДОБРАЖЕННЯ ======================
 function displayTop(scores) {
   const resultDiv = document.getElementById('results');
-  const topHeroes = scores.slice(0, 30); // беремо запас, щоб точно знайти 5 Carry і 5 Support
+  const topHeroes = scores.slice(0, 30); // запас, щоб знайти потрібні ролі
 
-  // 🔹 Фільтруємо за ролями
+  // 🔹 Фільтруємо Carry першими
   const carryHeroes = topHeroes.filter(t => {
     const hero = heroes.find(h => h.name === t.hero);
     return hero?.roles.includes('Carry');
   }).slice(0, 5);
 
+  // 🔹 Потім Support, але виключаємо героїв, які вже є в Carry
   const supportHeroes = topHeroes.filter(t => {
     const hero = heroes.find(h => h.name === t.hero);
-    return hero?.roles.includes('Support');
+    return hero?.roles.includes('Support') && !carryHeroes.some(c => c.hero === t.hero);
   }).slice(0, 5);
 
   // 🔹 HTML-відображення
   resultDiv.innerHTML = `
-    <h2 style="text-align:center; margin-bottom:10px;">Топ герої для наступного піку</h2>
+    <h2 style="text-align:center; margin-bottom:15px;">Топ герої для наступного піку</h2>
     <div style="
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 40px;
-      flex-wrap: wrap;
+      justify-items: center;
       padding: 10px;
+      text-align: center;
     ">
       <!-- Carry колонка -->
-      <div style="flex:1; min-width:250px;">
-        <h3 style="text-align:center; color:#ffcc00;">⚔ Carry</h3>
+      <div style="width:100%; max-width:300px;">
+        <h3 style="color:#ffcc00; margin-bottom:8px;">⚔ Carry</h3>
         ${carryHeroes.length
           ? carryHeroes.map(t => `
-              <div class="hero" style="background:#222; margin:6px 0; padding:8px 10px; border-radius:10px; box-shadow:0 0 6px #000;">
+              <div class="hero" style="
+                background:#222;
+                margin:6px 0;
+                padding:8px 10px;
+                border-radius:10px;
+                box-shadow:0 0 6px #000;
+              ">
                 <strong>${t.hero}</strong><br>
                 <small>Оцінка: ${t.score.toFixed(3)}</small>
               </div>`).join('')
-          : '<p style="opacity:0.6; text-align:center;">(немає Carry серед топів)</p>'
+          : '<p style="opacity:0.6;">(немає Carry серед топів)</p>'
         }
       </div>
 
       <!-- Support колонка -->
-      <div style="flex:1; min-width:250px;">
-        <h3 style="text-align:center; color:#66ff99;">🛡 Support</h3>
+      <div style="width:100%; max-width:300px;">
+        <h3 style="color:#66ff99; margin-bottom:8px;">🛡 Support</h3>
         ${supportHeroes.length
           ? supportHeroes.map(t => `
-              <div class="hero" style="background:#222; margin:6px 0; padding:8px 10px; border-radius:10px; box-shadow:0 0 6px #000;">
+              <div class="hero" style="
+                background:#222;
+                margin:6px 0;
+                padding:8px 10px;
+                border-radius:10px;
+                box-shadow:0 0 6px #000;
+              ">
                 <strong>${t.hero}</strong><br>
                 <small>Оцінка: ${t.score.toFixed(3)}</small>
               </div>`).join('')
-          : '<p style="opacity:0.6; text-align:center;">(немає Support серед топів)</p>'
+          : '<p style="opacity:0.6;">(немає Support серед топів)</p>'
         }
       </div>
     </div>
