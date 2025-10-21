@@ -1747,7 +1747,7 @@ const universalHeroes = topHeroes.filter(t => {
         universalHeroes.length
           ? universalHeroes.map(t => `
               <div class="hero" style="box-shadow:0 0 10px #66ccff;">
-                <strong>${t.name}</strong><br>
+                <strong>${t.hero}</strong><br>
                 <small>Бали: ${t.score.toFixed(3)}</small>
               </div>`).join('')
           : '<p style="opacity:0.6;">(немає універсальних серед топів)</p>'
