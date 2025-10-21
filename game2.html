@@ -1400,7 +1400,9 @@ const heroes = [
    // можеш додати всі інших героїв сюди
 ];
 
+// Припустимо, у тебе є масив heroes (як у прикладі з Wraith King)
 
+const universalHeroes = heroes.filter(h => h.roles.includes("Carry") && h.roles.includes("Support"));
 // ====================== ВАГИ РОЛЕЙ ======================
 const roleWeights = { Carry: 1.0, Disabler: 0.9, Durable: 0.8, Initiator: 0.9, Escape: 0.6, Nuker: 0.7, Pusher: 0.8, Support: 0.9, Ranged: 0.5, Melee: 0.5 };
 
@@ -1691,39 +1693,55 @@ function displayTop(scores) {
   }).slice(0, 5);
 
   // 🔹 HTML-відображення
-  resultDiv.innerHTML = `
+ resultDiv.innerHTML = `
   <h2 style="text-align:center; margin-bottom:15px;">
     Топ герої для наступного піку
   </h2>
   <div id="resultsGrid">
-    <!-- Carry колонка -->
+    <!-- Carry -->
     <div class="resultColumn">
       <h3 style="color:#ffcc00;">⚔ Carry</h3>
       ${
         carryHeroes.length
           ? carryHeroes.map(t => `
               <div class="hero">
-                <strong>${t.hero}</strong><br>
-                <small>Оцінка: ${t.score.toFixed(3)}</small>
+                <strong>${t.name}</strong><br>
+                <small>Winrate: ${(t.winrate*100).toFixed(1)}%</small>
               </div>`).join('')
           : '<p style="opacity:0.6;">(немає Carry серед топів)</p>'
       }
     </div>
 
-    <!-- Support колонка -->
+    <!-- Support -->
     <div class="resultColumn">
       <h3 style="color:#66ff99;">🛡 Support</h3>
       ${
         supportHeroes.length
           ? supportHeroes.map(t => `
               <div class="hero">
-                <strong>${t.hero}</strong><br>
-                <small>Оцінка: ${t.score.toFixed(3)}</small>
+                <strong>${t.name}</strong><br>
+                <small>Winrate: ${(t.winrate*100).toFixed(1)}%</small>
               </div>`).join('')
           : '<p style="opacity:0.6;">(немає Support серед топів)</p>'
       }
     </div>
+
+    <!-- Універсальні -->
+    <div class="resultColumn">
+      <h3 style="color:#66ccff;">🔄 Універсальні</h3>
+      ${
+        universalHeroes.length
+          ? universalHeroes.map(t => `
+              <div class="hero" style="box-shadow:0 0 10px #66ccff;">
+                <strong>${t.name}</strong><br>
+                <small>Winrate: ${(t.winrate*100).toFixed(1)}%</small>
+              </div>`).join('')
+          : '<p style="opacity:0.6;">(немає універсальних серед топів)</p>'
+      }
+    </div>
   </div>
+
+
   `;
 }
 
