@@ -1699,12 +1699,11 @@ function displayTop(scores) {
     return hero?.roles.includes('Support') && !carryHeroes.some(c => c.hero === t.hero);
   }).slice(0, 5);
 
-  const universalHeroes = topHeroes.filter(t => {
+  // Універсальні = ті, хто має і Carry, і Support
+// але беремо тільки з topHeroes (тобто з урахуванням поточного стану)
+const universalHeroes = topHeroes.filter(t => {
   const hero = heroes.find(h => h.name === t.hero);
-  return hero?.roles.includes('Carry') 
-      && hero?.roles.includes('Support')
-      && !carryHeroes.some(c => c.hero === t.hero)
-      && !supportHeroes.some(s => s.hero === t.hero);
+  return hero?.roles.includes('Carry') && hero?.roles.includes('Support');
 }).slice(0, 5);
 
 
