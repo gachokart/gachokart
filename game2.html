@@ -1503,99 +1503,6 @@ function getRandomPlayerInfluence() {
 }
 
 // ====================== РОЗРАХУНОК ======================
-function calculateBestPicks() {
-  // 🧩 Об'єднуємо героїв з усіх стадій + поточні вибори
-const mySelectedNow = getSelectedHeroes('#myTeam');
-const enemySelectedNow = getSelectedHeroes('#enemyTeam');
-const myHeroes = [...new Set([...allMyHeroes, ...mySelectedNow])];
-const enemyHeroes = [...new Set([...allEnemyHeroes, ...enemySelectedNow])];
-  const stageNow = Math.min(stage, 3);
-  const weights = getWeightsByStage(stageNow);
-  const keyRoles = ['Carry', 'Support', 'Disabler', 'Initiator'];
-  const stageRoleMultiplier = stageNow === 1 ? 1.2 : stageNow === 2 ? 1.1 : 1.0;
-
-  const roleCount = {};
-  myHeroes.forEach(my => {
-    const h = heroes.find(x => x.name === my);
-    if (h) h.roles.forEach(r => roleCount[r] = (roleCount[r] || 0) + 1);
-  });
-
-  function getSynergyScore(hero) {
-    let score = 0;
-    myHeroes.forEach(my => {
-      const ally = heroes.find(h => h.name === my);
-      if (ally) ally.roles.forEach(r => { if (hero.roles.includes(r)) { let m = keyRoles.includes(r)?stageRoleMultiplier:1; score += (roleWeights[r]||1)*m; }});
-    });
-    return score;
-  }
-
-  function getDuplicatePenalty(hero) {
-    let penalty = 0;
-    hero.roles.forEach(r => { if (roleCount[r] && roleCount[r]>1) penalty += (roleWeights[r]||1)*(roleCount[r]-1); });
-    return penalty;
-  }
-
-  function getMissingRoleBonus(hero) {
-    let bonus = 0;
-    Object.keys(roleWeights).forEach(r => {
-      if (!roleCount[r] && hero.roles.includes(r)) { let m = keyRoles.includes(r)?stageRoleMultiplier:1; bonus += roleWeights[r]*m; }
-    });
-    return bonus;
-  }
-
-  function getAdaptiveCounterScore(hero) {
-    if (!enemyHeroes.length) return 0;
-    let score = 0;
-    enemyHeroes.forEach(enemy => {
-      const enemyHero = heroes.find(h=>h.name===enemy);
-      if(!enemyHero) return;
-      if(hero.BestCounters?.includes(enemy)) score += 2.0;
-      if(hero.commonCounters?.includes(enemy)) score += 1.0;
-    });
-    if(hero.roles.some(r=>keyRoles.includes(r))) score *= stageRoleMultiplier;
-    return score;
-  }
-
-  const behaviorMode = document.getElementById('behaviorMode').checked;
-  const stability = behaviorMode ? getPlayerStability() : 1.0;
-  const influence = behaviorMode ? getRandomPlayerInfluence() : 0.0;
-  const harmony = behaviorMode ? getTeamHarmony(myHeroes) : 1.0;
-
-  let scores = [];
-  heroes.forEach(hero => {
-    if (myHeroes.includes(hero.name) || enemyHeroes.includes(hero.name)) return;
-    let score = 0;
-    const winNorm = (hero.winrate-0.5)/0.5;
-    const pickNorm = Math.log(1+hero.pickrate*100)/Math.log(101);
-    score += weights.winrate*winNorm + weights.pickrate*pickNorm;
-    score += getAdaptiveCounterScore(hero)*weights.counters;
-    score += getSynergyScore(hero)*weights.synergy;
-    score -= getDuplicatePenalty(hero);
-    score += getMissingRoleBonus(hero)*weights.roles;
-
-    // застосовуємо поведінкові фактори
-    if (behaviorMode) {
-      score *= getToxicityRisk(hero);
-      score *= harmony;
-      score *= stability;
-      score *= (1 + influence);
-    }
-
-    scores.push({hero: hero.name, score: Number(score.toFixed(4))});
-  });
-
- const recDiv = document.getElementById('recommendations');
-  if (recDiv) recDiv.innerHTML = '';
- scores.push({hero: hero.name, score: Number(score.toFixed(4))});
-
-// 🔹 Вставка фільтрації і сортування
-scores = scores.filter(s => s.score > 0);
-scores.sort((a, b) => b.score - a.score);
-
-// 🧩 показуємо нові рекомендації
-displayTop(scores);
- 
-}
 
 // ====================== ВІДОБРАЖЕННЯ ======================
 function displayTop(scores) {
@@ -1710,6 +1617,99 @@ function nextStage() {
   }
 }
 
+function calculateBestPicks() {
+  // 🧩 Об'єднуємо героїв з усіх стадій + поточні вибори
+const mySelectedNow = getSelectedHeroes('#myTeam');
+const enemySelectedNow = getSelectedHeroes('#enemyTeam');
+const myHeroes = [...new Set([...allMyHeroes, ...mySelectedNow])];
+const enemyHeroes = [...new Set([...allEnemyHeroes, ...enemySelectedNow])];
+  const stageNow = Math.min(stage, 3);
+  const weights = getWeightsByStage(stageNow);
+  const keyRoles = ['Carry', 'Support', 'Disabler', 'Initiator'];
+  const stageRoleMultiplier = stageNow === 1 ? 1.2 : stageNow === 2 ? 1.1 : 1.0;
+
+  const roleCount = {};
+  myHeroes.forEach(my => {
+    const h = heroes.find(x => x.name === my);
+    if (h) h.roles.forEach(r => roleCount[r] = (roleCount[r] || 0) + 1);
+  });
+
+  function getSynergyScore(hero) {
+    let score = 0;
+    myHeroes.forEach(my => {
+      const ally = heroes.find(h => h.name === my);
+      if (ally) ally.roles.forEach(r => { if (hero.roles.includes(r)) { let m = keyRoles.includes(r)?stageRoleMultiplier:1; score += (roleWeights[r]||1)*m; }});
+    });
+    return score;
+  }
+
+  function getDuplicatePenalty(hero) {
+    let penalty = 0;
+    hero.roles.forEach(r => { if (roleCount[r] && roleCount[r]>1) penalty += (roleWeights[r]||1)*(roleCount[r]-1); });
+    return penalty;
+  }
+
+  function getMissingRoleBonus(hero) {
+    let bonus = 0;
+    Object.keys(roleWeights).forEach(r => {
+      if (!roleCount[r] && hero.roles.includes(r)) { let m = keyRoles.includes(r)?stageRoleMultiplier:1; bonus += roleWeights[r]*m; }
+    });
+    return bonus;
+  }
+
+  function getAdaptiveCounterScore(hero) {
+    if (!enemyHeroes.length) return 0;
+    let score = 0;
+    enemyHeroes.forEach(enemy => {
+      const enemyHero = heroes.find(h=>h.name===enemy);
+      if(!enemyHero) return;
+      if(hero.BestCounters?.includes(enemy)) score += 2.0;
+      if(hero.commonCounters?.includes(enemy)) score += 1.0;
+    });
+    if(hero.roles.some(r=>keyRoles.includes(r))) score *= stageRoleMultiplier;
+    return score;
+  }
+
+  const behaviorMode = document.getElementById('behaviorMode').checked;
+  const stability = behaviorMode ? getPlayerStability() : 1.0;
+  const influence = behaviorMode ? getRandomPlayerInfluence() : 0.0;
+  const harmony = behaviorMode ? getTeamHarmony(myHeroes) : 1.0;
+
+  let scores = [];
+  heroes.forEach(hero => {
+    if (myHeroes.includes(hero.name) || enemyHeroes.includes(hero.name)) return;
+    let score = 0;
+    const winNorm = (hero.winrate-0.5)/0.5;
+    const pickNorm = Math.log(1+hero.pickrate*100)/Math.log(101);
+    score += weights.winrate*winNorm + weights.pickrate*pickNorm;
+    score += getAdaptiveCounterScore(hero)*weights.counters;
+    score += getSynergyScore(hero)*weights.synergy;
+    score -= getDuplicatePenalty(hero);
+    score += getMissingRoleBonus(hero)*weights.roles;
+
+    // застосовуємо поведінкові фактори
+    if (behaviorMode) {
+      score *= getToxicityRisk(hero);
+      score *= harmony;
+      score *= stability;
+      score *= (1 + influence);
+    }
+
+    scores.push({hero: hero.name, score: Number(score.toFixed(4))});
+  });
+
+ const recDiv = document.getElementById('recommendations');
+  if (recDiv) recDiv.innerHTML = '';
+ scores.push({hero: hero.name, score: Number(score.toFixed(4))});
+
+// 🔹 Вставка фільтрації і сортування
+scores = scores.filter(s => s.score > 0);
+scores.sort((a, b) => b.score - a.score);
+
+// 🧩 показуємо нові рекомендації
+displayTop(scores);
+ 
+}
 
 
 
