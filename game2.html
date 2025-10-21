@@ -1682,7 +1682,7 @@ function updateStageTitle() {
     if (stage < 3) {
         stage++; // переходимо на наступну стадію
       updateStageTitle();
-        updateTeamDisplays(true);
+        updateTeamDisplays(false);
         createSelectors(allMyHeroes, allEnemyHeroes); // створюємо нові селектори тільки для нових пік стадії
         calculateBestPicks();
     } else {
