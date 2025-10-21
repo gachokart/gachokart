@@ -143,51 +143,41 @@ button:hover {
 <h2 id="stageTitle">Stage 1</h2>
 
 <!-- Основні колонки -->
-<div id="mainContainer">
+<div id="mainContainer" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; max-width:1000px; margin:0 auto; gap:20px;">
 
   <!-- Ліва колонка: Моя команда -->
-  <div id="leftColumn">
+  <div id="leftColumn" style="flex:1; min-width:180px;">
     <div id="myTeam" class="team">
       <h3>🟦 Моя команда</h3>
-      <!-- Селектори героїв тут -->
     </div>
   </div>
 
-  <!-- Центральна колонка: Carry та Support -->
-  <div id="centerColumn">
-    <div id="carryColumn" class="roleColumn">
-      <h3>Carry</h3>
-    </div>
-    <div id="supportColumn" class="roleColumn">
-      <h3>Support</h3>
-    </div>
+  <!-- Центральна колонка: Carry -->
+  <div id="carryColumn" class="roleColumn" style="flex:1; min-width:160px;">
+    <h3>Carry</h3>
+  </div>
+
+  <!-- Центральна колонка: Support -->
+  <div id="supportColumn" class="roleColumn" style="flex:1; min-width:160px;">
+    <h3>Support</h3>
   </div>
 
   <!-- Права колонка: Ворог -->
-  <div id="rightColumn">
+  <div id="rightColumn" style="flex:1; min-width:180px;">
     <div id="enemyTeam" class="team">
       <h3>🟥 Суперники</h3>
-      <!-- Селектори ворогів тут -->
     </div>
   </div>
 
 </div>
 
-<!-- Кнопка Go -->
-<button id="nextBtn">Go</button>
-
-<!-- Результати драфту -->
-<div id="results"></div>
-
-<!-- Поведінковий фактор -->
-<div id="behaviorWrapper">
+<!-- Під колонками: чекбокс поведінки -->
+<div id="behaviorWrapper" style="text-align:center; margin-top:15px;">
   <label>
     <input type="checkbox" id="behaviorMode">
     🎭 Увімкнути поведінковий фактор
   </label>
 </div>
-
-<div id="behaviorInfo"></div>
 
 <script>
 
