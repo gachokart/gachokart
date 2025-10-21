@@ -1696,12 +1696,7 @@ function displayTop(scores) {
   }).slice(0, 5);
 
   // 🔹 HTML-відображення
- resultDiv.innerHTML = `
-  <h2 style="text-align:center; margin-bottom:15px;">
-    Топ герої для наступного піку
-  </h2>
-  <div id="resultsGrid">
-    <!-- Carry -->
+ <!-- Carry -->
 <div class="resultColumn">
   <h3 style="color:#ffcc00;">⚔ Carry</h3>
   ${
@@ -1709,8 +1704,7 @@ function displayTop(scores) {
       ? carryHeroes.map(t => `
           <div class="hero">
             <strong>${t.name}</strong><br>
-            <small>Winrate: ${(t.winrate * 100).toFixed(1)}%</small><br>
-            <small>Pickrate: ${(t.pickrate * 100).toFixed(1)}%</small>
+            <small>Бали: ${t.score.toFixed(3)}</small>
           </div>`).join('')
       : '<p style="opacity:0.6;">(немає Carry серед топів)</p>'
   }
@@ -1724,28 +1718,25 @@ function displayTop(scores) {
       ? supportHeroes.map(t => `
           <div class="hero">
             <strong>${t.name}</strong><br>
-            <small>Winrate: ${(t.winrate * 100).toFixed(1)}%</small><br>
-            <small>Pickrate: ${(t.pickrate * 100).toFixed(1)}%</small>
+            <small>Бали: ${t.score.toFixed(3)}</small>
           </div>`).join('')
       : '<p style="opacity:0.6;">(немає Support серед топів)</p>'
   }
 </div>
 
-    <!-- Універсальні -->
-    <div class="resultColumn">
-      <h3 style="color:#66ccff;">🔄 Універсальні</h3>
-      ${
-        universalHeroes.length
-          ? universalHeroes.map(t => `
-              <div class="hero" style="box-shadow:0 0 10px #66ccff;">
-                <strong>${t.name}</strong><br>
-                <small>Winrate: ${(t.winrate*100).toFixed(1)}%</small>
-              </div>`).join('')
-          : '<p style="opacity:0.6;">(немає універсальних серед топів)</p>'
-      }
-    </div>
-  </div>
-
+<!-- Універсальні -->
+<div class="resultColumn">
+  <h3 style="color:#66ccff;">🔄 Універсальні</h3>
+  ${
+    universalHeroes.length
+      ? universalHeroes.map(t => `
+          <div class="hero" style="box-shadow:0 0 10px #66ccff;">
+            <strong>${t.name}</strong><br>
+            <small>Бали: ${t.score.toFixed(3)}</small>
+          </div>`).join('')
+      : '<p style="opacity:0.6;">(немає універсальних серед топів)</p>'
+  }
+</div>
 
   `;
 }
