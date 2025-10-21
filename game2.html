@@ -1423,17 +1423,29 @@ function createTeamSelectors(container, count, saved = []) {
 
 // ====================== БЛОКУВАННЯ ПОВТОРІВ ======================
 function updateSelects() {
-  const myHeroes = getSelectedHeroes('#myTeam');
-  const enemyHeroes = getSelectedHeroes('#enemyTeam');
   const selects = Array.from(document.querySelectorAll('select'));
-  const selectedHeroes = selects.map(s => s.value).filter(v => v !== '');
+  const selectedHeroes = [
+    ...getSelectedHeroes('#myTeam'),
+    ...getSelectedHeroes('#enemyTeam')
+  ];
+
   selects.forEach(select => {
     const current = select.value;
-    Array.from(select.options).forEach(opt => {
-      if (opt.value === '') opt.disabled = false;
-      else opt.disabled = selectedHeroes.includes(opt.value) && opt.value !== current;
-      opt.style.color = opt.disabled ? '#aaa' : '#000';
+
+    // будуємо новий список опцій
+    let heroOptions = ['<option value="">Вибери героя</option>'];
+    heroes.forEach(h => {
+      // якщо герой вже вибраний десь, і це не поточний select — пропускаємо
+      if (selectedHeroes.includes(h.name) && h.name !== current) return;
+      heroOptions.push(`<option value="${h.name}">${h.name}</option>`);
     });
+
+    // оновлюємо HTML селектора
+    select.innerHTML = heroOptions.join('');
+    // відновлюємо значення, якщо воно ще є
+    if (current && !selectedHeroes.includes(current) || current === select.value) {
+      select.value = current;
+    }
   });
 }
 
