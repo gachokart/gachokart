@@ -1379,6 +1379,7 @@ function createSelectors(savedMy = [], savedEnemy = []) {
 
   createTeamSelectors(myTeamDiv, limits.my, savedMy);
   createTeamSelectors(enemyTeamDiv, limits.enemy, savedEnemy);
+
   updateSelects();
   document.getElementById('nextBtn').onclick = nextStage;
 }
@@ -1598,21 +1599,12 @@ function nextStage() {
     stage++;
     stageTitle.textContent = `Стадія ${stage}`;
 
-    // 🔹 Очищаємо старі селектори
-    const myTeamDiv = document.getElementById('myTeam');
-    const enemyTeamDiv = document.getElementById('enemyTeam');
-    myTeamDiv.innerHTML = "<h2>Моя команда</h2>";
-    enemyTeamDiv.innerHTML = "<h2>Суперник</h2>";
-
-    // 🔹 Створюємо нові порожні селектори
-    const limitsNext = stageLimits[stage - 1];
-    createTeamSelectors(myTeamDiv, limitsNext.my);
-    createTeamSelectors(enemyTeamDiv, limitsNext.enemy);
-
-    updateSelects();
+    // 🔹 Створюємо нові селектори, передаючи поточні значення
+    createSelectors(allMyHeroes, allEnemyHeroes);
 
     // 🔹 Обчислюємо рекомендації з урахуванням усіх вибраних героїв
     calculateBestPicks();
+
   } else {
     showFinalChance();
   }
@@ -1620,7 +1612,6 @@ function nextStage() {
   // 🔹 Оновлюємо списки усіх вибраних героїв
   updateTeamDisplays(false);
 }
-
 function calculateBestPicks() {
   // Поточні вибрані герої
   const mySelectedNow = getSelectedHeroes('#myTeam');
