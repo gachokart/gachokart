@@ -93,13 +93,43 @@ button:hover {
 /* =================== Контейнери команд =================== */
 #teamsDisplay {
   display: flex;
-  justify-content: space-around;
-  max-width: 900px;
-  margin: 15px auto;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  max-width: 1000px;
+  margin: 20px auto;
+  gap: 20px;
 }
-#teamsDisplay ul { list-style: none; padding: 0; font-size: 13px; }
 
+/* Ліва і права колонки */
+#myTeamDisplay, #enemyTeamDisplay {
+  flex: 1;
+  min-width: 180px;
+}
+
+/* Центральний блок */
+#middleColumns {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 20px;
+  flex: 1.2;
+}
+
+.roleColumn {
+  background: rgba(20,20,20,0.8);
+  border-radius: 10px;
+  padding: 10px;
+  min-width: 160px;
+  box-shadow: 0 0 10px #ffaa00;
+  text-align: center;
+}
+
+#teamsDisplay ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 13px;
+}
 /* =================== Підсумок =================== */
 #draftSummary {
   display: none;
