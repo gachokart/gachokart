@@ -1402,6 +1402,9 @@ const heroes = [
 
 // Припустимо, у тебе є масив heroes (як у прикладі з Wraith King)
 
+// Припустимо, у тебе є масив heroes (як у прикладі з Wraith King)
+const carryHeroes = heroes.filter(h => h.roles.includes("Carry") && !h.roles.includes("Support"));
+const supportHeroes = heroes.filter(h => h.roles.includes("Support") && !h.roles.includes("Carry"));
 const universalHeroes = heroes.filter(h => h.roles.includes("Carry") && h.roles.includes("Support"));
 // ====================== ВАГИ РОЛЕЙ ======================
 const roleWeights = { Carry: 1.0, Disabler: 0.9, Durable: 0.8, Initiator: 0.9, Escape: 0.6, Nuker: 0.7, Pusher: 0.8, Support: 0.9, Ranged: 0.5, Melee: 0.5 };
