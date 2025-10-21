@@ -7,7 +7,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fira+Sans:wght@400;600&display=swap" rel="stylesheet">
 <style>
   /* =================== Базовий фон та шрифти =================== */
- /* =================== Базовий фон та шрифти =================== */
 body {
   margin: 0;
   padding: 0;
@@ -28,20 +27,18 @@ h1 { font-size: 28px; color: #ff4500; text-shadow: 0 0 15px #ff4500, 0 0 25px #a
 h2 { font-size: 16px; color: #ffcc00; }
 h3 { font-size: 14px; color: #66ff99; }
 
-/* =================== Команди =================== */
-.team {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+/* =================== Команди та ролі =================== */
+.team, .roleColumn {
+  padding:12px;
+  border-radius:12px;
   background: rgba(0,0,0,0.65);
-  border-radius: 12px;
-  padding: 12px;
-  margin: 10px;
-  max-width: 220px;
-  box-shadow: 0 0 12px #ffcc00;
+  box-shadow:0 0 12px #ffcc00;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-.team:hover { transform: scale(1.05); box-shadow: 0 0 18px #ffaa00; }
+.team:hover, .roleColumn:hover {
+  transform: scale(1.05);
+  box-shadow:0 0 18px #ffaa00;
+}
 .team input, .team select {
   margin: 6px 0;
   padding: 6px;
@@ -50,6 +47,13 @@ h3 { font-size: 14px; color: #66ff99; }
   width: 160px;
   text-align: center;
   font-size: 13px;
+}
+.roleColumn {
+  text-align:center;
+  min-height:120px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
 }
 
 /* =================== Кнопка =================== */
@@ -72,7 +76,7 @@ button:hover {
   box-shadow: 0 0 20px #ffaa00;
 }
 
-/* =================== Результати та герої =================== */
+/* =================== Результати =================== */
 #results {
   margin-top: 15px;
   display: flex;
@@ -90,68 +94,36 @@ button:hover {
 }
 .hero:hover { transform: scale(1.05); box-shadow: 0 0 18px #ffaa00; }
 
-/* =================== Контейнери команд =================== */
-#teamsDisplay {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  max-width: 1000px;
+/* =================== Основний контейнер =================== */
+#mainContainer {
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  gap:20px;
+  flex-wrap:wrap;
+  max-width:1000px;
   margin: 20px auto;
-  gap: 20px;
 }
 
-/* Ліва і права колонки */
-#myTeamDisplay, #enemyTeamDisplay {
-  flex: 1;
-  min-width: 180px;
+/* Колонки */
+#leftColumn, #centerColumn, #rightColumn {
+  flex:1;
+  min-width:180px;
 }
 
-/* Центральний блок */
-#middleColumns {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  gap: 20px;
-  flex: 1.2;
-}
-
-.roleColumn {
-  background: rgba(20,20,20,0.8);
-  border-radius: 10px;
-  padding: 10px;
-  min-width: 160px;
-  box-shadow: 0 0 10px #ffaa00;
-  text-align: center;
-}
-
-#teamsDisplay ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  font-size: 13px;
-}
-/* =================== Підсумок =================== */
-#draftSummary {
-  display: none;
-  max-width: 850px;
-  margin: 25px auto;
-  padding: 20px;
-  background: rgba(30,30,30,0.85);
-  border-radius: 15px;
-  box-shadow: 0 0 18px #ffcc00;
-}
-#summaryContainer { display: flex; justify-content: space-between; flex-wrap: wrap; }
-#summaryMyTeam, #summaryEnemyTeam { list-style: none; padding: 0; width: 38%; }
-#summaryCenter { width: 20%; }
-#summaryBar {
-  height: 20px;
-  background: linear-gradient(to right, #ff4500, #ffcc00);
-  width: 0%;
-  border-radius: 10px;
-  transition: width 0.5s ease;
+/* Центральна колонка: Carry & Support */
+#centerColumn {
+  flex:1.2;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
 }
 
 /* =================== Поведінковий фактор =================== */
+#behaviorWrapper {
+  text-align:center;
+  margin-top:15px;
+}
 #behaviorInfo {
   display: none;
   max-width: 550px;
@@ -163,9 +135,6 @@ button:hover {
   font-size: 14px;
   line-height: 1.5;
 }
-#controls { margin: 12px 0; }
-#controls input { margin-right: 6px; transform: scale(1.1); cursor: pointer; 
-  }
 </style>
 </head>
 <body>
@@ -173,45 +142,49 @@ button:hover {
 <h1>Dota 2 Draft Helper</h1>
 <h2 id="stageTitle">Stage 1</h2>
 
-<div id="teamsWrapper" class="team-container" style="display:flex; justify-content:center; flex-wrap:wrap;">
-  <div id="myTeam" class="team"></div>
-  <div id="enemyTeam" class="team"></div>
+<!-- Основні колонки -->
+<div id="mainContainer">
+
+  <!-- Ліва колонка: Моя команда -->
+  <div id="leftColumn">
+    <div id="myTeam" class="team">
+      <h3>🟦 Моя команда</h3>
+      <!-- Селектори героїв тут -->
+    </div>
+  </div>
+
+  <!-- Центральна колонка: Carry та Support -->
+  <div id="centerColumn">
+    <div id="carryColumn" class="roleColumn">
+      <h3>Carry</h3>
+    </div>
+    <div id="supportColumn" class="roleColumn">
+      <h3>Support</h3>
+    </div>
+  </div>
+
+  <!-- Права колонка: Ворог -->
+  <div id="rightColumn">
+    <div id="enemyTeam" class="team">
+      <h3>🟥 Суперники</h3>
+      <!-- Селектори ворогів тут -->
+    </div>
+  </div>
+
 </div>
 
+<!-- Кнопка Go -->
 <button id="nextBtn">Go</button>
 
+<!-- Результати драфту -->
 <div id="results"></div>
 
-<div id="controls">
+<!-- Поведінковий фактор -->
+<div id="behaviorWrapper">
   <label>
     <input type="checkbox" id="behaviorMode">
     🎭 Увімкнути поведінковий фактор
   </label>
-</div>
-
-<div id="teamsDisplay">
-  <div id="myTeamDisplay" style="text-align:left;">
-    <h3>🟦 Моя команда</h3>
-    <ul id="myTeamList"></ul>
-  </div>
-  <div id="enemyTeamDisplay" style="text-align:right;">
-    <h3>🟥 Суперники</h3>
-    <ul id="enemyTeamList"></ul>
-  </div>
-</div>
-
-<div id="draftSummary">
-  <div id="summaryContainer">
-    <ul id="summaryMyTeam"></ul>
-    <div id="summaryCenter">
-      <h2 id="summaryChance"></h2>
-      <div style="background:rgba(0,0,0,0.5); border-radius:12px; overflow:hidden; width:160px; height:25px; margin:0 auto;">
-        <div id="summaryBar"></div>
-      </div>
-      <p id="summaryBehavior"></p>
-    </div>
-    <ul id="summaryEnemyTeam"></ul>
-  </div>
 </div>
 
 <div id="behaviorInfo"></div>
