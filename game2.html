@@ -1401,6 +1401,11 @@ const heroes = [
    // можеш додати всі інших героїв сюди
 ];
 
+  heroes.forEach(h => {
+  h.score = (h.winrate * 0.7 + h.pickrate * 0.3);
+});
+
+
 // Припустимо, у тебе є масив heroes (як у прикладі з Wraith King)
 const carryHeroes = heroes.filter(h => h.roles.includes("Carry") && !h.roles.includes("Support"));
 const supportHeroes = heroes.filter(h => h.roles.includes("Support") && !h.roles.includes("Carry"));
@@ -1696,51 +1701,50 @@ function displayTop(scores) {
 
   // 🔹 HTML-відображення
   resultDiv.innerHTML = `
-  <h2 style="text-align:center; margin-bottom:15px;">
-    Топ герої для наступного піку
-  </h2>
+  <h2 style="text-align:center; margin-bottom:15px;">Топ герої для наступного піку</h2>
   <div id="resultsGrid">
     <!-- Carry -->
-<div class="resultColumn">
-  <h3 style="color:#ffcc00;">⚔ Carry</h3>
-  ${
-    carryHeroes.length
-      ? carryHeroes.map(t => `
-          <div class="hero">
-            <strong>${t.name}</strong><br>
-            <small>Бали: ${t.score.toFixed(3)}</small>
-          </div>`).join('')
-      : '<p style="opacity:0.6;">(немає Carry серед топів)</p>'
-  }
-</div>
+    <div class="resultColumn">
+      <h3 style="color:#ffcc00;">⚔ Carry</h3>
+      ${
+        carryHeroes.length
+          ? carryHeroes.map(t => `
+              <div class="hero">
+                <strong>${t.name}</strong><br>
+                <small>Бали: ${t.score.toFixed(3)}</small>
+              </div>`).join('')
+          : '<p style="opacity:0.6;">(немає Carry серед топів)</p>'
+      }
+    </div>
 
-<!-- Support -->
-<div class="resultColumn">
-  <h3 style="color:#66ff99;">🛡 Support</h3>
-  ${
-    supportHeroes.length
-      ? supportHeroes.map(t => `
-          <div class="hero">
-            <strong>${t.name}</strong><br>
-            <small>Бали: ${t.score.toFixed(3)}</small>
-          </div>`).join('')
-      : '<p style="opacity:0.6;">(немає Support серед топів)</p>'
-  }
-</div>
+    <!-- Support -->
+    <div class="resultColumn">
+      <h3 style="color:#66ff99;">🛡 Support</h3>
+      ${
+        supportHeroes.length
+          ? supportHeroes.map(t => `
+              <div class="hero">
+                <strong>${t.name}</strong><br>
+                <small>Бали: ${t.score.toFixed(3)}</small>
+              </div>`).join('')
+          : '<p style="opacity:0.6;">(немає Support серед топів)</p>'
+      }
+    </div>
 
-<!-- Універсальні -->
-<div class="resultColumn">
-  <h3 style="color:#66ccff;">🔄 Універсальні</h3>
-  ${
-    universalHeroes.length
-      ? universalHeroes.map(t => `
-          <div class="hero" style="box-shadow:0 0 10px #66ccff;">
-            <strong>${t.name}</strong><br>
-            <small>Бали: ${t.score.toFixed(3)}</small>
-          </div>`).join('')
-      : '<p style="opacity:0.6;">(немає універсальних серед топів)</p>'
-  }
-</div>
+    <!-- Universal -->
+    <div class="resultColumn">
+      <h3 style="color:#66ccff;">🔄 Універсальні</h3>
+      ${
+        universalHeroes.length
+          ? universalHeroes.map(t => `
+              <div class="hero" style="box-shadow:0 0 10px #66ccff;">
+                <strong>${t.name}</strong><br>
+                <small>Бали: ${t.score.toFixed(3)}</small>
+              </div>`).join('')
+          : '<p style="opacity:0.6;">(немає універсальних серед топів)</p>'
+      }
+    </div>
+  </div>
   `;
 }
 
