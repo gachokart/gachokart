@@ -1423,6 +1423,8 @@ function createTeamSelectors(container, count, saved = []) {
 
 // ====================== БЛОКУВАННЯ ПОВТОРІВ ======================
 function updateSelects() {
+  const myHeroes = getSelectedHeroes('#myTeam');
+  const enemyHeroes = getSelectedHeroes('#enemyTeam');
   const selects = Array.from(document.querySelectorAll('select'));
   const selectedHeroes = selects.map(s => s.value).filter(v => v !== '');
   selects.forEach(select => {
@@ -1683,7 +1685,7 @@ function updateStageTitle() {
         stage++; // переходимо на наступну стадію
       updateStageTitle();
         updateTeamDisplays(false);
-        createSelectors(allMyHeroes, allEnemyHeroes); // створюємо нові селектори тільки для нових пік стадії
+        createSelectors([], []); // створюємо чисті селектори для нової стадії
         calculateBestPicks();
     } else {
         showFinalChance(); // фінальна стадія
