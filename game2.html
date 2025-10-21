@@ -1435,15 +1435,16 @@ function updateSelects() {
     // будуємо новий список опцій
     let heroOptions = ['<option value="">Вибери героя</option>'];
     heroes.forEach(h => {
-      // якщо герой вже вибраний десь, і це не поточний select — пропускаємо
+      // якщо герой уже вибраний десь, але це не поточний select → пропускаємо
       if (selectedHeroes.includes(h.name) && h.name !== current) return;
       heroOptions.push(`<option value="${h.name}">${h.name}</option>`);
     });
 
     // оновлюємо HTML селектора
     select.innerHTML = heroOptions.join('');
+
     // відновлюємо значення, якщо воно ще є
-    if (current && !selectedHeroes.includes(current) || current === select.value) {
+    if (current) {
       select.value = current;
     }
   });
