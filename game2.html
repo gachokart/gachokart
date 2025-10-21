@@ -98,26 +98,44 @@ button:hover {
 }
 
   #teamsDisplay {
-    display: flex;
-    justify-content: space-between;
-    max-width: 900px;
-    margin: 20px auto;
-  }
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  max-width: 1000px;
+  margin: 20px auto;
+  gap: 20px;
+}
 
-  #teamsDisplay ul {
-    list-style: none;
-    padding: 0;
-    font-size: 14px;
-  }
+#teamsDisplay .column {
+  flex: 1;                /* усі однакові */
+  min-width: 200px;       /* щоб не ламались на мобільних */
+  background: rgba(0,0,0,0.7);
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px #ffcc00;
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
 
-  #teamsDisplay h3 {
-    font-family: 'Press Start 2P';
-    font-size: 14px;
-    margin-bottom: 10px;
-    color: #ffcc00;
-    text-shadow: 0 0 5px #000;
-  }
+#teamsDisplay .column:hover {
+  transform: scale(1.04);
+  box-shadow: 0 0 15px #ffaa00;
+}
 
+#teamsDisplay h3 {
+  font-family: 'Press Start 2P';
+  font-size: 14px;
+  margin-bottom: 10px;
+  color: #ffcc00;
+  text-shadow: 0 0 5px #000;
+}
+
+#teamsDisplay ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 14px;
+}
   #draftSummary {
     display: none;
     max-width: 900px;
@@ -186,12 +204,23 @@ button:hover {
   </label>
 </div>
 
-  <div id="teamsDisplay" style="display:flex; justify-content:space-between; margin-top:20px;">
-  <div id="myTeamDisplay" style="width:45%; text-align:left;">
+  <div id="teamsDisplay">
+  <div class="column">
     <h3>🟦 Моя команда</h3>
     <ul id="myTeamList"></ul>
   </div>
-  <div id="enemyTeamDisplay" style="width:45%; text-align:right;">
+
+  <div class="column">
+    <h3>⚔️ Carry</h3>
+    <ul id="carryList"></ul>
+  </div>
+
+  <div class="column">
+    <h3>🛡️ Support</h3>
+    <ul id="supportList"></ul>
+  </div>
+
+  <div class="column">
     <h3>🟥 Суперники</h3>
     <ul id="enemyTeamList"></ul>
   </div>
