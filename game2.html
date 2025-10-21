@@ -1424,32 +1424,38 @@ function createTeamSelectors(container, count, saved = []) {
 // ====================== БЛОКУВАННЯ ПОВТОРІВ ======================
 function updateSelects() {
   const selects = Array.from(document.querySelectorAll('select'));
-  const selectedHeroes = [
+  const selectedCurrentStage = [
     ...getSelectedHeroes('#myTeam'),
     ...getSelectedHeroes('#enemyTeam')
   ];
 
+  // Заблоковані герої з попередніх стадій
+  const lockedHeroes = new Set([...allMyHeroes, ...allEnemyHeroes]);
+
   selects.forEach(select => {
     const current = select.value;
 
-    // будуємо новий список опцій
-    let heroOptions = ['<option value="">Вибери героя</option>'];
-    heroes.forEach(h => {
-      // якщо герой уже вибраний десь, але це не поточний select → пропускаємо
-      if (selectedHeroes.includes(h.name) && h.name !== current) return;
-      heroOptions.push(`<option value="${h.name}">${h.name}</option>`);
-    });
+    // Будуємо список опцій: доступні лише ті, що не locked і не вибрані іншими селекторами поточної стадії
+    const optionsHtml = ['<option value="">Вибери героя</option>'].concat(
+      heroes
+        .filter(h => {
+          // залишаємо поточне значення, навіть якщо воно у списку selectedCurrentStage (щоб не скидати)
+          if (current && h.name === current) return true;
+          // блокуємо героїв з попередніх стадій (locked)
+          if (lockedHeroes.has(h.name)) return false;
+          // блокуємо героїв, уже вибраних іншими селекторами поточної стадії
+          if (selectedCurrentStage.includes(h.name)) return false;
+          return true;
+        })
+        .map(h => `<option value="${h.name}">${h.name}</option>`)
+    ).join('');
 
-    // оновлюємо HTML селектора
-    select.innerHTML = heroOptions.join('');
+    select.innerHTML = optionsHtml;
 
-    // відновлюємо значення, якщо воно ще є
-    if (current) {
-      select.value = current;
-    }
+    // Відновити значення якщо воно ще доступне
+    if (current) select.value = current;
   });
 }
-
 // ====================== ВАГИ СТАДІЙ ======================
 function getWeightsByStage(stage) {
   switch (stage) {
