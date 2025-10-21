@@ -1702,32 +1702,34 @@ function displayTop(scores) {
   </h2>
   <div id="resultsGrid">
     <!-- Carry -->
-    <div class="resultColumn">
-      <h3 style="color:#ffcc00;">⚔ Carry</h3>
-      ${
-        carryHeroes.length
-          ? carryHeroes.map(t => `
-              <div class="hero">
-                <strong>${t.name}</strong><br>
-                <small>Winrate: ${(t.winrate*100).toFixed(1)}%</small>
-              </div>`).join('')
-          : '<p style="opacity:0.6;">(немає Carry серед топів)</p>'
-      }
-    </div>
+<div class="resultColumn">
+  <h3 style="color:#ffcc00;">⚔ Carry</h3>
+  ${
+    carryHeroes.length
+      ? carryHeroes.map(t => `
+          <div class="hero">
+            <strong>${t.name}</strong><br>
+            <small>Winrate: ${(t.winrate * 100).toFixed(1)}%</small><br>
+            <small>Pickrate: ${(t.pickrate * 100).toFixed(1)}%</small>
+          </div>`).join('')
+      : '<p style="opacity:0.6;">(немає Carry серед топів)</p>'
+  }
+</div>
 
-    <!-- Support -->
-    <div class="resultColumn">
-      <h3 style="color:#66ff99;">🛡 Support</h3>
-      ${
-        supportHeroes.length
-          ? supportHeroes.map(t => `
-              <div class="hero">
-                <strong>${t.name}</strong><br>
-                <small>Winrate: ${(t.winrate*100).toFixed(1)}%</small>
-              </div>`).join('')
-          : '<p style="opacity:0.6;">(немає Support серед топів)</p>'
-      }
-    </div>
+<!-- Support -->
+<div class="resultColumn">
+  <h3 style="color:#66ff99;">🛡 Support</h3>
+  ${
+    supportHeroes.length
+      ? supportHeroes.map(t => `
+          <div class="hero">
+            <strong>${t.name}</strong><br>
+            <small>Winrate: ${(t.winrate * 100).toFixed(1)}%</small><br>
+            <small>Pickrate: ${(t.pickrate * 100).toFixed(1)}%</small>
+          </div>`).join('')
+      : '<p style="opacity:0.6;">(немає Support серед топів)</p>'
+  }
+</div>
 
     <!-- Універсальні -->
     <div class="resultColumn">
