@@ -1586,10 +1586,15 @@ const enemyHeroes = [...new Set([...allEnemyHeroes, ...enemySelectedNow])];
 
  const recDiv = document.getElementById('recommendations');
   if (recDiv) recDiv.innerHTML = '';
+ scores.push({hero: hero.name, score: Number(score.toFixed(4))});
 
-  // 🧩 показуємо нові рекомендації
-  displayTop(scores);
+// 🔹 Вставка фільтрації і сортування
+scores = scores.filter(s => s.score > 0);
+scores.sort((a, b) => b.score - a.score);
 
+// 🧩 показуємо нові рекомендації
+displayTop(scores);
+ 
 }
 
 // ====================== ВІДОБРАЖЕННЯ ======================
