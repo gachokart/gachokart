@@ -212,7 +212,7 @@ button:hover {
     <ul id="summaryEnemyTeam" style="list-style:none; padding:0; text-align:center;"></ul>
   </div>
 </div>
-
+<div id="behaviorInfo" style="display:none; margin-top:15px; color:#ff6666;"></div>
 
 
 <script>
@@ -1586,6 +1586,31 @@ function calculateBestPicks() {
   scores.sort((a,b)=>b.score-a.score);
   displayTop(scores);
 }
+  function showBehaviorInfo() {
+  const behaviorMode = document.getElementById('behaviorMode').checked;
+  const behaviorDiv = document.getElementById('behaviorInfo');
+
+  if (!behaviorMode) {
+    behaviorDiv.style.display = 'none';
+    return;
+  }
+
+  // Генеруємо фактори
+  const stability = getPlayerStability();
+  const influence = getRandomPlayerInfluence();
+  const harmony = getTeamHarmony([...allMyHeroes, ...getSelectedHeroes('#myTeam')]);
+
+  behaviorDiv.innerHTML = `
+    <h3>Поведінкові фактори</h3>
+    <ul>
+      <li>Ризик токсичних героїв: ${ (getToxicityRisk({name:'Invoker'})*100).toFixed(0) }% (приклад)</li>
+      <li>Гармонія команди: ${(harmony*100).toFixed(0)}%</li>
+      <li>Стабільність гравця: ${(stability*100).toFixed(0)}%</li>
+      <li>Вплив випадкового профілю: ${(influence*100).toFixed(0)}%</li>
+    </ul>
+  `;
+  behaviorDiv.style.display = 'block';
+}
 
 // ====================== ВІДОБРАЖЕННЯ ======================
 function displayTop(scores) {
@@ -1686,7 +1711,8 @@ function updateStageTitle() {
       updateStageTitle();
         updateTeamDisplays(false);
         createSelectors([], []); // створюємо чисті селектори для нової стадії
-        calculateBestPicks();
+       calculateBestPicks();
+showBehaviorInfo();
     } else {
         showFinalChance(); // фінальна стадія
     }
