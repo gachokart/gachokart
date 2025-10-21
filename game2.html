@@ -143,6 +143,7 @@ button:hover {
 <h2 id="stageTitle">Stage 1</h2>
 
 <!-- Основні колонки -->
+<!-- Основний контейнер з 4 колонками -->
 <div id="mainContainer" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; max-width:1000px; margin:0 auto; gap:20px;">
 
   <!-- Ліва колонка: Моя команда -->
@@ -171,13 +172,19 @@ button:hover {
 
 </div>
 
-<!-- Під колонками: чекбокс поведінки -->
+<!-- Кнопка Go -->
+<div style="text-align:center; margin-top:15px;">
+  <button id="nextBtn">Go</button>
+</div>
+
+<!-- Поведінковий фактор -->
 <div id="behaviorWrapper" style="text-align:center; margin-top:15px;">
   <label>
     <input type="checkbox" id="behaviorMode">
     🎭 Увімкнути поведінковий фактор
   </label>
 </div>
+
 
 <script>
 
