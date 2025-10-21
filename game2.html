@@ -1699,6 +1699,16 @@ function displayTop(scores) {
     return hero?.roles.includes('Support') && !carryHeroes.some(c => c.hero === t.hero);
   }).slice(0, 5);
 
+  const universalHeroes = topHeroes.filter(t => {
+  const hero = heroes.find(h => h.name === t.hero);
+  return hero?.roles.includes('Carry') 
+      && hero?.roles.includes('Support')
+      && !carryHeroes.some(c => c.hero === t.hero)
+      && !supportHeroes.some(s => s.hero === t.hero);
+}).slice(0, 5);
+
+
+
   // 🔹 HTML-відображення
   resultDiv.innerHTML = `
   <h2 style="text-align:center; margin-bottom:15px;">Топ герої для наступного піку</h2>
