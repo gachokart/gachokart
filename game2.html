@@ -1504,8 +1504,11 @@ function getRandomPlayerInfluence() {
 
 // ====================== РОЗРАХУНОК ======================
 function calculateBestPicks() {
-  const myHeroes = getSelectedHeroes('#myTeam');
-  const enemyHeroes = getSelectedHeroes('#enemyTeam');
+  // 🧩 Об'єднуємо героїв з усіх стадій + поточні вибори
+const mySelectedNow = getSelectedHeroes('#myTeam');
+const enemySelectedNow = getSelectedHeroes('#enemyTeam');
+const myHeroes = [...new Set([...allMyHeroes, ...mySelectedNow])];
+const enemyHeroes = [...new Set([...allEnemyHeroes, ...enemySelectedNow])];
   const stageNow = Math.min(stage, 3);
   const weights = getWeightsByStage(stageNow);
   const keyRoles = ['Carry', 'Support', 'Disabler', 'Initiator'];
