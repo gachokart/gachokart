@@ -1584,8 +1584,12 @@ const enemyHeroes = [...new Set([...allEnemyHeroes, ...enemySelectedNow])];
     scores.push({hero: hero.name, score: Number(score.toFixed(4))});
   });
 
-  scores.sort((a,b)=>b.score-a.score);
+ const recDiv = document.getElementById('recommendations');
+  if (recDiv) recDiv.innerHTML = '';
+
+  // 🧩 показуємо нові рекомендації
   displayTop(scores);
+
 }
 
 // ====================== ВІДОБРАЖЕННЯ ======================
