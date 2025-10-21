@@ -1506,8 +1506,8 @@ function getRandomPlayerInfluence() {
 
 // ====================== РОЗРАХУНОК ======================
 function calculateBestPicks() {
-  const myHeroes = getSelectedHeroes('#myTeam');
-  const enemyHeroes = getSelectedHeroes('#enemyTeam');
+  const myHeroes = [...allMyHeroes, ...getSelectedHeroes('#myTeam')];
+  const enemyHeroes = [...allEnemyHeroes, ...getSelectedHeroes('#enemyTeam')];
   const stageNow = Math.min(stage, 3);
   const weights = getWeightsByStage(stageNow);
   const keyRoles = ['Carry', 'Support', 'Disabler', 'Initiator'];
