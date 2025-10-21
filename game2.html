@@ -1666,44 +1666,39 @@ function nextStage() {
   const limits = stageLimits[stage - 1];
   const stageTitle = document.getElementById('stageTitle');
 
-  function updateStageTitle() {
-    stageTitle.textContent = `Стадія ${stage}`;
-  }
-
   // Перевірка вибору
   if (mySelected.length < limits.my || enemySelected.length < limits.enemy) {
     alert(`⚠️ Обери ${limits.my} героїв у свою команду та ${limits.enemy} у суперника!`);
     return;
   }
 
-  // Зберігаємо вибраних героїв
+  // Зберігаємо вибраних героїв (накопичуємо)
   allMyHeroes.push(...mySelected);
   allEnemyHeroes.push(...enemySelected);
 
   // Якщо ще не фінал
   if (stage < 3) {
-    stage++; // Переходимо на наступну стадію
-    updateStageTitle();
+    stage++; // переходимо на наступну стадію
 
-    // 🧩 Оновлюємо списки усіх вибраних героїв
+    // Оновлюємо заголовок (якщо він є)
+    if (stageTitle) stageTitle.textContent = `Стадія ${stage}`;
+
+    // Показуємо всі накопичені вибрані герої
     updateTeamDisplays(false);
 
-    // 🧩 Очищаємо старі селектори і створюємо нові (порожні) для наступної стадії
-    const myTeamDiv = document.getElementById('myTeam');
-    const enemyTeamDiv = document.getElementById('enemyTeam');
-    myTeamDiv.innerHTML = "<h2>Моя команда</h2>";
-    enemyTeamDiv.innerHTML = "<h2>Суперник</h2>";
+    // --- Створюємо НОВІ порожні селектори для поточної стадії ---
+    // Викликаємо createSelectors з порожніми масивами, щоб не підставляти старі вибори
+    createSelectors([], []);
 
-    const limitsNext = stageLimits[stage - 1]; // межі наступної стадії
-    createTeamSelectors(myTeamDiv, limitsNext.my); // створюємо порожні селектори
-    createTeamSelectors(enemyTeamDiv, limitsNext.enemy);
-
-    updateSelects(); // оновлюємо блокування
-    calculateBestPicks(); // оновлюємо рекомендації
+    // Забезпечуємо коректне блокування повторів і оновлення рекомендацій
+    updateSelects();
+    calculateBestPicks();
   } else {
-    showFinalChance(); // фінальна стадія
+    // фінальна стадія
+    showFinalChance();
   }
 }
+
 
 
 
