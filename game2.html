@@ -1685,19 +1685,25 @@ function nextStage() {
     stage++; // Переходимо на наступну стадію
     updateStageTitle();
 
-    // Оновлюємо списки з усіма вибраними
+    // 🧩 Оновлюємо списки усіх вибраних героїв
     updateTeamDisplays(false);
 
-    // 🧩 Очищаємо старі селектори і створюємо нові для нової стадії
-    createSelectors(allMyHeroes, allEnemyHeroes);
+    // 🧩 Очищаємо старі селектори і створюємо нові (порожні) для наступної стадії
+    const myTeamDiv = document.getElementById('myTeam');
+    const enemyTeamDiv = document.getElementById('enemyTeam');
+    myTeamDiv.innerHTML = "<h2>Моя команда</h2>";
+    enemyTeamDiv.innerHTML = "<h2>Суперник</h2>";
 
-    // Показуємо нові рекомендації
-    calculateBestPicks();
+    const limitsNext = stageLimits[stage - 1]; // межі наступної стадії
+    createTeamSelectors(myTeamDiv, limitsNext.my); // створюємо порожні селектори
+    createTeamSelectors(enemyTeamDiv, limitsNext.enemy);
+
+    updateSelects(); // оновлюємо блокування
+    calculateBestPicks(); // оновлюємо рекомендації
   } else {
     showFinalChance(); // фінальна стадія
   }
 }
-
 
 
 
