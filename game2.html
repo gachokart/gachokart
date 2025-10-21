@@ -1678,39 +1678,37 @@ function nextStage() {
   const limits = stageLimits[stage - 1];
   const stageTitle = document.getElementById('stageTitle');
 
-  // Перевірка вибору
   if (mySelected.length < limits.my || enemySelected.length < limits.enemy) {
     alert(`⚠️ Обери ${limits.my} героїв у свою команду та ${limits.enemy} у суперника!`);
     return;
   }
 
-  // Зберігаємо вибраних героїв (накопичуємо)
+  // зберігаємо вибраних героїв для історії
   allMyHeroes.push(...mySelected);
   allEnemyHeroes.push(...enemySelected);
 
-  // Якщо ще не фінал
   if (stage < 3) {
-    stage++; // переходимо на наступну стадію
+    stage++;
+    stageTitle.textContent = `Стадія ${stage}`;
 
-    // Оновлюємо заголовок (якщо він є)
-    if (stageTitle) stageTitle.textContent = `Стадія ${stage}`;
+    // 🔹 очищаємо селектори, але зберігаємо списки
+    const myTeamDiv = document.getElementById('myTeam');
+    const enemyTeamDiv = document.getElementById('enemyTeam');
+    myTeamDiv.innerHTML = "<h2>Моя команда</h2>";
+    enemyTeamDiv.innerHTML = "<h2>Суперник</h2>";
 
-    // Показуємо всі накопичені вибрані герої
-    updateTeamDisplays(false);
+    const limitsNext = stageLimits[stage - 1];
+    createTeamSelectors(myTeamDiv, limitsNext.my); // порожні
+    createTeamSelectors(enemyTeamDiv, limitsNext.enemy);
 
-    // --- Створюємо НОВІ порожні селектори для поточної стадії ---
-    // Викликаємо createSelectors з порожніми масивами, щоб не підставляти старі вибори
-    createSelectors([], []);
-
-    // Забезпечуємо коректне блокування повторів і оновлення рекомендацій
     updateSelects();
+
+    // 🔹 обчислюємо рекомендації з урахуванням ВСІХ героїв
     calculateBestPicks();
   } else {
-    // фінальна стадія
     showFinalChance();
   }
 }
-
 
 
 
