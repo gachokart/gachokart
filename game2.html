@@ -1404,50 +1404,32 @@ const heroes = [
    // можеш додати всі інших героїв сюди
 ];
 
-  heroes.forEach(h => {
+ heroes.forEach(h => {
   h.score = (h.winrate * 0.7 + h.pickrate * 0.3);
 });
 
-
-// Припустимо, у тебе є масив heroes (як у прикладі з Wraith King)
+// 2️⃣ Розподіл героїв по базових типах
 const carryHeroes = heroes.filter(h => h.roles.includes("Carry") && !h.roles.includes("Support"));
 const supportHeroes = heroes.filter(h => h.roles.includes("Support") && !h.roles.includes("Carry"));
 const universalHeroes = heroes.filter(h => h.roles.includes("Carry") && h.roles.includes("Support"));
-// ====================== ВАГИ РОЛЕЙ ======================
-const roleWeights = { Carry: 1.0, Disabler: 0.9, Durable: 0.8, Initiator: 0.9, Escape: 0.6, Nuker: 0.7, Pusher: 0.8, Support: 0.9, Ranged: 0.5, Melee: 0.5 };
 
-// ====================== ЕТАПИ ======================
-const stageLimits = [ { my: 2, enemy: 2 }, { my: 2, enemy: 2 }, { my: 1, enemy: 1 } ];
-// ====================== КАТЕГОРІЇ ТА ВАГИ РОЛЕЙ ======================
+// 3️⃣ КАТЕГОРІЇ ТА ВАГИ РОЛЕЙ
 const roleCategories = {
   Carry: {
-    roles: {
-      Melee: 0.6,
-      Ranged: 0.6,
-      Carry: 1.0,
-      Nuker: 0.8
-    },
+    roles: { Melee: 0.6, Ranged: 0.6, Carry: 1.0, Nuker: 0.8 },
     weight: 1.0
   },
   Support: {
-    roles: {
-      Support: 0.9,
-      Disabler: 0.85,
-      Pusher: 0.7
-    },
+    roles: { Support: 0.9, Disabler: 0.85, Pusher: 0.7 },
     weight: 0.9
   },
   Universal: {
-    roles: {
-      Durable: 0.8,
-      Initiator: 0.85,
-      Escape: 0.75
-    },
+    roles: { Durable: 0.8, Initiator: 0.85, Escape: 0.75 },
     weight: 0.85
   }
 };
 
-// ✅ Функція для отримання ваги героя за його ролями
+// 4️⃣ Функція для підрахунку ваги героя по ролях
 function getHeroCategoryWeight(heroRoles) {
   let totalWeight = 0;
   let totalCount = 0;
@@ -1464,6 +1446,7 @@ function getHeroCategoryWeight(heroRoles) {
 
   return totalCount > 0 ? totalWeight / totalCount : 0;
 }
+
   
 
 
@@ -1633,66 +1616,97 @@ function calculateBestPicks() {
   const keyRoles = ['Carry', 'Support', 'Disabler', 'Initiator'];
   const stageRoleMultiplier = stageNow === 1 ? 1.2 : stageNow === 2 ? 1.1 : 1.0;
 
+  // 🧮 Підрахунок кількості ролей у моїй команді
   const roleCount = {};
   myHeroes.forEach(my => {
     const h = heroes.find(x => x.name === my);
     if (h) h.roles.forEach(r => roleCount[r] = (roleCount[r] || 0) + 1);
   });
 
+  // 💠 Синергія з моїми героями
   function getSynergyScore(hero) {
     let score = 0;
     myHeroes.forEach(my => {
       const ally = heroes.find(h => h.name === my);
-      if (ally) ally.roles.forEach(r => { if (hero.roles.includes(r)) { let m = keyRoles.includes(r)?stageRoleMultiplier:1; score += (roleWeights[r]||1)*m; }});
+      if (ally) {
+        ally.roles.forEach(r => {
+          if (hero.roles.includes(r)) {
+            let m = keyRoles.includes(r) ? stageRoleMultiplier : 1;
+            score += (roleWeights[r] || 1) * m;
+          }
+        });
+      }
     });
     return score;
   }
 
+  // ❌ Покарання за дублювання ролей
   function getDuplicatePenalty(hero) {
     let penalty = 0;
-    hero.roles.forEach(r => { if (roleCount[r] && roleCount[r]>1) penalty += (roleWeights[r]||1)*(roleCount[r]-1); });
+    hero.roles.forEach(r => {
+      if (roleCount[r] && roleCount[r] > 1)
+        penalty += (roleWeights[r] || 1) * (roleCount[r] - 1);
+    });
     return penalty;
   }
 
+  // ✅ Бонус за відсутню роль
   function getMissingRoleBonus(hero) {
     let bonus = 0;
     Object.keys(roleWeights).forEach(r => {
-      if (!roleCount[r] && hero.roles.includes(r)) { let m = keyRoles.includes(r)?stageRoleMultiplier:1; bonus += roleWeights[r]*m; }
+      if (!roleCount[r] && hero.roles.includes(r)) {
+        let m = keyRoles.includes(r) ? stageRoleMultiplier : 1;
+        bonus += roleWeights[r] * m;
+      }
     });
     return bonus;
   }
 
+  // ⚔️ Оцінка контрів
   function getAdaptiveCounterScore(hero) {
     if (!enemyHeroes.length) return 0;
     let score = 0;
     enemyHeroes.forEach(enemy => {
-      const enemyHero = heroes.find(h=>h.name===enemy);
-      if(!enemyHero) return;
-      if(hero.BestCounters?.includes(enemy)) score += 2.0;
-      if(hero.commonCounters?.includes(enemy)) score += 1.0;
+      const enemyHero = heroes.find(h => h.name === enemy);
+      if (!enemyHero) return;
+      if (hero.BestCounters?.includes(enemy)) score += 2.0;
+      if (hero.commonCounters?.includes(enemy)) score += 1.0;
     });
-    if(hero.roles.some(r=>keyRoles.includes(r))) score *= stageRoleMultiplier;
+    if (hero.roles.some(r => keyRoles.includes(r))) score *= stageRoleMultiplier;
     return score;
   }
 
+  // 🎭 Поведінкові фактори
   const behaviorMode = document.getElementById('behaviorMode').checked;
   const stability = behaviorMode ? getPlayerStability() : 1.0;
   const influence = behaviorMode ? getRandomPlayerInfluence() : 0.0;
   const harmony = behaviorMode ? getTeamHarmony(myHeroes) : 1.0;
 
+  // 🧠 Головний розрахунок балів
   let scores = [];
   heroes.forEach(hero => {
     if (myHeroes.includes(hero.name) || enemyHeroes.includes(hero.name)) return;
     let score = 0;
-    const winNorm = (hero.winrate-0.5)/0.5;
-    const pickNorm = Math.log(1+hero.pickrate*100)/Math.log(101);
-    score += weights.winrate*winNorm + weights.pickrate*pickNorm;
-    score += getAdaptiveCounterScore(hero)*weights.counters;
-    score += getSynergyScore(hero)*weights.synergy;
-    score -= getDuplicatePenalty(hero);
-    score += getMissingRoleBonus(hero)*weights.roles;
 
-    // застосовуємо поведінкові фактори
+    // статистика
+    const winNorm = (hero.winrate - 0.5) / 0.5;
+    const pickNorm = Math.log(1 + hero.pickrate * 100) / Math.log(101);
+
+    // базовий рейтинг
+    const base = (hero.winrate * 0.7 + hero.pickrate * 0.3);
+
+    // ролі
+    const roleWeight = getHeroCategoryWeight(hero.roles);
+
+    score += weights.winrate * winNorm;
+    score += weights.pickrate * pickNorm;
+    score += getAdaptiveCounterScore(hero) * weights.counters;
+    score += getSynergyScore(hero) * weights.synergy;
+    score -= getDuplicatePenalty(hero);
+    score += getMissingRoleBonus(hero) * weights.roles;
+    score += roleWeight * 0.5; // невеликий вплив категорії
+
+    // поведінкові фактори
     if (behaviorMode) {
       score *= getToxicityRisk(hero);
       score *= harmony;
@@ -1700,36 +1714,44 @@ function calculateBestPicks() {
       score *= (1 + influence);
     }
 
-    scores.push({hero: hero.name, score: Number(score.toFixed(4))});
+    // зберігаємо з базовими параметрами
+    scores.push({
+      hero: hero.name,
+      score: Number(score.toFixed(4)),
+      baseScore: base,
+      winrate: hero.winrate,
+      pickrate: hero.pickrate,
+      roles: hero.roles
+    });
   });
 
-  scores.sort((a,b)=>b.score-a.score);
-  displayTop(scores);
+  // 🔹 Сортування
+  scores.sort((a, b) => b.score - a.score);
+
+  // 🔸 Розділення на 3 категорії
+  const carryList = [];
+  const supportList = [];
+  const universalList = [];
+
+  scores.forEach(h => {
+    const hero = heroes.find(x => x.name === h.hero);
+    if (!hero) return;
+    if (hero.roles.includes("Carry") && !hero.roles.includes("Support")) carryList.push(h);
+    else if (hero.roles.includes("Support") && !hero.roles.includes("Carry")) supportList.push(h);
+    else if (hero.roles.includes("Carry") && hero.roles.includes("Support")) universalList.push(h);
+  });
+
+  // 🖥️ Вивід у три колонки
+  displayTopThreeColumns(carryList, supportList, universalList);
 }
-  function showBehaviorInfo() {
-  const behaviorMode = document.getElementById('behaviorMode').checked;
-  const behaviorDiv = document.getElementById('behaviorInfo');
 
-  if (!behaviorMode) {
-    behaviorDiv.style.display = 'none';
-    return;
-  }
-
-  // Генеруємо фактори
-  const stability = getPlayerStability();
-  const influence = getRandomPlayerInfluence();
-  const harmony = getTeamHarmony([...allMyHeroes, ...getSelectedHeroes('#myTeam')]);
-
-  behaviorDiv.innerHTML = `
-    <h3>Поведінкові фактори</h3>
-    <ul>
-      <li>Ризик токсичних героїв: ${ (getToxicityRisk({name:'Invoker'})*100).toFixed(0) }% (приклад)</li>
-      <li>Гармонія команди: ${(harmony*100).toFixed(0)}%</li>
-      <li>Стабільність гравця: ${(stability*100).toFixed(0)}%</li>
-      <li>Вплив випадкового профілю: ${(influence*100).toFixed(0)}%</li>
-    </ul>
-  `;
-  behaviorDiv.style.display = 'block';
+  function displayTopThreeColumns(carryList, supportList, universalList) {
+  document.getElementById('carryList').innerHTML = carryList.slice(0, 10)
+    .map(h => `<li>${h.hero} (${(h.score*100).toFixed(1)})</li>`).join('');
+  document.getElementById('supportList').innerHTML = supportList.slice(0, 10)
+    .map(h => `<li>${h.hero} (${(h.score*100).toFixed(1)})</li>`).join('');
+  document.getElementById('universalList').innerHTML = universalList.slice(0, 10)
+    .map(h => `<li>${h.hero} (${(h.score*100).toFixed(1)})</li>`).join('');
 }
 
 // ====================== ВІДОБРАЖЕННЯ ======================
