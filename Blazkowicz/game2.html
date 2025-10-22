@@ -261,6 +261,8 @@ button:hover {
 <div id="behaviorInfo" style="display:none; margin-top:15px; color:#ff6666;"></div>
 
 
+
+
 <script>
 // =========================
 // 🔥 ВШИТИЙ heroes.json
@@ -1423,6 +1425,8 @@ const stageLimits = [ { my: 2, enemy: 2 }, { my: 2, enemy: 2 }, { my: 1, enemy: 
 // ====================== ІНІЦІАЛІЗАЦІЯ ======================
 document.addEventListener('DOMContentLoaded', () => { createSelectors(); updateTeamDisplays()});
 
+ 
+
 // ====================== СЕЛЕКТОРИ ======================
 function createSelectors(savedMy = [], savedEnemy = []) {
   const myTeamDiv = document.getElementById('myTeam');
@@ -1686,32 +1690,58 @@ function calculateBestPicks() {
 }
 
 // ====================== ВІДОБРАЖЕННЯ ======================
+// Категорії з вагами
+const roleCategories = {
+  carry: { roles: ["Carry", "Pusher", "Nuker"], weight: 3 },
+  support: { roles: ["Support", "Disabler"], weight: 2 },
+  universal: { roles: ["Melee", "Ranged", "Durable", "Initiator", "Escape"], weight: 1 }
+};
+
+function getCategory(role) {
+  for (const [cat, data] of Object.entries(roleCategories)) {
+    if (data.roles.includes(role)) return cat;
+  }
+  return null;
+}
+
+function calculateHeroWeight(hero) {
+  const result = { carry: 0, support: 0, universal: 0, total: 0 };
+  hero.roles.forEach(role => {
+    const cat = getCategory(role);
+    if (cat) {
+      const w = roleCategories[cat].weight;
+      result[cat] += w;
+      result.total += w;
+    }
+  });
+  return result;
+}
+
 function displayTop(scores) {
   const resultDiv = document.getElementById('results');
-  const topHeroes = scores.slice(0, 30); // запас, щоб знайти потрібні ролі
+  const topHeroes = scores.slice(0, 30); // запас
 
-  // 🔹 Фільтруємо Carry першими
+  // Carry
   const carryHeroes = topHeroes.filter(t => {
     const hero = heroes.find(h => h.name === t.hero);
     return hero?.roles.includes('Carry');
   }).slice(0, 5);
 
-  // 🔹 Потім Support, але виключаємо героїв, які вже є в Carry
+  // Support
   const supportHeroes = topHeroes.filter(t => {
     const hero = heroes.find(h => h.name === t.hero);
     return hero?.roles.includes('Support') && !carryHeroes.some(c => c.hero === t.hero);
   }).slice(0, 5);
 
-  // Універсальні = ті, хто має і Carry, і Support
-// але беремо тільки з topHeroes (тобто з урахуванням поточного стану)
-const universalHeroes = topHeroes.filter(t => {
+  // Universal = ті, хто має і Carry, і Support
+  const universalHeroes = topHeroes.filter(t => {
   const hero = heroes.find(h => h.name === t.hero);
-  return hero?.roles.includes('Carry') && hero?.roles.includes('Support');
+  // якщо герой не тільки Carry або Support, а має хоча б одну роль з universal
+  return hero && hero.roles.some(r => roleCategories.universal.roles.includes(r)) &&
+         !hero.roles.includes('Carry') && !hero.roles.includes('Support');
 }).slice(0, 5);
 
-
-
-  // 🔹 HTML-відображення
+  // HTML-відображення
   resultDiv.innerHTML = `
   <h2 style="text-align:center; margin-bottom:15px;">Топ герої для наступного піку</h2>
   <div id="resultsGrid">
@@ -1720,11 +1750,15 @@ const universalHeroes = topHeroes.filter(t => {
       <h3 style="color:#ffcc00;">⚔ Carry</h3>
       ${
         carryHeroes.length
-          ? carryHeroes.map(t => `
-              <div class="hero">
-                <strong>${t.hero}</strong><br>
-                <small>Бали: ${t.score.toFixed(3)}</small>
-              </div>`).join('')
+          ? carryHeroes.map(t => {
+              const hero = heroes.find(h => h.name === t.hero);
+              const w = calculateHeroWeight(hero);
+              return `
+                <div class="hero">
+                  <strong>${t.hero}</strong><br>
+                  <small>Бали: ${t.score.toFixed(3)} | Вага: ${w.carry}</small>
+                </div>`;
+            }).join('')
           : '<p style="opacity:0.6;">(немає Carry серед топів)</p>'
       }
     </div>
@@ -1734,11 +1768,15 @@ const universalHeroes = topHeroes.filter(t => {
       <h3 style="color:#66ff99;">🛡 Support</h3>
       ${
         supportHeroes.length
-          ? supportHeroes.map(t => `
-              <div class="hero">
-                <strong>${t.hero}</strong><br>
-                <small>Бали: ${t.score.toFixed(3)}</small>
-              </div>`).join('')
+          ? supportHeroes.map(t => {
+              const hero = heroes.find(h => h.name === t.hero);
+              const w = calculateHeroWeight(hero);
+              return `
+                <div class="hero">
+                  <strong>${t.hero}</strong><br>
+                  <small>Бали: ${t.score.toFixed(3)} | Вага: ${w.support}</small>
+                </div>`;
+            }).join('')
           : '<p style="opacity:0.6;">(немає Support серед топів)</p>'
       }
     </div>
@@ -1748,11 +1786,15 @@ const universalHeroes = topHeroes.filter(t => {
       <h3 style="color:#66ccff;">🔄 Універсальні</h3>
       ${
         universalHeroes.length
-          ? universalHeroes.map(t => `
-              <div class="hero" style="box-shadow:0 0 10px #66ccff;">
-                <strong>${t.hero}</strong><br>
-                <small>Бали: ${t.score.toFixed(3)}</small>
-              </div>`).join('')
+          ? universalHeroes.map(t => {
+              const hero = heroes.find(h => h.name === t.hero);
+              const w = calculateHeroWeight(hero);
+              return `
+                <div class="hero" style="box-shadow:0 0 10px #66ccff;">
+                  <strong>${t.hero}</strong><br>
+                  <small>Бали: ${t.score.toFixed(3)} | Carry: ${w.carry}, Support: ${w.support}, Univ: ${w.universal}</small>
+                </div>`;
+            }).join('')
           : '<p style="opacity:0.6;">(немає універсальних серед топів)</p>'
       }
     </div>
@@ -1876,6 +1918,7 @@ if (myChance <= 45) {
 // показуємо блок
 document.getElementById('draftSummary').style.display = 'block';
 document.getElementById('results').style.display = 'none';
+ 
 
 
 
@@ -1891,4 +1934,3 @@ document.getElementById('results').style.display = 'none';
 </script>
 </body>
 </html>
-
