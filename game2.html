@@ -1762,78 +1762,13 @@ function calculateBestPicks() {
 }
 
 // ====================== ВІДОБРАЖЕННЯ ======================
-function displayTop(scores) {
-  const resultDiv = document.getElementById('results');
-  const topHeroes = scores.slice(0, 30); // запас, щоб знайти потрібні ролі
-
-  // 🔹 Фільтруємо Carry першими
-  const carryHeroes = topHeroes.filter(t => {
-    const hero = heroes.find(h => h.name === t.hero);
-    return hero?.roles.includes('Carry');
-  }).slice(0, 5);
-
-  // 🔹 Потім Support, але виключаємо героїв, які вже є в Carry
-  const supportHeroes = topHeroes.filter(t => {
-    const hero = heroes.find(h => h.name === t.hero);
-    return hero?.roles.includes('Support') && !carryHeroes.some(c => c.hero === t.hero);
-  }).slice(0, 5);
-
-  // Універсальні = ті, хто має і Carry, і Support
-// але беремо тільки з topHeroes (тобто з урахуванням поточного стану)
-const universalHeroes = topHeroes.filter(t => {
-  const hero = heroes.find(h => h.name === t.hero);
-  return hero?.roles.includes('Carry') && hero?.roles.includes('Support');
-}).slice(0, 5);
-
-
-
-  // 🔹 HTML-відображення
-  resultDiv.innerHTML = `
-  <h2 style="text-align:center; margin-bottom:15px;">Топ герої для наступного піку</h2>
-  <div id="resultsGrid">
-    <!-- Carry -->
-    <div class="resultColumn">
-      <h3 style="color:#ffcc00;">⚔ Carry</h3>
-      ${
-        carryHeroes.length
-          ? carryHeroes.map(t => `
-              <div class="hero">
-                <strong>${t.hero}</strong><br>
-                <small>Бали: ${t.score.toFixed(3)}</small>
-              </div>`).join('')
-          : '<p style="opacity:0.6;">(немає Carry серед топів)</p>'
-      }
-    </div>
-
-    <!-- Support -->
-    <div class="resultColumn">
-      <h3 style="color:#66ff99;">🛡 Support</h3>
-      ${
-        supportHeroes.length
-          ? supportHeroes.map(t => `
-              <div class="hero">
-                <strong>${t.hero}</strong><br>
-                <small>Бали: ${t.score.toFixed(3)}</small>
-              </div>`).join('')
-          : '<p style="opacity:0.6;">(немає Support серед топів)</p>'
-      }
-    </div>
-
-    <!-- Universal -->
-    <div class="resultColumn">
-      <h3 style="color:#66ccff;">🔄 Універсальні</h3>
-      ${
-        universalHeroes.length
-          ? universalHeroes.map(t => `
-              <div class="hero" style="box-shadow:0 0 10px #66ccff;">
-                <strong>${t.hero}</strong><br>
-                <small>Бали: ${t.score.toFixed(3)}</small>
-              </div>`).join('')
-          : '<p style="opacity:0.6;">(немає універсальних серед топів)</p>'
-      }
-    </div>
-  </div>
-  `;
+function displayTopThreeColumns(carryList,supportList,universalList){
+  document.getElementById('carryList').innerHTML = carryList.slice(0,10)
+    .map(h=>`<li>${h.hero} (${(h.score*100).toFixed(1)})</li>`).join('');
+  document.getElementById('supportList').innerHTML = supportList.slice(0,10)
+    .map(h=>`<li>${h.hero} (${(h.score*100).toFixed(1)})</li>`).join('');
+  document.getElementById('universalList').innerHTML = universalList.slice(0,10)
+    .map(h=>`<li>${h.hero} (${(h.score*100).toFixed(1)})</li>`).join('');
 }
 
 
@@ -1881,85 +1816,59 @@ showBehaviorInfo();
 
 // ====================== ФІНАЛ ======================
 // ====================== ФІНАЛ ======================
-function showFinalChance() {
-    const myTeam = allMyHeroes;
-    const enemyTeam = allEnemyHeroes;
+function showFinalChance(){
+  const myTeam = allMyHeroes;
+  const enemyTeam = allEnemyHeroes;
 
-    let myScore = 0, enemyScore = 0;
-
-    heroes.forEach(h => {
-        if (myTeam.includes(h.name)) {
-            enemyTeam.forEach(e => {
-                if (h.BestCounters?.includes(e)) myScore += 2;
-                if (h.commonCounters?.includes(e)) myScore += 1;
-            });
-            myScore += h.winrate; // додаємо winrate
-        }
-        if (enemyTeam.includes(h.name)) {
-            myTeam.forEach(m => {
-                if (h.BestCounters?.includes(m)) enemyScore += 2;
-                if (h.commonCounters?.includes(m)) enemyScore += 1;
-            });
-            enemyScore += h.winrate;
-        }
-    });
-
-    // синергія команд
-    myScore *= getTeamHarmony(myTeam);
-    enemyScore *= getTeamHarmony(enemyTeam);
-
-    let myChance = (myScore + enemyScore > 0) ? (myScore / (myScore + enemyScore)) * 100 : 50;
-
-    // поведінкові фактори
-    if (document.getElementById('behaviorMode').checked){
-        const stability = getPlayerStability();
-        const influence = getRandomPlayerInfluence();
-        myChance *= stability * (1 + influence);
-        myChance = Math.max(5, Math.min(95, myChance));
+  let myScore=0, enemyScore=0;
+  heroes.forEach(h=>{
+    if(myTeam.includes(h.name)){
+      enemyTeam.forEach(e=>{
+        if(h.BestCounters?.includes(e)) myScore+=2;
+        if(h.commonCounters?.includes(e)) myScore+=1;
+      });
+      myScore += h.winrate ?? 0.5;
     }
+    if(enemyTeam.includes(h.name)){
+      myTeam.forEach(m=>{
+        if(h.BestCounters?.includes(m)) enemyScore+=2;
+        if(h.commonCounters?.includes(m)) enemyScore+=1;
+      });
+      enemyScore += h.winrate ?? 0.5;
+    }
+  });
 
-    // відображення
-    document.getElementById('summaryMyTeam').innerHTML = myTeam.map(h=>`<li>🟩 ${h}</li>`).join('');
-    document.getElementById('summaryEnemyTeam').innerHTML = enemyTeam.map(h=>`<li>🟥 ${h}</li>`).join('');
-    document.getElementById('summaryChance').textContent = `Шанс на перемогу: ${myChance.toFixed(0)}%`;
-    document.getElementById('summaryBar').style.width = `${myChance}%`;
-    document.getElementById('draftSummary').style.display = 'block';
-    document.getElementById('results').style.display = 'none';
-  // показуємо фінальний результат
-document.getElementById('draftSummary').style.display = 'block';
+  myScore *= getTeamHarmony(myTeam);
+  enemyScore *= getTeamHarmony(enemyTeam);
 
-// ховаємо селектори та заголовок стадії
-document.getElementById('selectorsContainer').style.display = 'none';
-document.getElementById('stageTitle').style.display = 'none';
-document.getElementById('results').style.display = 'none';
-document.getElementById('teamsDisplay').style.display = 'none';
-document.getElementById('controls').style.display = 'none';
-  // текст
-document.getElementById('summaryChance').textContent = `Шанс на перемогу: ${myChance.toFixed(0)}%`;
+  let myChance = (myScore + enemyScore>0)?(myScore/(myScore+enemyScore))*100:50;
 
-// шкала
-const bar = document.getElementById("summaryBar");
-bar.style.width = `${myChance}%`;
+  if(document.getElementById('behaviorMode').checked){
+    const stability = getPlayerStability();
+    const influence = getRandomPlayerInfluence();
+    const harmony = getTeamHarmony(myTeam);
+    myChance *= stability * harmony * (1+influence);
+    myChance = Math.max(5, Math.min(95, myChance));
+  }
 
-if (myChance <= 45) {
-  bar.style.background = "#f44336"; // червоний
-} else if (myChance < 55) {
-  bar.style.background = "#ffeb3b"; // жовтий
-} else {
-  bar.style.background = "#4caf50"; // зелений
+  // Відображення
+  document.getElementById('summaryMyTeam').innerHTML = myTeam.map(h=>`<li>🟩 ${h}</li>`).join('');
+  document.getElementById('summaryEnemyTeam').innerHTML = enemyTeam.map(h=>`<li>🟥 ${h}</li>`).join('');
+  const bar = document.getElementById('summaryBar');
+  bar.style.width = `${myChance}%`;
+  bar.style.background = myChance<=45?"#f44336":myChance<55?"#ffeb3b":"#4caf50";
+  document.getElementById('summaryChance').textContent = `Шанс на перемогу: ${myChance.toFixed(0)}%`;
+
+  document.getElementById('draftSummary').style.display='block';
+  document.getElementById('results').style.display='none';
+  document.getElementById('selectorsContainer').style.display='none';
+  document.getElementById('stageTitle').style.display='none';
+  document.getElementById('teamsDisplay').style.display='none';
+  document.getElementById('controls').style.display='none';
+
+  updateTeamDisplays(false); // залишаємо останні вибрані герої
 }
-
-// показуємо блок
-document.getElementById('draftSummary').style.display = 'block';
-document.getElementById('results').style.display = 'none';
-
-
-
-
-
-
-    updateTeamDisplays(false); // залишаємо останні вибрані герої в списках
-}
+</script>
  
 
 
