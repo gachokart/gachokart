@@ -1691,6 +1691,7 @@ function calculateBestPicks() {
 
 // ====================== ВІДОБРАЖЕННЯ ======================
 // Категорії з вагами
+// Категорії з вагами
 const roleCategories = {
   carry: { roles: ["Carry", "Pusher", "Nuker"], weight: 3 },
   support: { roles: ["Support", "Disabler"], weight: 2 },
@@ -1721,6 +1722,9 @@ function displayTop(scores) {
   const resultDiv = document.getElementById('results');
   const topHeroes = scores.slice(0, 30); // запас
 
+  // Сортуємо за score спочатку
+  topHeroes.sort((a, b) => b.score - a.score);
+
   // Carry
   const carryHeroes = topHeroes.filter(t => {
     const hero = heroes.find(h => h.name === t.hero);
@@ -1733,13 +1737,14 @@ function displayTop(scores) {
     return hero?.roles.includes('Support') && !carryHeroes.some(c => c.hero === t.hero);
   }).slice(0, 5);
 
-  // Universal = ті, хто має і Carry, і Support
+  // Universal = герої, які не потрапили у Carry/Support, але мають хоча б одну роль з universal
   const universalHeroes = topHeroes.filter(t => {
-  const hero = heroes.find(h => h.name === t.hero);
-  // якщо герой не тільки Carry або Support, а має хоча б одну роль з universal
-  return hero && hero.roles.some(r => roleCategories.universal.roles.includes(r)) &&
-         !hero.roles.includes('Carry') && !hero.roles.includes('Support');
-}).slice(0, 5);
+    const hero = heroes.find(h => h.name === t.hero);
+    return hero &&
+           !carryHeroes.some(c => c.hero === hero.name) &&
+           !supportHeroes.some(s => s.hero === hero.name) &&
+           hero.roles.some(r => roleCategories.universal.roles.includes(r));
+  }).slice(0, 5);
 
   // HTML-відображення
   resultDiv.innerHTML = `
@@ -1753,11 +1758,10 @@ function displayTop(scores) {
           ? carryHeroes.map(t => {
               const hero = heroes.find(h => h.name === t.hero);
               const w = calculateHeroWeight(hero);
-              return `
-                <div class="hero">
-                  <strong>${t.hero}</strong><br>
-                  <small>Бали: ${t.score.toFixed(3)} | Вага: ${w.carry}</small>
-                </div>`;
+              return `<div class="hero">
+                        <strong>${t.hero}</strong><br>
+                        <small>Бали: ${t.score.toFixed(3)} | Carry: ${w.carry}</small>
+                      </div>`;
             }).join('')
           : '<p style="opacity:0.6;">(немає Carry серед топів)</p>'
       }
@@ -1771,11 +1775,10 @@ function displayTop(scores) {
           ? supportHeroes.map(t => {
               const hero = heroes.find(h => h.name === t.hero);
               const w = calculateHeroWeight(hero);
-              return `
-                <div class="hero">
-                  <strong>${t.hero}</strong><br>
-                  <small>Бали: ${t.score.toFixed(3)} | Вага: ${w.support}</small>
-                </div>`;
+              return `<div class="hero">
+                        <strong>${t.hero}</strong><br>
+                        <small>Бали: ${t.score.toFixed(3)} | Support: ${w.support}</small>
+                      </div>`;
             }).join('')
           : '<p style="opacity:0.6;">(немає Support серед топів)</p>'
       }
@@ -1789,11 +1792,10 @@ function displayTop(scores) {
           ? universalHeroes.map(t => {
               const hero = heroes.find(h => h.name === t.hero);
               const w = calculateHeroWeight(hero);
-              return `
-                <div class="hero" style="box-shadow:0 0 10px #66ccff;">
-                  <strong>${t.hero}</strong><br>
-                  <small>Бали: ${t.score.toFixed(3)} | Carry: ${w.carry}, Support: ${w.support}, Univ: ${w.universal}</small>
-                </div>`;
+              return `<div class="hero" style="box-shadow:0 0 10px #66ccff;">
+                        <strong>${t.hero}</strong><br>
+                        <small>Бали: ${t.score.toFixed(3)} | Carry: ${w.carry}, Support: ${w.support}, Univ: ${w.universal}</small>
+                      </div>`;
             }).join('')
           : '<p style="opacity:0.6;">(немає універсальних серед топів)</p>'
       }
