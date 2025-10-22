@@ -1,49 +1,335 @@
 [
     {
-      "matchId": "8000011111",
-      "date": "2025-10-15T19:30:00Z",
-      "hero": "Invoker",
-      "result": "WIN",
-      "durationMinutes": 44,
-      "kda": { "kills": 14, "deaths": 3, "assists": 12 },
-      "roles": ["Mid", "Nuker"],
-      "streakTag": "winStreakStart",
+      "matchId": "1",
+      "date": "2025-09-24",
+      "hero": "Juggernaut",
+      "position": "Core",
+      "result": "LOSS",
+      "durationMinutes": 35,
+      "kda": { "kills": 3, "deaths": 11, "assists": 5 },
       "teammates": [
-        { "hero": "Juggernaut", "kda": { "kills": 12, "deaths": 2, "assists": 8 } },
-        { "hero": "Crystal Maiden", "kda": { "kills": 3, "deaths": 5, "assists": 20 } },
-        { "hero": "Axe", "kda": { "kills": 9, "deaths": 4, "assists": 12 } },
-        { "hero": "Phantom Assassin", "kda": { "kills": 18, "deaths": 1, "assists": 7 } }
+        { "hero": "Weaver", "position": "Hard Support", "kda": { "kills": 2, "deaths": 6, "assists": 13 } },
+        { "hero": "Clockwerk", "position": "Support", "kda": { "kills": 3, "deaths": 12, "assists": 7 } },
+        { "hero": "Necrophos", "position": "Offlane", "kda": { "kills": 5, "deaths": 12, "assists": 8 } },
+        { "hero": "Arc Warden", "position": "Mid", "kda": { "kills": 12, "deaths": 8, "assists": 1 } }
       ],
       "opponents": [
-        { "hero": "Zeus", "result": "LOSS", "kda": { "kills": 6, "deaths": 10, "assists": 7 } },
-        { "hero": "Slark", "result": "LOSS", "kda": { "kills": 2, "deaths": 12, "assists": 4 } },
-        { "hero": "Underlord", "result": "LOSS", "kda": { "kills": 3, "deaths": 8, "assists": 15 } },
-        { "hero": "Lion", "result": "LOSS", "kda": { "kills": 4, "deaths": 9, "assists": 10 } },
-        { "hero": "Drow Ranger", "result": "LOSS", "kda": { "kills": 7, "deaths": 7, "assists": 6 } }
+        { "hero": "Lina", "position": "Support", "result": "WIN", "kda": { "kills": 7, "deaths": 7, "assists": 17 } },
+        { "hero": "Phantom Lancer", "position": "Core", "result": "WIN", "kda": { "kills": 5, "deaths": 6, "assists": 10 } },
+        { "hero": "Lich", "position": "Hard Support", "result": "WIN", "kda": { "kills": 8, "deaths": 6, "assists": 21 } },
+        { "hero": "Lone Druid", "position": "Mid", "result": "WIN", "kda": { "kills": 16, "deaths": 1, "assists": 14 } },
+        { "hero": "Queen of Pain", "position": "Offlane", "result": "WIN", "kda": { "kills": 13, "deaths": 6, "assists": 8 } }
       ]
     },
     {
-      "matchId": "8000011112",
-      "date": "2025-10-16T20:05:00Z",
-      "hero": "Zeus",
-      "result": "LOSS",
-      "durationMinutes": 38,
-      "kda": { "kills": 6, "deaths": 10, "assists": 7 },
-      "roles": ["Nuker", "Ranged"],
-      "streakTag": "loseStreakStart",
+      "matchId": "2",
+      "date": "2025-09-24",
+      "hero": "Lifestealer",
+      "position": "Core",
+      "result": "WIN",
+      "durationMinutes": 23,
+      "kda": { "kills": 2, "deaths": 1, "assists": 9 },
       "teammates": [
-        { "hero": "Slark", "kda": { "kills": 2, "deaths": 12, "assists": 4 } },
-        { "hero": "Ogre Magi", "kda": { "kills": 1, "deaths": 8, "assists": 14 } },
-        { "hero": "Centaur Warrunner", "kda": { "kills": 3, "deaths": 9, "assists": 11 } },
-        { "hero": "Shadow Shaman", "kda": { "kills": 2, "deaths": 7, "assists": 9 } }
+        { "hero": "Nature's Prophet", "position": "Support", "kda": { "kills": 5, "deaths": 2, "assists": 14 } },
+        { "hero": "Lina", "position": "Mid", "kda": { "kills": 13, "deaths": 2, "assists": 8 } },
+        { "hero": "Ogre Magi", "position": "Hard Support", "kda": { "kills": 3, "deaths": 1, "assists": 14 } },
+        { "hero": "Axe", "position": "Offlane", "kda": { "kills": 6, "deaths": 0, "assists": 6 } }
       ],
       "opponents": [
-        { "hero": "Invoker", "result": "WIN", "kda": { "kills": 14, "deaths": 3, "assists": 12 } },
-        { "hero": "Phantom Assassin", "result": "WIN", "kda": { "kills": 18, "deaths": 1, "assists": 7 } },
-        { "hero": "Axe", "result": "WIN", "kda": { "kills": 9, "deaths": 4, "assists": 12 } },
-        { "hero": "Crystal Maiden", "result": "WIN", "kda": { "kills": 3, "deaths": 5, "assists": 20 } },
-        { "hero": "Sniper", "result": "WIN", "kda": { "kills": 11, "deaths": 2, "assists": 9 } }
+        { "hero": "Bane", "position": "Hard Support", "result": "LOSS", "kda": { "kills": 1, "deaths": 6, "assists": 4 } },
+        { "hero": "Earthshaker", "position": "Mid", "result": "LOSS", "kda": { "kills": 1, "deaths": 10, "assists": 0 } },
+        { "hero": "Chaos Knight", "position": "Offlane", "result": "LOSS", "kda": { "kills": 1, "deaths": 6, "assists": 1 } },
+        { "hero": "Juggernaut", "position": "Core", "result": "LOSS", "kda": { "kills": 1, "deaths": 5, "assists": 1 } },
+        { "hero": "Windranger", "position": "Support", "result": "LOSS", "kda": { "kills": 2, "deaths": 3, "assists": 1 } }
       ]
-    }
+    },
+    {
+      "matchId": "3",
+      "date": "2025-09-24",
+      "hero": "Juggernaut",
+      "position": "Core",
+      "result": "WIN",
+      "durationMinutes": 33,
+      "kda": { "kills": 6, "deaths": 9, "assists": 9 },
+      "teammates": [
+        { "hero": "Lion", "position": "Hard Support", "kda": { "kills": 2, "deaths": 10, "assists": 19 } },
+        { "hero": "Shadow Fiend", "position": "Mid", "kda": { "kills": 26, "deaths": 1, "assists": 9 } },
+        { "hero": "Wraith King", "position": "Offlane", "kda": { "kills": 8, "deaths": 4, "assists": 15 } },
+        { "hero": "Weaver", "position": "Support", "kda": { "kills": 7, "deaths": 7, "assists": 17 } }
+      ],
+      "opponents": [
+        { "hero": "Zeus", "position": "Support", "result": "LOSS", "kda": { "kills": 6, "deaths": 12, "assists": 13 } },
+        { "hero": "Puck", "position": "Mid", "result": "LOSS", "kda": { "kills": 5, "deaths": 7, "assists": 5 } },
+        { "hero": "Shadow Shaman", "position": "Hard Support", "result": "LOSS", "kda": { "kills": 6, "deaths": 11, "assists": 10 } },
+        { "hero": "Underlord", "position": "Offlane", "result": "LOSS", "kda": { "kills": 8, "deaths": 12, "assists": 15 } },
+        { "hero": "Sven", "position": "Core", "result": "LOSS", "kda": { "kills": 5, "deaths": 8, "assists": 11 } }
+      ]
+    },
+    {
+      "matchId": "4",
+      "date": "2025-09-23",
+      "hero": "Riki",
+      "position": "Core",
+      "result": "WIN",
+      "durationMinutes": 36,
+      "kda": { "kills": 19, "deaths": 5, "assists": 14 },
+      "teammates": [
+        { "hero": "Witch Doctor", "position": "Support", "kda": { "kills": 13, "deaths": 3, "assists": 14 } },
+        { "hero": "Dazzle", "position": "Hard Support", "kda": { "kills": 6, "deaths": 7, "assists": 29 } },
+        { "hero": "Dawnbreaker", "position": "Offlane", "kda": { "kills": 11, "deaths": 6, "assists": 24 } },
+        { "hero": "Puck", "position": "Mid", "kda": { "kills": 14, "deaths": 6, "assists": 11 } }
+      ],
+      "opponents": [
+        { "hero": "Sven", "position": "Core", "result": "LOSS", "kda": { "kills": 2, "deaths": 7, "assists": 3 } },
+        { "hero": "Hoodwink", "position": "Support", "result": "LOSS", "kda": { "kills": 8, "deaths": 11, "assists": 10 } },
+        { "hero": "Necrophos", "position": "Offlane", "result": "LOSS", "kda": { "kills": 7, "deaths": 15, "assists": 8 } },
+        { "hero": "Venomancer", "position": "Hard Support", "result": "LOSS", "kda": { "kills": 5, "deaths": 19, "assists": 12 } },
+        { "hero": "Skywrath Mage", "position": "Mid", "result": "LOSS", "kda": { "kills": 5, "deaths": 13, "assists": 14 } }
+      ]
+    },
+    {
+      "matchId": "5",
+      "date": "2025-09-22",
+      "hero": "Phantom Lancer",
+      "position": "Core",
+      "result": "WIN",
+      "durationMinutes": 42,
+      "kda": { "kills": 11, "deaths": 3, "assists": 15 },
+      "teammates": [
+        { "hero": "Invoker", "position": "Mid", "kda": { "kills": 20, "deaths": 5, "assists": 12 } },
+        { "hero": "Dazzle", "position": "Support", "kda": { "kills": 1, "deaths": 6, "assists": 18 } },
+        { "hero": "Elder Titan", "position": "Offlane", "kda": { "kills": 0, "deaths": 10, "assists": 6 } },
+        { "hero": "Disruptor", "position": "Hard Support", "kda": { "kills": 4, "deaths": 12, "assists": 22 } }
+      ],
+      "opponents": [
+        { "hero": "Phoenix", "position": "Hard Support", "result": "LOSS", "kda": { "kills": 6, "deaths": 12, "assists": 13 } },
+        { "hero": "Sniper", "position": "Mid", "result": "LOSS", "kda": { "kills": 13, "deaths": 8, "assists": 11 } },
+        { "hero": "Wraith King", "position": "Offlane", "result": "LOSS", "kda": { "kills": 8, "deaths": 10, "assists": 12 } },
+        { "hero": "Rubick", "position": "Support", "result": "LOSS", "kda": { "kills": 2, "deaths": 4, "assists": 16 } },
+        { "hero": "Riki", "position": "Core", "result": "LOSS", "kda": { "kills": 9, "deaths": 8, "assists": 7 } }
+      ]
+    },
+    {
+      "matchId": "6",
+      "date": "2025-09-22",
+      "hero": "Lifestealer",
+      "position": "Core",
+      "result": "LOSS",
+      "durationMinutes": 45,
+      "kda": { "kills": 7, "deaths": 4, "assists": 11 },
+      "teammates": [
+        { "hero": "Dawnbreaker", "position": "Offlane", "kda": { "kills": 9, "deaths": 8, "assists": 9 } },
+        { "hero": "Elder Titan", "position": "Support", "kda": { "kills": 4, "deaths": 18, "assists": 16 } },
+        { "hero": "Earthshaker", "position": "Mid", "kda": { "kills": 6, "deaths": 9, "assists": 5 } },
+        { "hero": "Enigma", "position": "Hard Support", "kda": { "kills": 1, "deaths": 13, "assists": 11 } }
+      ],
+      "opponents": [
+        { "hero": "Medusa", "position": "Core", "result": "WIN", "kda": { "kills": 11, "deaths": 4, "assists": 13 } },
+        { "hero": "Tidehunter", "position": "Offlane", "result": "WIN", "kda": { "kills": 7, "deaths": 8, "assists": 20 } },
+        { "hero": "Witch Doctor", "position": "Hard Support", "result": "WIN", "kda": { "kills": 6, "deaths": 10, "assists": 24 } },
+        { "hero": "Queen of Pain", "position": "Mid", "result": "WIN", "kda": { "kills": 21, "deaths": 3, "assists": 10 } },
+        { "hero": "Nyx Assassin", "position": "Support", "result": "WIN", "kda": { "kills": 7, "deaths": 4, "assists": 19 } }
+      ]
+    },
+     {
+      "matchId": "7",
+      "date": "2025-09-22",
+      "hero": "Ursa",
+      "position": "Core",
+      "result": "LOSS",
+      "durationMinutes": 33,
+      "kda": { "kills": 6, "deaths": 8, "assists": 5 },
+      "teammates": [
+        { "hero": "Puck", "position": "Mid", "kda": { "kills": 5, "deaths": 5, "assists": 7 } },
+        { "hero": "Earthshaker", "position": "Support", "kda": { "kills": 1, "deaths": 7, "assists": 6 } },
+        { "hero": "Dragon Knight", "position": "Offlane", "kda": { "kills": 3, "deaths": 10, "assists": 2 } },
+        { "hero": "Vengeful Spirit", "position": "Hard Support", "kda": { "kills": 3, "deaths": 11, "assists": 11 } }
+      ],
+      "opponents": [
+        { "hero": "Luna", "position": "Core", "result": "Win", "kda": { "kills": 12, "deaths": 2, "assists": 9 } },
+        { "hero": "Alchemist", "position": "Mid", "result": "WIN", "kda": { "kills": 7, "deaths": 0, "assists": 18 } },
+        { "hero": "Silencer", "position": "Support", "result": "WIN", "kda": { "kills": 3, "deaths": 5, "assists": 23 } },
+        { "hero": "Pudge", "position": "Offlane", "result": "WIN", "kda": { "kills": 10, "deaths": 9, "assists": 18 } },
+        { "hero": "Dazzle", "position": "Hard Support", "result": "WIN", "kda": { "kills": 9, "deaths": 3, "assists": 23 } }
+      ]
+    },
+    {
+      "matchId": "8",
+      "date": "2025-09-22",
+      "hero": "Weaver",
+      "position": "Core",
+      "result": "LOSS",
+      "durationMinutes": 38,
+      "kda": { "kills": 10, "deaths": 6, "assists": 6 },
+      "teammates": [
+        { "hero": "Rubick", "position": "Mid", "kda": { "kills": 23, "deaths": 5, "assists": 10 } },
+        { "hero": "Invoker", "position": "Support", "kda": { "kills": 3, "deaths": 13, "assists": 16 } },
+        { "hero": "Magnus", "position": "Offlane", "kda": { "kills": 3, "deaths": 9, "assists": 14 } },
+        { "hero": "Hoodwink", "position": "Hard Support", "kda": { "kills": 4, "deaths": 6, "assists": 24 } }
+      ],
+      "opponents": [
+        { "hero": "Earthshaker", "position": "Mid", "result": "WIN", "kda": { "kills": 10, "deaths": 9, "assists": 16 } },
+        { "hero": "Morphling", "position": "Core", "result": "WIN", "kda": { "kills": 12, "deaths": 3, "assists": 11 } },
+        { "hero": "Ancient Apparition", "position": "Support", "result": "WIN", "kda": { "kills": 4, "deaths": 16, "assists": 13 } },
+        { "hero": "Riki", "position": "Hard Support", "result": "WIN", "kda": { "kills": 5, "deaths": 10, "assists": 17 } },
+        { "hero": "Necrophos", "position": "Offlane", "result": "WIN", "kda": { "kills": 7, "deaths": 6, "assists": 12 } }
+      ]
+    },
+     {
+      "matchId": "9",
+      "date": "2025-09-21",
+      "hero": "Lifestealer",
+      "position": "Core",
+      "result": "WIN",
+      "durationMinutes": 39,
+      "kda": { "kills": 12, "deaths": 2, "assists": 14 },
+      "teammates": [
+        { "hero": "Nature's Prophet", "position": "Mid", "kda": { "kills": 15, "deaths": 7, "assists": 21 } },
+        { "hero": "Io", "position": "Hard Support", "kda": { "kills": 2, "deaths": 12, "assists": 24 } },
+        { "hero": "Dark Willow", "position": "Support", "kda": { "kills": 6, "deaths": 7, "assists": 29 } },
+        { "hero": "Primal Beast", "position": "Offlane", "kda": { "kills": 13, "deaths": 6, "assists": 31 } }
+      ],
+      "opponents": [
+        { "hero": "Disruptor", "position": "Hard Support", "result": "LOSS", "kda": { "kills": 2, "deaths": 16, "assists": 24 } },
+        { "hero": "Necrophos", "position": "Mid", "result": "LOSS", "kda": { "kills": 8, "deaths": 9, "assists": 13 } },
+        { "hero": "Pudge", "position": "Support", "result": "LOSS", "kda": { "kills": 8, "deaths": 9, "assists": 15 } },
+        { "hero": "Weaver", "position": "Offlane", "result": "LOSS", "kda": { "kills": 8, "deaths": 7, "assists": 11 } },
+        { "hero": "Phantom Assassin", "position": "Core", "result": "LOSS", "kda": { "kills": 6, "deaths": 8, "assists": 5 } }
+      ]
+    },
+    {
+      "matchId": "10",
+      "date": "2025-09-20",
+      "hero": "Lifestealer",
+      "position": "Core",
+      "result": "WIN",
+      "durationMinutes": 45,
+      "kda": { "kills": 2, "deaths": 4, "assists": 10 },
+      "teammates": [
+        { "hero": "Necrophos", "position": "Offlane", "kda": { "kills": 20, "deaths": 10, "assists": 16 } },
+        { "hero": "Razor", "position": "Mid", "kda": { "kills": 11, "deaths": 8, "assists": 20 } },
+        { "hero": "Earthshaker", "position": "Hard Support", "kda": { "kills": 9, "deaths": 12, "assists": 26 } },
+        { "hero": "Magnus", "position": "Support", "kda": { "kills": 10, "deaths": 12, "assists": 23 } }
+      ],
+      "opponents": [
+        { "hero": "Queen of Pain", "position": "Support", "result": "LOSS", "kda": { "kills": 5, "deaths": 9, "assists": 24 } },
+        { "hero": "Silencer", "position": "Hard Support", "result": "LOSS", "kda": { "kills": 9, "deaths": 13, "assists": 26 } },
+        { "hero": "Invoker", "position": "Mid", "result": "LOSS", "kda": { "kills": 5, "deaths": 14, "assists": 23 } },
+        { "hero": "Sniper", "position": "Core", "result": "LOSS", "kda": { "kills": 10, "deaths": 5, "assists": 11 } },
+        { "hero": "Huskar", "position": "Offlane", "result": "LOSS", "kda": { "kills": 17, "deaths": 13, "assists": 12 } }
+      ]
+    },
+    {
+      "matchId": "11",
+      "date": "2025-09-20",
+      "hero": "Wraith King",
+      "position": "Core",
+      "result": "WIN",
+      "durationMinutes": 41,
+      "kda": { "kills": 12, "deaths": 9, "assists": 17 },
+      "teammates": [
+        { "hero": "Weaver", "position": "Support", "kda": { "kills": 3, "deaths": 2, "assists": 25 } },
+        { "hero": "Pudge", "position": "Offlane", "kda": { "kills": 19, "deaths": 5, "assists": 8 } },
+        { "hero": "Undying", "position": "Hard Support", "kda": { "kills": 4, "deaths": 11, "assists": 25 } },
+        { "hero": "Lion", "position": "Mid", "kda": { "kills": 24, "deaths": 10, "assists": 10 } }
+      ],
+      "opponents": [
+        { "hero": "Zeus", "position": "Hard Support", "result": "LOSS", "kda": { "kills": 8, "deaths": 10, "assists": 16 } },
+        { "hero": "Ursa", "position": "Core", "result": "LOSS", "kda": { "kills": 12, "deaths": 9, "assists": 12 } },
+        { "hero": "Techies", "position": "Offlane", "result": "LOSS", "kda": { "kills": 8, "deaths": 10, "assists": 16 } },
+        { "hero": "Vengeful Spirit", "position": "Support", "result": "LOSS", "kda": { "kills": 1, "deaths": 15, "assists": 19 } },
+        { "hero": "Storm Spirit", "position": "MId", "result": "LOSS", "kda": { "kills": 7, "deaths": 18, "assists": 16 } }
+      ]
+    },
+    {
+      "matchId": "12",
+      "date": "2025-09-20",
+      "hero": "Wraith King",
+      "position": "Core",
+      "result": "LOSS",
+      "durationMinutes": 46,
+      "kda": { "kills": 1, "deaths": 7, "assists": 6 },
+      "teammates": [
+        { "hero": "Shadow Shaman", "position": "Support", "kda": { "kills": 3, "deaths": 15, "assists": 14 } },
+        { "hero": "Lion", "position": "Hard Support", "kda": { "kills": 6, "deaths": 6, "assists": 7 } },
+        { "hero": "Slardar", "position": "Offlane", "kda": { "kills": 5, "deaths": 6, "assists": 12 } },
+        { "hero": "Nature's Prophet", "position": "Mid", "kda": { "kills": 10, "deaths": 7, "assists": 6 } }
+      ],
+      "opponents": [
+        { "hero": "Outworld Destroyer", "position": "Mid", "result": "WIN", "kda": { "kills": 18, "deaths": 1, "assists": 9 } },
+        { "hero": "Juggernaut", "position": "Core", "result": "WIN", "kda": { "kills": 4, "deaths": 6, "assists": 11 } },
+        { "hero": "Silencer", "position": "Support", "result": "WIN", "kda": { "kills": 4, "deaths": 4, "assists": 25 } },
+        { "hero": "Dawnbreaker", "position": "Offlane", "result": "WIN", "kda": { "kills": 10, "deaths": 7, "assists": 21 } },
+        { "hero": "Vengeful Spirit", "position": "Hard Support", "result": "WIN", "kda": { "kills": 5, "deaths": 7, "assists": 25 } }
+      ]
+    },
+    {
+      "matchId": "13",
+      "date": "2025-09-20",
+      "hero": "Queen of Pain",
+      "position": "Mid",
+      "result": "WIN",
+      "durationMinutes": 39,
+      "kda": { "kills": 15, "deaths": 5, "assists": 19 },
+      "teammates": [
+        { "hero": "Bounty Hunter", "position": "Support", "kda": { "kills": 6, "deaths": 6, "assists": 19 } },
+        { "hero": "Medusa", "position": "Core", "kda": { "kills": 7, "deaths": 4, "assists": 15 } },
+        { "hero": "Earthshaker", "position": "Offlane", "kda": { "kills": 8, "deaths": 12, "assists": 16 } },
+        { "hero": "Lion", "position": "Hard Support", "kda": { "kills": 11, "deaths": 13, "assists": 15 } }
+      ],
+      "opponents": [
+        { "hero": "Zeus", "position": "Mid", "result": "LOSS", "kda": { "kills": 9, "deaths": 7, "assists": 9 } },
+        { "hero": "Ogre Magi", "position": "Hard Support", "result": "LOSS", "kda": { "kills": 4, "deaths": 10, "assists": 20 } },
+        { "hero": "Silencer", "position": "Support", "result": "LOSS", "kda": { "kills": 10, "deaths": 11, "assists": 17 } },
+        { "hero": "Pudge", "position": "Offlane", "result": "LOSS", "kda": { "kills": 8, "deaths": 10, "assists": 15 } },
+        { "hero": "Phantom Lancer", "position": "Core", "result": "LOSS", "kda": { "kills": 7, "deaths": 9, "assists": 8 } }
+      ]
+    },
+    {
+      "matchId": "14",
+      "date": "2025-09-19",
+      "hero": "Abaddon",
+      "position": "Hard Support",
+      "result": "WIN",
+      "durationMinutes": 53,
+      "kda": { "kills": 3, "deaths": 8, "assists": 25 },
+      "teammates": [
+        { "hero": "Windranger", "position": "Support", "kda": { "kills": 8, "deaths": 10, "assists": 14 } },
+        { "hero": "Sven", "position": "Mid", "kda": { "kills": 10, "deaths": 9, "assists": 17 } },
+        { "hero": "Mars", "position": "Offlane", "kda": { "kills": 9, "deaths": 9, "assists": 23 } },
+        { "hero": "Phantom Lancer", "position": "Core", "kda": { "kills": 15, "deaths": 7, "assists": 12 } }
+      ],
+      "opponents": [
+        { "hero": "Ogre Magi", "position": "Offlane", "result": "LOSS", "kda": { "kills": 3, "deaths": 11, "assists": 16 } },
+        { "hero": "Mirana", "position": "Hard Support", "result": "LOSS", "kda": { "kills": 2, "deaths": 9, "assists": 27 } },
+        { "hero": "Ursa", "position": "Core", "result": "LOSS", "kda": { "kills": 15, "deaths": 7, "assists": 16 } },
+        { "hero": "Silencer", "position": "Support", "result": "LOSS", "kda": { "kills": 7, "deaths": 11, "assists": 27 } },
+        { "hero": "Puck", "position": "Mid", "result": "LOSS", "kda": { "kills": 15, "deaths": 7, "assists": 17 } }
+      ]
+    },
+    {
+      "matchId": "15",
+      "date": "2025-09-19",
+      "hero": "Ogre Magi",
+      "position": "Hard Support",
+      "result": "LOSS",
+      "durationMinutes": 58,
+      "kda": { "kills": 0, "deaths": 14, "assists": 28 },
+      "teammates": [
+        { "hero": "Windranger", "position": "Offlane", "kda": { "kills": 19, "deaths": 14, "assists": 12 } },
+        { "hero": "Earth Spirit", "position": "Support", "kda": { "kills": 6, "deaths": 6, "assists": 7 } },
+        { "hero": "Pudge", "position": "Mid", "kda": { "kills": 6, "deaths": 12, "assists": 23 } },
+        { "hero": "Phantom Lancer", "position": "Core", "kda": { "kills": 17, "deaths": 12, "assists": 14 } }
+      ],
+      "opponents": [
+        { "hero": "Huskar", "position": "Offlane", "result": "WIN", "kda": { "kills": 10, "deaths": 17, "assists": 19 } },
+        { "hero": "Shadow Demon", "position": "Hard Support", "result": "WIN", "kda": { "kills": 4, "deaths": 16, "assists": 34 } },
+        { "hero": "Puck", "position": "Mid", "result": "WIN", "kda": { "kills": 26, "deaths": 7, "assists": 19 } },
+        { "hero": "Phantom Assassin", "position": "Offlane", "result": "WIN", "kda": { "kills": 10, "deaths": 9, "assists": 20 } },
+        { "hero": "Riki", "position": "Support", "result": "WIN", "kda": { "kills": 15, "deaths": 6, "assists": 18 } }
+      ]
+    },
   ],
+
+
 
