@@ -1,0 +1,49 @@
+[
+    {
+      "matchId": "8000011111",
+      "date": "2025-10-15T19:30:00Z",
+      "hero": "Invoker",
+      "result": "WIN",
+      "durationMinutes": 44,
+      "kda": { "kills": 14, "deaths": 3, "assists": 12 },
+      "roles": ["Mid", "Nuker"],
+      "streakTag": "winStreakStart",
+      "teammates": [
+        { "hero": "Juggernaut", "kda": { "kills": 12, "deaths": 2, "assists": 8 } },
+        { "hero": "Crystal Maiden", "kda": { "kills": 3, "deaths": 5, "assists": 20 } },
+        { "hero": "Axe", "kda": { "kills": 9, "deaths": 4, "assists": 12 } },
+        { "hero": "Phantom Assassin", "kda": { "kills": 18, "deaths": 1, "assists": 7 } }
+      ],
+      "opponents": [
+        { "hero": "Zeus", "result": "LOSS", "kda": { "kills": 6, "deaths": 10, "assists": 7 } },
+        { "hero": "Slark", "result": "LOSS", "kda": { "kills": 2, "deaths": 12, "assists": 4 } },
+        { "hero": "Underlord", "result": "LOSS", "kda": { "kills": 3, "deaths": 8, "assists": 15 } },
+        { "hero": "Lion", "result": "LOSS", "kda": { "kills": 4, "deaths": 9, "assists": 10 } },
+        { "hero": "Drow Ranger", "result": "LOSS", "kda": { "kills": 7, "deaths": 7, "assists": 6 } }
+      ]
+    },
+    {
+      "matchId": "8000011112",
+      "date": "2025-10-16T20:05:00Z",
+      "hero": "Zeus",
+      "result": "LOSS",
+      "durationMinutes": 38,
+      "kda": { "kills": 6, "deaths": 10, "assists": 7 },
+      "roles": ["Nuker", "Ranged"],
+      "streakTag": "loseStreakStart",
+      "teammates": [
+        { "hero": "Slark", "kda": { "kills": 2, "deaths": 12, "assists": 4 } },
+        { "hero": "Ogre Magi", "kda": { "kills": 1, "deaths": 8, "assists": 14 } },
+        { "hero": "Centaur Warrunner", "kda": { "kills": 3, "deaths": 9, "assists": 11 } },
+        { "hero": "Shadow Shaman", "kda": { "kills": 2, "deaths": 7, "assists": 9 } }
+      ],
+      "opponents": [
+        { "hero": "Invoker", "result": "WIN", "kda": { "kills": 14, "deaths": 3, "assists": 12 } },
+        { "hero": "Phantom Assassin", "result": "WIN", "kda": { "kills": 18, "deaths": 1, "assists": 7 } },
+        { "hero": "Axe", "result": "WIN", "kda": { "kills": 9, "deaths": 4, "assists": 12 } },
+        { "hero": "Crystal Maiden", "result": "WIN", "kda": { "kills": 3, "deaths": 5, "assists": 20 } },
+        { "hero": "Sniper", "result": "WIN", "kda": { "kills": 11, "deaths": 2, "assists": 9 } }
+      ]
+    }
+  ],
+
