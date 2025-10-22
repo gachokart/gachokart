@@ -1858,6 +1858,26 @@ document.getElementById('stageTitle').style.display = 'none';
 document.getElementById('results').style.display = 'none';
 document.getElementById('teamsDisplay').style.display = 'none';
 document.getElementById('controls').style.display = 'none';
+  // текст
+document.getElementById('summaryChance').textContent = `Шанс на перемогу: ${myChance.toFixed(0)}%`;
+
+// шкала
+const bar = document.getElementById("summaryBar");
+bar.style.width = `${myChance}%`;
+
+if (myChance <= 45) {
+  bar.style.background = "#f44336"; // червоний
+} else if (myChance < 55) {
+  bar.style.background = "#ffeb3b"; // жовтий
+} else {
+  bar.style.background = "#4caf50"; // зелений
+}
+
+// показуємо блок
+document.getElementById('draftSummary').style.display = 'block';
+document.getElementById('results').style.display = 'none';
+
+
 
 
 
