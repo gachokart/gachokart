@@ -1684,7 +1684,7 @@ function calculateBestPicks() {
 
   function getDuplicatePenalty(hero) {
     let penalty = 0;
-    hero.roles.forEach(r => { if (roleCount[r] && roleCount[r]>1) penalty += (roleWeights[r]||1)*(roleCount[r]-1);
+    hero.roles.forEach(r => { if (roleCount[r] && roleCount[r]>1) penalty += (roleWeights[r]||1)*(roleCount[r]-1);}
     return penalty;
   }
 
