@@ -1735,9 +1735,11 @@ function displayTop(scores) {
 
   // Universal = ті, хто має і Carry, і Support
   const universalHeroes = topHeroes.filter(t => {
-    const hero = heroes.find(h => h.name === t.hero);
-    return hero?.roles.includes('Carry') && hero?.roles.includes('Support');
-  }).slice(0, 5);
+  const hero = heroes.find(h => h.name === t.hero);
+  // якщо герой не тільки Carry або Support, а має хоча б одну роль з universal
+  return hero && hero.roles.some(r => roleCategories.universal.roles.includes(r)) &&
+         !hero.roles.includes('Carry') && !hero.roles.includes('Support');
+}).slice(0, 5);
 
   // HTML-відображення
   resultDiv.innerHTML = `
