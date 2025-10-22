@@ -200,6 +200,24 @@ button:hover {
     margin-right: 5px;
   }
 
+  #win-bar-container {
+  width: 100%;
+  height: 20px;
+  background: #333;
+  border-radius: 10px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+#win-bar {
+  height: 100%;
+  width: 0%;
+  background: #4caf50; /* за замовчуванням зелений */
+  transition: width 0.5s ease, background 0.5s ease;
+}
+
+
+
 </style>
 </head>
 
@@ -256,6 +274,10 @@ button:hover {
   </div>
 </div>
 <div id="behaviorInfo" style="display:none; margin-top:15px; color:#ff6666;"></div>
+<div id="win-bar-container">
+  <div id="win-bar"></div>
+</div>
+
 
 
 <script>
@@ -1838,6 +1860,23 @@ function showFinalChance() {
         myChance *= stability * (1 + influence);
         myChance = Math.max(5, Math.min(95, myChance));
     }
+
+  document.getElementById('summaryChance').textContent = `Шанс на перемогу: ${myChance.toFixed(0)}%`;
+
+// шкала
+const bar = document.getElementById("summaryBar");
+bar.style.width = `${myChance}%`;
+
+if (myChance <= 45) {
+  bar.style.background = "#f44336"; // червоний
+} else if (myChance < 55) {
+  bar.style.background = "#ffeb3b"; // жовтий
+} else {
+  bar.style.background = "#4caf50"; // зелений
+}
+
+
+
 
     // відображення
     document.getElementById('summaryMyTeam').innerHTML = myTeam.map(h=>`<li>🟩 ${h}</li>`).join('');
