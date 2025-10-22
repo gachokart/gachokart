@@ -259,20 +259,7 @@ button:hover {
   </div>
 </div>
 <div id="behaviorInfo" style="display:none; margin-top:15px; color:#ff6666;"></div>
-<div id="role-columns" style="display:flex; gap:20px; margin-top:20px;">
-  <div id="carry-col" style="flex:1;">
-    <h3>Carry</h3>
-    <ul id="carry-list"></ul>
-  </div>
-  <div id="support-col" style="flex:1;">
-    <h3>Support</h3>
-    <ul id="support-list"></ul>
-  </div>
-  <div id="universal-col" style="flex:1;">
-    <h3>Universal</h3>
-    <ul id="universal-list"></ul>
-  </div>
-</div>
+
 
 
 
@@ -1438,27 +1425,7 @@ const stageLimits = [ { my: 2, enemy: 2 }, { my: 2, enemy: 2 }, { my: 1, enemy: 
 // ====================== ІНІЦІАЛІЗАЦІЯ ======================
 document.addEventListener('DOMContentLoaded', () => { createSelectors(); updateTeamDisplays()});
 
-  function showRoleColumns(heroes) {
-  // очищаємо попередній вивід
-  document.getElementById("carry-list").innerHTML = "";
-  document.getElementById("support-list").innerHTML = "";
-  document.getElementById("universal-list").innerHTML = "";
-
-  heroes.forEach(hero => {
-    const weights = calculateHeroWeight(hero); // наша функція з категоріями
-    if (weights.carry > 0) {
-      document.getElementById("carry-list").innerHTML += `<li>${hero.name}</li>`;
-    }
-    if (weights.support > 0) {
-      document.getElementById("support-list").innerHTML += `<li>${hero.name}</li>`;
-    }
-    if (weights.universal > 0) {
-      document.getElementById("universal-list").innerHTML += `<li>${hero.name}</li>`;
-    }
-  });
-}
-
-
+ 
 
 // ====================== СЕЛЕКТОРИ ======================
 function createSelectors(savedMy = [], savedEnemy = []) {
@@ -1913,13 +1880,7 @@ if (myChance <= 45) {
 // показуємо блок
 document.getElementById('draftSummary').style.display = 'block';
 document.getElementById('results').style.display = 'none';
-  document.getElementById("go-button").addEventListener("click", () => {
-  // ... твій існуючий код для збору героїв
-
-  // приклад: показати моїх героїв у 3 колонках
-  const myTeam = heroes.filter(h => myHeroes.includes(h.name));
-  showRoleColumns(myTeam);
-});
+ 
 
 
 
