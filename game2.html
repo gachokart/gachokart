@@ -1418,6 +1418,53 @@ const roleWeights = { Carry: 1.0, Disabler: 0.9, Durable: 0.8, Initiator: 0.9, E
 
 // ====================== ЕТАПИ ======================
 const stageLimits = [ { my: 2, enemy: 2 }, { my: 2, enemy: 2 }, { my: 1, enemy: 1 } ];
+// ====================== КАТЕГОРІЇ ТА ВАГИ РОЛЕЙ ======================
+const roleCategories = {
+  Carry: {
+    roles: {
+      Melee: 0.6,
+      Ranged: 0.6,
+      Carry: 1.0,
+      Nuker: 0.8
+    },
+    weight: 1.0
+  },
+  Support: {
+    roles: {
+      Support: 0.9,
+      Disabler: 0.85,
+      Pusher: 0.7
+    },
+    weight: 0.9
+  },
+  Universal: {
+    roles: {
+      Durable: 0.8,
+      Initiator: 0.85,
+      Escape: 0.75
+    },
+    weight: 0.85
+  }
+};
+
+// ✅ Функція для отримання ваги героя за його ролями
+function getHeroCategoryWeight(heroRoles) {
+  let totalWeight = 0;
+  let totalCount = 0;
+
+  for (const categoryName in roleCategories) {
+    const category = roleCategories[categoryName];
+    for (const role of heroRoles) {
+      if (category.roles[role]) {
+        totalWeight += category.roles[role] * category.weight;
+        totalCount++;
+      }
+    }
+  }
+
+  return totalCount > 0 ? totalWeight / totalCount : 0;
+}
+  
 
 
 // ====================== ІНІЦІАЛІЗАЦІЯ ======================
