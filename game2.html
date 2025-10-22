@@ -262,6 +262,10 @@ button:hover {
 
 
 <script>
+
+  let stage = 1;
+let allMyHeroes = [];
+let allEnemyHeroes = [];
 // =========================
 // 🔥 ВШИТИЙ heroes.json
 // =========================
@@ -1458,7 +1462,13 @@ const stageLimits = [
 
 
 // ====================== ІНІЦІАЛІЗАЦІЯ ======================
-document.addEventListener('DOMContentLoaded', () => { createSelectors(); updateTeamDisplays()});
+document.addEventListener('DOMContentLoaded', () => {
+  createSelectors();
+  updateTeamDisplays();
+  calculateBestPicks();
+  showBehaviorInfo();
+});
+
 
 // ====================== СЕЛЕКТОРИ ======================
 function createSelectors(savedMy = [], savedEnemy = []) {
