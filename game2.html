@@ -1447,6 +1447,13 @@ function getHeroCategoryWeight(heroRoles) {
   return totalCount > 0 ? totalWeight / totalCount : 0;
 }
 
+  // ====================== ЕТАПИ ГРИ ======================
+const stageLimits = [
+  { my: 2, enemy: 2 },  // Стадія 1 — по 2 герої на кожну команду
+  { my: 2, enemy: 2 },  // Стадія 2 — ще по 2
+  { my: 1, enemy: 1 }   // Стадія 3 — фінальний вибір
+];
+
   
 
 
