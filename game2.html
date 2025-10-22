@@ -227,6 +227,8 @@ button:hover {
 <!-- 🔹 Додаємо напис стадії -->
 <h2 id="stageTitle">Stage 1</h2>  
 
+<div id="selectorsContainer">
+
 
 <div id="myTeam" class="team"></div>
 
@@ -234,7 +236,7 @@ button:hover {
 <div id="enemyTeam" class="team"></div>
 
 <button id="nextBtn">Go</button>
-
+</div>
 <div id="results"></div>
   
 <div id="controls">
@@ -1874,6 +1876,16 @@ if (myChance <= 45) {
 } else {
   bar.style.background = "#4caf50"; // зелений
 }
+
+// показуємо фінальний результат
+document.getElementById('draftSummary').style.display = 'block';
+
+// ховаємо селектори та заголовок стадії
+document.getElementById('selectorsContainer').style.display = 'none';
+document.getElementById('stageTitle').style.display = 'none';
+document.getElementById('results').style.display = 'none';
+document.getElementById('teamsDisplay').style.display = 'none';
+document.getElementById('controls').style.display = 'none';
 
 
 
