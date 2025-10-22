@@ -1439,6 +1439,15 @@ const roleWeights = { Carry: 1.0, Disabler: 0.9, Durable: 0.8, Initiator: 0.9, E
 
 // ====================== ЕТАПИ ======================
 const stageLimits = [ { my: 2, enemy: 2 }, { my: 2, enemy: 2 }, { my: 1, enemy: 1 } ];
+  function mapToMainRole(heroRoles) {
+  if (heroRoles.includes("Carry") || heroRoles.includes("Escape") || heroRoles.includes("Pusher")) {
+    return "Carry";
+  }
+  if (heroRoles.includes("Support") || heroRoles.includes("Disabler") || heroRoles.includes("Initiator") || heroRoles.includes("Durable")) {
+    return "Support";
+  }
+  return "Universal"; // все інше
+}
 
 
 // ====================== ІНІЦІАЛІЗАЦІЯ ======================
@@ -1713,21 +1722,18 @@ function displayTop(scores) {
 
   // 🔹 Фільтруємо Carry першими
   const carryHeroes = topHeroes.filter(t => {
-    const hero = heroes.find(h => h.name === t.hero);
-    return hero?.roles.includes('Carry');
-  }).slice(0, 5);
+  const hero = heroes.find(h => h.name === t.hero);
+  return mapToMainRole(hero?.roles) === "Carry";
+}).slice(0, 5);
 
-  // 🔹 Потім Support, але виключаємо героїв, які вже є в Carry
-  const supportHeroes = topHeroes.filter(t => {
-    const hero = heroes.find(h => h.name === t.hero);
-    return hero?.roles.includes('Support') && !carryHeroes.some(c => c.hero === t.hero);
-  }).slice(0, 5);
+const supportHeroes = topHeroes.filter(t => {
+  const hero = heroes.find(h => h.name === t.hero);
+  return mapToMainRole(hero?.roles) === "Support" && !carryHeroes.some(c => c.hero === t.hero);
+}).slice(0, 5);
 
-  // Універсальні = ті, хто має і Carry, і Support
-// але беремо тільки з topHeroes (тобто з урахуванням поточного стану)
 const universalHeroes = topHeroes.filter(t => {
   const hero = heroes.find(h => h.name === t.hero);
-  return hero?.roles.includes('Carry') && hero?.roles.includes('Support');
+  return mapToMainRole(hero?.roles) === "Universal";
 }).slice(0, 5);
 
 
@@ -1908,6 +1914,11 @@ document.getElementById('controls').style.display = 'none';
     document.getElementById('summaryBar').style.width = `${myChance}%`;
     document.getElementById('draftSummary').style.display = 'block';
     document.getElementById('results').style.display = 'none';
+  document.getElementById('summaryMyTeam').innerHTML = myTeam.map(h=>{
+  const hero = heroes.find(x => x.name === h);
+  const role = mapToMainRole(hero.roles);
+  return `<li>🟩 ${h} <small>(${role})</small></li>`;
+}).join('');
 
 
     updateTeamDisplays(false); // залишаємо останні вибрані герої в списках
