@@ -1877,6 +1877,17 @@ if (myChance <= 45) {
   bar.style.background = "#4caf50"; // зелений
 }
 
+  function mapToMainRole(heroRoles) {
+  if (heroRoles.includes("Carry") || heroRoles.includes("Escape") || heroRoles.includes("Pusher")) {
+    return "Carry";
+  }
+  if (heroRoles.includes("Support") || heroRoles.includes("Disabler") || heroRoles.includes("Initiator") || heroRoles.includes("Durable")) {
+    return "Support";
+  }
+  return "Universal"; // все інше
+}
+
+
 // показуємо фінальний результат
 document.getElementById('draftSummary').style.display = 'block';
 
