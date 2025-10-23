@@ -6,9 +6,14 @@
   <style>
     body { background:#111; color:#eee; font-family:monospace; padding:20px; }
     h1 { color:#6cf; }
+    h2 { color:#9cf; }
+    h3 { color:#acf; }
     .match { margin:5px 0; padding:5px; border-bottom:1px solid #333; }
     .good { color:#6f6; }
     .bad { color:#f66; }
+    table { border-collapse: collapse; margin:10px 0; width:auto; }
+    th, td { border:1px solid #333; padding:6px 8px; text-align:left; }
+    img.hero { width:40px; height:40px; vertical-align:middle; margin-right:6px; }
   </style>
 </head>
 <body>
@@ -23,163 +28,262 @@
     async function fetchMatchHistory() {
       const url = `http://localhost:3000/api/matches?account_id=${accountId32}&count=${MATCH_COUNT}`;
       const res = await fetch(url);
-      return await res.json(); // OpenDota одразу повертає масив матчів
-    }
-
-    async function fetchMatchDetails(matchId) {
-      const url = `http://localhost:3000/api/match/${matchId}`;
-      const res = await fetch(url);
-      return await res.json();
+      if (!res.ok) throw new Error("Server unavailable");
+      return await res.json(); // OpenDota віддає масив матчів
     }
 
     async function getHeroesMap() {
-  const res = await fetch("https://api.opendota.com/api/heroes");
-  const heroes = await res.json();
-  const map = {};
-  for (const h of heroes) {
-    const short = h.name.replace("npc_dota_hero_", "");
-    map[h.id] = {
-      name: h.localized_name,
-      img: `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/${short}.png`
-    };
-  }
-  return map;
-}
+      const res = await fetch("https://api.opendota.com/api/heroes");
+      const heroes = await res.json();
+      const map = {};
+      for (const h of heroes) {
+        const short = h.name.replace("npc_dota_hero_", "");
+        map[h.id] = {
+          name: h.localized_name,
+          short,
+          img: `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/${short}.png`
+        };
+      }
+      return map;
+    }
 
+    function roleLabel(id) {
+      const roleNames = {1:"Carry",2:"Mid",3:"Offlane",4:"Support",5:"Hard Support"};
+      return roleNames[id] || "Unknown";
+    }
 
+    function safePercent(n) {
+      if (!isFinite(n)) return "0.0";
+      return n.toFixed(1);
+    }
 
-    function analyzePlayer(match, accountId32) {
-      // OpenDota вже дає потрібні поля
-      const k = match.kills;
-      const d = match.deaths;
-      const a = match.assists;
-      const kda = ((k + a) / Math.max(1, d)).toFixed(2);
-      const win = match.radiant_win === (match.player_slot < 128);
-      return { k, d, a, kda: parseFloat(kda), win };
+    function buildPrediction({
+      winrate,
+      streak,
+      lastResultBool,
+      rolesAgg,
+      boosters,
+      ruiners,
+      total,
+      tempoWr
+    }) {
+      // базовий скор з winrate
+      let score = winrate;
+
+      // імпульс серії
+      if (streak > 2 && lastResultBool) score += 5;
+      if (streak > 2 && !lastResultBool) score -= 5;
+
+      // бонус/штраф за темп (якщо короткі/довгі матчі дають кращий WR за загальний)
+      if (tempoWr.short > winrate) score += 3;
+      if (tempoWr.long > winrate) score += 3;
+
+      // рекомендована роль за найвищим WR
+      let bestRole = null;
+      let worstRole = null;
+      for (const [rid, arr] of Object.entries(rolesAgg)) {
+        if (arr.games === 0) continue;
+        if (!bestRole || arr.wr > bestRole.wr) bestRole = { id: Number(rid), wr: arr.wr };
+        if (!worstRole || arr.wr < worstRole.wr) worstRole = { id: Number(rid), wr: arr.wr };
+      }
+      if (bestRole && bestRole.wr > winrate) score += 4;
+      if (worstRole && worstRole.wr < winrate) score -= 4;
+
+      // обмеження
+      score = Math.max(5, Math.min(95, score));
+      const boosterChance = safePercent((boosters / total) * 100);
+      const ruinerChance = safePercent((ruiners / total) * 100);
+      const nextWinStreakChance = !lastResultBool ? "Високий" : "Низький";
+      const nextLoseStreakChance = lastResultBool ? "Високий" : "Низький";
+
+      return {
+        score: score.toFixed(1),
+        boosterChance,
+        ruinerChance,
+        nextWinStreakChance,
+        nextLoseStreakChance,
+        recommendedRole: bestRole ? `${roleLabel(bestRole.id)} (${bestRole.wr.toFixed(1)}% WR)` : "недостатньо даних"
+      };
     }
 
     async function analyzeMatches() {
-  const matches = await fetchMatchHistory();
-  const heroesMap = await getHeroesMap();
-   
-  if (!matches || matches.length === 0) {
-    document.getElementById("summary").innerHTML =
-      "❌ Матчі не знайдено. Перевір Steam32 ID або онови профіль на OpenDota.";
-    return;
-  }
+      try {
+        const matches = await fetchMatchHistory();
+        const heroesMap = await getHeroesMap();
 
-  const container = document.getElementById("matches");
-  let total = 0, wins = 0, sumKDA = 0;
-  let streak = 0, lastResult = null, avgDuration = 0;
+        if (!matches || matches.length === 0) {
+          document.getElementById("summary").innerHTML =
+            "❌ Матчі не знайдено. Перевір Steam32 ID або онови профіль на OpenDota.";
+          return;
+        }
 
-  // Лічильники
-  const roles = {1:[],2:[],3:[],4:[],5:[]};
-  const heroes = {};
-  const durations = {short:[], mid:[], long:[]};
+        const container = document.getElementById("matches");
+        let total = 0, wins = 0, sumKDA = 0;
+        let streak = 0, lastResult = null, avgDuration = 0;
+        let boosters = 0, ruiners = 0;
 
-  for (const m of matches) {
-    const k = m.kills, d = m.deaths, a = m.assists;
-    const kda = ( (k+a) / Math.max(1,d) );
-    const win = (m.player_slot < 128) === m.radiant_win;
+        const roles = {1:[],2:[],3:[],4:[],5:[]}; // зберігаємо масиви записів {win,kda}
+        const heroes = {}; // hero_id: [ {win,kda} ]
+        const durations = {short:[], mid:[], long:[]}; // масиви win(true)/loss(false)
 
-    total++;
-    if (win) wins++;
-    sumKDA += kda;
-    avgDuration += m.duration;
+        for (const m of matches) {
+          const k = m.kills || 0, d = m.deaths || 0, a = m.assists || 0;
+          const kda = ((k + a) / Math.max(1, d));
+          const win = (m.player_slot < 128) === m.radiant_win;
+          const duration = m.duration || 0;
 
-    // streak
-    if (lastResult === null || lastResult === win) {
-      streak++;
-    } else {
-      streak = 1;
+          total++;
+          if (win) wins++;
+          sumKDA += kda;
+          avgDuration += duration;
+
+          // streak
+          if (lastResult === null || lastResult === win) streak++;
+          else streak = 1;
+          lastResult = win;
+
+          // бустер/руінер сигнали
+          if (kda >= 6 && win) boosters++;
+          if (kda <= 1 && !win) ruiners++;
+
+          // ролі (може бути null/undefined, тому перевіряємо)
+          if (m.lane_role && roles[m.lane_role]) roles[m.lane_role].push({ win, kda });
+
+          // герої
+          if (!heroes[m.hero_id]) heroes[m.hero_id] = [];
+          heroes[m.hero_id].push({ win, kda });
+
+          // тривалість
+          if (duration < 1800) durations.short.push(win);
+          else if (duration < 2400) durations.mid.push(win);
+          else durations.long.push(win);
+
+          // список матчів (вивід)
+          const heroInfo = heroesMap[m.hero_id];
+          const heroCell = heroInfo
+            ? `<img class="hero" src="${heroInfo.img}" alt="${heroInfo.name}"> ${heroInfo.name}`
+            : `Hero ${m.hero_id}`;
+          const div = document.createElement("div");
+          div.className = "match";
+          div.innerHTML = `Match ${m.match_id}: 
+            <span class="${win ? 'good' : 'bad'}">${win ? 'WIN' : 'LOSS'}</span> 
+            | ${heroCell} | K=${k}, D=${d}, A=${a}, KDA=${kda.toFixed(2)} | ${Math.round(duration/60)} хв`;
+          container.appendChild(div);
+        }
+
+        const winrate = parseFloat(((wins / total) * 100).toFixed(1));
+        const avgKDA = (sumKDA / total).toFixed(2);
+        avgDuration = Math.round((avgDuration / total) / 60);
+
+        // агрегати для ролей (WR/KDA)
+        const rolesAgg = {};
+        for (let r = 1; r <= 5; r++) {
+          const arr = roles[r] || [];
+          const games = arr.length;
+          const wr = games ? (arr.filter(x => x.win).length / games) * 100 : 0;
+          const ak = games ? (arr.reduce((s, x) => s + x.kda, 0) / games) : 0;
+          rolesAgg[r] = { games, wr, ak };
+        }
+
+        // темп WR
+        const tempoWr = {
+          short: durations.short.length ? (durations.short.filter(x => x).length / durations.short.length) * 100 : 0,
+          mid: durations.mid.length ? (durations.mid.filter(x => x).length / durations.mid.length) * 100 : 0,
+          long: durations.long.length ? (durations.long.filter(x => x).length / durations.long.length) * 100 : 0
+        };
+
+        // прогноз
+        const prediction = buildPrediction({
+          winrate,
+          streak,
+          lastResultBool: !!lastResult,
+          rolesAgg,
+          boosters,
+          ruiners,
+          total,
+          tempoWr
+        });
+
+        // summary
+        let html = `<h2>📊 Summary (${total} матчів)</h2>
+          Winrate: ${winrate}%<br>
+          Середній KDA: ${avgKDA}<br>
+          Середня тривалість: ${avgDuration} хв<br>
+          Поточна серія: ${streak} ${lastResult ? "W" : "L"}<br><br>`;
+
+        // прогноз
+        html += `<h2>🔮 Прогноз наступного матчу</h2>
+          Шанс перемоги: ${prediction.score}%<br>
+          Шанс бустера в команді: ${prediction.boosterChance}%<br>
+          Шанс руінера в команді: ${prediction.ruinerChance}%<br>
+          Шанс початку win-streak: ${prediction.nextWinStreakChance}<br>
+          Шанс початку lose-streak: ${prediction.nextLoseStreakChance}<br>
+          Рекомендована роль: ${prediction.recommendedRole}<br><br>`;
+
+        // ролі таблиця
+        html += `<h3>🎭 Ролі</h3><table><tr><th>Роль</th><th>Ігор</th><th>Winrate</th><th>Avg KDA</th></tr>`;
+        for (let r = 1; r <= 5; r++) {
+          const { games, wr, ak } = rolesAgg[r];
+          if (!games) continue;
+          html += `<tr>
+            <td>${roleLabel(r)}</td>
+            <td>${games}</td>
+            <td>${wr.toFixed(1)}%</td>
+            <td>${ak.toFixed(2)}</td>
+          </tr>`;
+        }
+        html += `</table>`;
+
+        // топ герої таблиця
+        html += `<h3>🦸‍♂️ Топ герої</h3>
+          <table>
+          <tr><th>Герой</th><th>Ігор</th><th>Winrate</th><th>Avg KDA</th></tr>`;
+
+        const topHeroes = Object.entries(heroes)
+          .sort((a, b) => b[1].length - a[1].length)
+          .slice(0, 5);
+
+        for (const [hid, arr] of topHeroes) {
+          const wr = (arr.filter(x => x.win).length / arr.length) * 100;
+          const ak = arr.reduce((s, x) => s + x.kda, 0) / arr.length;
+          const hero = heroesMap[hid];
+          const heroCell = hero
+            ? `<img class="hero" src="${hero.img}" alt="${hero.name}"> ${hero.name}`
+            : `Hero ${hid}`;
+          html += `<tr>
+            <td>${heroCell}</td>
+            <td>${arr.length}</td>
+            <td>${wr.toFixed(1)}%</td>
+            <td>${ak.toFixed(2)}</td>
+          </tr>`;
+        }
+        html += `</table>`;
+
+        // темп ігор
+        html += `<h3>⏱️ Темп ігор</h3><table>
+          <tr><th>Категорія</th><th>Ігор</th><th>Winrate</th></tr>`;
+        const tempoRows = [
+          { name: "<30 хв", arr: durations.short, wr: tempoWr.short },
+          { name: "30–40 хв", arr: durations.mid, wr: tempoWr.mid },
+          { name: ">40 хв", arr: durations.long, wr: tempoWr.long }
+        ];
+        for (const row of tempoRows) {
+          if (!row.arr.length) continue;
+          html += `<tr>
+            <td>${row.name}</td>
+            <td>${row.arr.length}</td>
+            <td>${row.wr.toFixed(1)}%</td>
+          </tr>`;
+        }
+        html += `</table>`;
+
+        document.getElementById("summary").innerHTML = html;
+      } catch (err) {
+        document.getElementById("summary").innerHTML = "⚠️ Сервер недоступний або помилка запиту.";
+        console.error(err);
+      }
     }
-    lastResult = win;
 
-    // ролі
-    if (m.lane_role) roles[m.lane_role].push({win,kda});
-
-    // герої
-    if (!heroes[m.hero_id]) heroes[m.hero_id] = [];
-    heroes[m.hero_id].push({win,kda});
-
-    // тривалість
-    if (m.duration < 1800) durations.short.push(win);
-    else if (m.duration < 2400) durations.mid.push(win);
-    else durations.long.push(win);
-
-    // список матчів
-    const div = document.createElement("div");
-    div.className = "match";
-    div.innerHTML = `Match ${m.match_id}: 
-      <span class="${win ? 'good':'bad'}">${win ? 'WIN':'LOSS'}</span> 
-      | Hero=${m.hero_id} | K=${k}, D=${d}, A=${a}, KDA=${kda.toFixed(2)} | ${Math.round(m.duration/60)} хв`;
-    container.appendChild(div);
-  }
-
-  const winrate = ((wins/total)*100).toFixed(1);
-  const avgKDA = (sumKDA/total).toFixed(2);
-  avgDuration = Math.round(avgDuration/total/60);
-
-  // summary
-  let html = `<h2>📊 Summary (${total} матчів)</h2>
-    Winrate: ${winrate}%<br>
-    Середній KDA: ${avgKDA}<br>
-    Середня тривалість: ${avgDuration} хв<br>
-    Поточна серія: ${streak} ${lastResult ? "W" : "L"}<br><br>`;
-
-  // ролі
-  html += `<h3>🎭 Ролі</h3><table border="1" cellpadding="4"><tr><th>Роль</th><th>Ігор</th><th>Winrate</th><th>Avg KDA</th></tr>`;
-  const roleNames = {1:"Carry",2:"Mid",3:"Offlane",4:"Support",5:"Hard Support"};
-  for (let r=1;r<=5;r++) {
-    const arr = roles[r];
-    if (arr.length===0) continue;
-    const wr = (arr.filter(x=>x.win).length/arr.length*100).toFixed(1);
-    const ak = (arr.reduce((s,x)=>s+x.kda,0)/arr.length).toFixed(2);
-    html += `<tr><td>${roleNames[r]}</td><td>${arr.length}</td><td>${wr}%</td><td>${ak}</td></tr>`;
-  }
-  html += `</table>`;
-
-  // герої
-  html += `<h3>🦸‍♂️ Топ герої</h3>
-<table border="1" cellpadding="4">
-<tr><th>Герой</th><th>Ігор</th><th>Winrate</th><th>Avg KDA</th></tr>`;
-
-const topHeroes = Object.entries(heroes)
-  .sort((a,b)=>b[1].length-a[1].length)
-  .slice(0,5);
-
-for (const [hid,arr] of topHeroes) {
-  const wr = (arr.filter(x=>x.win).length/arr.length*100).toFixed(1);
-  const ak = (arr.reduce((s,x)=>s+x.kda,0)/arr.length).toFixed(2);
-  const hero = heroesMap[hid];
-  html += `<tr>
-    <td><img src="${hero.img}" width="40" style="vertical-align:middle"> ${hero.name}</td>
-    <td>${arr.length}</td>
-    <td>${wr}%</td>
-    <td>${ak}</td>
-  </tr>`;
-}
-html += `</table>`;
-
-
-
-  // темп ігор
-  html += `<h3>⏱️ Темп ігор</h3><table border="1" cellpadding="4"><tr><th>Категорія</th><th>Ігор</th><th>Winrate</th></tr>`;
-  for (const [cat,arr] of Object.entries(durations)) {
-    if (arr.length===0) continue;
-    const wr = (arr.filter(x=>x).length/arr.length*100).toFixed(1);
-    const name = cat==="short"?"<30 хв":cat==="mid"?"30-40 хв":">40 хв";
-    html += `<tr><td>${name}</td><td>${arr.length}</td><td>${wr}%</td></tr>`;
-  }
-  html += `</table>`;
-
-  document.getElementById("summary").innerHTML = html;
-}
-
-    analyzeMatches();
-  </script>
-</body>
-</html>
     analyzeMatches();
   </script>
 </body>
