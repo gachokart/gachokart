@@ -14,11 +14,19 @@
     table { border-collapse: collapse; margin:10px 0; width:auto; }
     th, td { border:1px solid #333; padding:6px 8px; text-align:left; }
     img.hero { width:40px; height:40px; vertical-align:middle; margin-right:6px; }
+    #boosterRuinerStats { margin:8px 0 16px; }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <h1>Dota 2 Match Predictor</h1>
+
   <div id="summary"></div>
+
+  <h3>📈 Графік матчів</h3>
+  <canvas id="matchChart" width="900" height="260"></canvas>
+  <div id="boosterRuinerStats"></div>
+
   <div id="matches"></div>
 
   <script>
@@ -29,7 +37,7 @@
       const url = `http://localhost:3000/api/matches?account_id=${accountId32}&count=${MATCH_COUNT}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error("Server unavailable");
-      return await res.json(); // OpenDota віддає масив матчів
+      return await res.json();
     }
 
     async function getHeroesMap() {
@@ -40,7 +48,6 @@
         const short = h.name.replace("npc_dota_hero_", "");
         map[h.id] = {
           name: h.localized_name,
-          short,
           img: `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/${short}.png`
         };
       }
@@ -57,40 +64,27 @@
       return n.toFixed(1);
     }
 
-    function buildPrediction({
-      winrate,
-      streak,
-      lastResultBool,
-      rolesAgg,
-      boosters,
-      ruiners,
-      total,
-      tempoWr
-    }) {
-      // базовий скор з winrate
+    function buildPrediction({ winrate, streak, lastResultBool, rolesAgg, boosters, ruiners, total, tempoWr }) {
       let score = winrate;
 
       // імпульс серії
       if (streak > 2 && lastResultBool) score += 5;
       if (streak > 2 && !lastResultBool) score -= 5;
 
-      // бонус/штраф за темп (якщо короткі/довгі матчі дають кращий WR за загальний)
+      // темп
       if (tempoWr.short > winrate) score += 3;
       if (tempoWr.long > winrate) score += 3;
 
-      // рекомендована роль за найвищим WR
+      // рекомендована роль (найвищий WR серед наявних)
       let bestRole = null;
-      let worstRole = null;
-      for (const [rid, arr] of Object.entries(rolesAgg)) {
-        if (arr.games === 0) continue;
-        if (!bestRole || arr.wr > bestRole.wr) bestRole = { id: Number(rid), wr: arr.wr };
-        if (!worstRole || arr.wr < worstRole.wr) worstRole = { id: Number(rid), wr: arr.wr };
+      for (const [rid, agg] of Object.entries(rolesAgg)) {
+        if (agg.games === 0) continue;
+        if (!bestRole || agg.wr > bestRole.wr) bestRole = { id: Number(rid), wr: agg.wr };
       }
       if (bestRole && bestRole.wr > winrate) score += 4;
-      if (worstRole && worstRole.wr < winrate) score -= 4;
 
-      // обмеження
       score = Math.max(5, Math.min(95, score));
+
       const boosterChance = safePercent((boosters / total) * 100);
       const ruinerChance = safePercent((ruiners / total) * 100);
       const nextWinStreakChance = !lastResultBool ? "Високий" : "Низький";
@@ -118,15 +112,19 @@
         }
 
         const container = document.getElementById("matches");
+
         let total = 0, wins = 0, sumKDA = 0;
         let streak = 0, lastResult = null, avgDuration = 0;
         let boosters = 0, ruiners = 0;
+        let allyBoosters = 0, enemyBoosters = 0, allyRuiners = 0, enemyRuiners = 0;
 
-        const roles = {1:[],2:[],3:[],4:[],5:[]}; // зберігаємо масиви записів {win,kda}
-        const heroes = {}; // hero_id: [ {win,kda} ]
-        const durations = {short:[], mid:[], long:[]}; // масиви win(true)/loss(false)
+        const roles = {1:[],2:[],3:[],4:[],5:[]};
+        const heroes = {};
+        const durations = {short:[], mid:[], long:[]};
 
-        for (const m of matches) {
+        const labels = [], colors = [];
+
+        for (const [idx, m] of matches.entries()) {
           const k = m.kills || 0, d = m.deaths || 0, a = m.assists || 0;
           const kda = ((k + a) / Math.max(1, d));
           const win = (m.player_slot < 128) === m.radiant_win;
@@ -142,11 +140,20 @@
           else streak = 1;
           lastResult = win;
 
-          // бустер/руінер сигнали
-          if (kda >= 6 && win) boosters++;
-          if (kda <= 1 && !win) ruiners++;
+          // бустер/руінер сигнал для ВІЗУАЛУ
+          let color = "#888";
+          const isAlly = (m.player_slot < 128) === m.radiant_win; // моя команда = та, що виграла, якщо win===true
+          if (kda >= 6 && win) {
+            boosters++;
+            color = "green";
+            if (isAlly) allyBoosters++; else enemyBoosters++;
+          } else if (kda <= 1 && !win) {
+            ruiners++;
+            color = "red";
+            if (isAlly) allyRuiners++; else enemyRuiners++;
+          }
 
-          // ролі (може бути null/undefined, тому перевіряємо)
+          // ролі
           if (m.lane_role && roles[m.lane_role]) roles[m.lane_role].push({ win, kda });
 
           // герої
@@ -158,7 +165,11 @@
           else if (duration < 2400) durations.mid.push(win);
           else durations.long.push(win);
 
-          // список матчів (вивід)
+          // для графіка
+          labels.push("M" + (idx + 1));
+          colors.push(color);
+
+          // список матчів
           const heroInfo = heroesMap[m.hero_id];
           const heroCell = heroInfo
             ? `<img class="hero" src="${heroInfo.img}" alt="${heroInfo.name}"> ${heroInfo.name}`
@@ -166,16 +177,16 @@
           const div = document.createElement("div");
           div.className = "match";
           div.innerHTML = `Match ${m.match_id}: 
-            <span class="${win ? 'good' : 'bad'}">${win ? 'WIN' : 'LOSS'}</span> 
+            <span class="${win ? 'good':'bad'}">${win ? 'WIN':'LOSS'}</span> 
             | ${heroCell} | K=${k}, D=${d}, A=${a}, KDA=${kda.toFixed(2)} | ${Math.round(duration/60)} хв`;
           container.appendChild(div);
         }
 
         const winrate = parseFloat(((wins / total) * 100).toFixed(1));
-        const avgKDA = (sumKDA / total).toFixed(2);
+        const avgKDAstr = (sumKDA / total).toFixed(2);
         avgDuration = Math.round((avgDuration / total) / 60);
 
-        // агрегати для ролей (WR/KDA)
+        // агрегати ролей
         const rolesAgg = {};
         for (let r = 1; r <= 5; r++) {
           const arr = roles[r] || [];
@@ -185,7 +196,7 @@
           rolesAgg[r] = { games, wr, ak };
         }
 
-        // темп WR
+        // WR за темпом
         const tempoWr = {
           short: durations.short.length ? (durations.short.filter(x => x).length / durations.short.length) * 100 : 0,
           mid: durations.mid.length ? (durations.mid.filter(x => x).length / durations.mid.length) * 100 : 0,
@@ -204,14 +215,13 @@
           tempoWr
         });
 
-        // summary
+        // ——— Вивід Summary та Прогнозу ———
         let html = `<h2>📊 Summary (${total} матчів)</h2>
           Winrate: ${winrate}%<br>
-          Середній KDA: ${avgKDA}<br>
+          Середній KDA: ${avgKDAstr}<br>
           Середня тривалість: ${avgDuration} хв<br>
           Поточна серія: ${streak} ${lastResult ? "W" : "L"}<br><br>`;
 
-        // прогноз
         html += `<h2>🔮 Прогноз наступного матчу</h2>
           Шанс перемоги: ${prediction.score}%<br>
           Шанс бустера в команді: ${prediction.boosterChance}%<br>
@@ -220,8 +230,9 @@
           Шанс початку lose-streak: ${prediction.nextLoseStreakChance}<br>
           Рекомендована роль: ${prediction.recommendedRole}<br><br>`;
 
-        // ролі таблиця
-        html += `<h3>🎭 Ролі</h3><table><tr><th>Роль</th><th>Ігор</th><th>Winrate</th><th>Avg KDA</th></tr>`;
+        // Ролі
+        html += `<h3>🎭 Ролі</h3><table>
+          <tr><th>Роль</th><th>Ігор</th><th>Winrate</th><th>Avg KDA</th></tr>`;
         for (let r = 1; r <= 5; r++) {
           const { games, wr, ak } = rolesAgg[r];
           if (!games) continue;
@@ -234,15 +245,13 @@
         }
         html += `</table>`;
 
-        // топ герої таблиця
+        // Топ герої
         html += `<h3>🦸‍♂️ Топ герої</h3>
           <table>
-          <tr><th>Герой</th><th>Ігор</th><th>Winrate</th><th>Avg KDA</th></tr>`;
-
+            <tr><th>Герой</th><th>Ігор</th><th>Winrate</th><th>Avg KDA</th></tr>`;
         const topHeroes = Object.entries(heroes)
           .sort((a, b) => b[1].length - a[1].length)
           .slice(0, 5);
-
         for (const [hid, arr] of topHeroes) {
           const wr = (arr.filter(x => x.win).length / arr.length) * 100;
           const ak = arr.reduce((s, x) => s + x.kda, 0) / arr.length;
@@ -259,7 +268,7 @@
         }
         html += `</table>`;
 
-        // темп ігор
+        // Темп
         html += `<h3>⏱️ Темп ігор</h3><table>
           <tr><th>Категорія</th><th>Ігор</th><th>Winrate</th></tr>`;
         const tempoRows = [
@@ -278,11 +287,47 @@
         html += `</table>`;
 
         document.getElementById("summary").innerHTML = html;
+
+        // ——— Графік матчів (бар, кольори: зелений=бустер, червоний=руінер, сірий=звичайний) ———
+        const ctx = document.getElementById("matchChart").getContext("2d");
+        new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels,
+            datasets: [{
+              label: "Матчі",
+              data: new Array(labels.length).fill(1),
+              backgroundColor: colors
+            }]
+          },
+          options: {
+            plugins: { legend: { display: false }, tooltip: { enabled: false } },
+            scales: {
+              x: { display: false },
+              y: { display: false }
+            }
+          }
+        });
+
+        // Відсотки бустерів/руінерів у моїй та ворожій командах
+        const allyEvents = allyBoosters + allyRuiners;
+        const enemyEvents = enemyBoosters + enemyRuiners;
+        const allyPercent = safePercent((allyEvents / total) * 100);
+        const enemyPercent = safePercent((enemyEvents / total) * 100);
+        document.getElementById("boosterRuinerStats").innerHTML =
+          `У твоїй команді: ${allyPercent}% матчів із бустером/руінером (зелений/червоний).<br>` +
+          `У суперників: ${enemyPercent}% матчів із бустером/руінером (зелений/червоний).`;
+
       } catch (err) {
         document.getElementById("summary").innerHTML = "⚠️ Сервер недоступний або помилка запиту.";
         console.error(err);
       }
     }
+
+    analyzeMatches();
+  </script>
+</body>
+</html>
 
     analyzeMatches();
   </script>
