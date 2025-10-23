@@ -2057,7 +2057,10 @@ document.getElementById('results').style.display = 'none';
     updateTeamDisplays(false); // залишаємо останні вибрані герої в списках
 }
  
-
+(async () => {
+  await fetchPlayerStats();   // завантажуємо статистику
+  renderHeroScoresTable();    // будуємо таблицю
+})();
 
 
 </script>
