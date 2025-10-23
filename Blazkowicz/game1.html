@@ -1,124 +1,93 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8" />
-  <title>Space Invaders (Canvas)</title>
+  <meta charset="UTF-8">
+  <title>Dota 2 Match Predictor (OpenDota)</title>
   <style>
-    body {
-      margin: 0;
-      background: black;
-      overflow: hidden;
-    }
-    canvas {
-      display: block;
-      margin: auto;
-      background: #000;
-    }
+    body { background:#111; color:#eee; font-family:monospace; padding:20px; }
+    h1 { color:#6cf; }
+    .match { margin:5px 0; padding:5px; border-bottom:1px solid #333; }
+    .good { color:#6f6; }
+    .bad { color:#f66; }
   </style>
 </head>
 <body>
-  <canvas id="game" width="800" height="600"></canvas>
+  <h1>Dota 2 Match Predictor</h1>
+  <div id="summary"></div>
+  <div id="matches"></div>
+
   <script>
-    const canvas = document.getElementById("game");
-    const ctx = canvas.getContext("2d");
+    const accountId32 = 863386335; // твій Steam32 ID
+    const MATCH_COUNT = 100;
 
-    const player = {
-      x: canvas.width / 2 - 25,
-      y: canvas.height - 40,
-      width: 50,
-      height: 20,
-      color: "lime",
-      speed: 7
-    };
+    async function fetchMatchHistory() {
+      const url = `http://localhost:3000/api/matches?account_id=${accountId32}&count=${MATCH_COUNT}`;
+      const res = await fetch(url);
+      return await res.json(); // OpenDota одразу повертає масив матчів
+    }
 
-    const bullets = [];
-    const aliens = [];
+    async function fetchMatchDetails(matchId) {
+      const url = `http://localhost:3000/api/match/${matchId}`;
+      const res = await fetch(url);
+      return await res.json();
+    }
 
-    // Створення прибульців
-    for (let row = 0; row < 3; row++) {
-      for (let col = 0; col < 8; col++) {
-        aliens.push({
-          x: 80 + col * 80,
-          y: 50 + row * 50,
-          width: 40,
-          height: 20,
-          color: "red"
-        });
+    function analyzePlayer(match, accountId32) {
+      // OpenDota вже дає потрібні поля
+      const k = match.kills;
+      const d = match.deaths;
+      const a = match.assists;
+      const kda = ((k + a) / Math.max(1, d)).toFixed(2);
+      const win = match.radiant_win === (match.player_slot < 128);
+      return { k, d, a, kda: parseFloat(kda), win };
+    }
+
+    async function analyzeMatches() {
+      const matches = await fetchMatchHistory();
+      const container = document.getElementById("matches");
+
+      let total = 0, wins = 0, sumKDA = 0;
+      let boosters = 0, ruiners = 0;
+
+      for (const m of matches) {
+        const stats = analyzePlayer(m, accountId32);
+        total++;
+        if (stats.win) wins++;
+        sumKDA += stats.kda;
+
+        if (stats.kda >= 6 && stats.win) boosters++;
+        if (stats.kda <= 1 && !stats.win) ruiners++;
+
+        const div = document.createElement("div");
+        div.className = "match";
+        div.innerHTML = `Match ${m.match_id}: 
+          <span class="${stats.win ? 'good':'bad'}">${stats.win ? 'WIN':'LOSS'}</span> 
+          | Hero=${m.hero_id} | K=${stats.k}, D=${stats.d}, A=${stats.a}, KDA=${stats.kda}`;
+        container.appendChild(div);
       }
+
+      const winrate = ((wins / total) * 100).toFixed(1);
+      const avgKDA = (sumKDA / total).toFixed(2);
+      const boosterChance = ((boosters / total) * 100).toFixed(1);
+      const ruinerChance = ((ruiners / total) * 100).toFixed(1);
+      const nextWinChance = winrate;
+
+      document.getElementById("summary").innerHTML = `
+        <h2>📊 Summary (${total} матчів)</h2>
+        Winrate: ${winrate}%<br>
+        Середній KDA: ${avgKDA}<br><br>
+        🔮 Прогноз:<br>
+        Шанс перемоги у наступному матчі: ${nextWinChance}%<br>
+        Шанс зустріти бустера: ${boosterChance}%<br>
+        Шанс зустріти руінера: ${ruinerChance}%
+      `;
     }
 
-    // Керування
-    const keys = {};
-    window.addEventListener("keydown", e => keys[e.code] = true);
-    window.addEventListener("keyup", e => keys[e.code] = false);
-
-    function shoot() {
-      bullets.push({
-        x: player.x + player.width / 2 - 2,
-        y: player.y,
-        width: 4,
-        height: 10,
-        color: "white",
-        speed: 8
-      });
-    }
-
-    let shootCooldown = 0;
-
-    function update() {
-      // Гравець
-      if (keys["ArrowLeft"]) player.x -= player.speed;
-      if (keys["ArrowRight"]) player.x += player.speed;
-      player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
-
-      // Стрільба
-      if (keys["Space"] && shootCooldown <= 0) {
-        shoot();
-        shootCooldown = 15;
-      }
-      if (shootCooldown > 0) shootCooldown--;
-
-      // Кулі
-      bullets.forEach((b, i) => {
-        b.y -= b.speed;
-        if (b.y < 0) bullets.splice(i, 1);
-      });
-
-      // Перевірка зіткнень
-      bullets.forEach((b, bi) => {
-        aliens.forEach((a, ai) => {
-          if (
-            b.x < a.x + a.width &&
-            b.x + b.width > a.x &&
-            b.y < a.y + a.height &&
-            b.y + b.height > a.y
-          ) {
-            aliens.splice(ai, 1);
-            bullets.splice(bi, 1);
-          }
-        });
-      });
-    }
-
-    function drawRect(obj) {
-      ctx.fillStyle = obj.color;
-      ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
-    }
-
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawRect(player);
-      bullets.forEach(drawRect);
-      aliens.forEach(drawRect);
-    }
-
-    function loop() {
-      update();
-      draw();
-      requestAnimationFrame(loop);
-    }
-
-    loop();
+    analyzeMatches();
+  </script>
+</body>
+</html>
+    analyzeMatches();
   </script>
 </body>
 </html>
