@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <title>Dota 2 Match Predictor (Steam API)</title>
+  <title>Dota 2 Match Predictor (OpenDota)</title>
   <style>
     body { background:#111; color:#eee; font-family:monospace; padding:20px; }
     h1 { color:#6cf; }
@@ -18,51 +18,43 @@
 
   <script>
     const accountId32 = 863386335; // твій Steam32 ID
-    const API_KEY = "F376439B1833C7DF76D6AB25A571755E"; // встав свій ключ сюди
     const MATCH_COUNT = 100;
 
     async function fetchMatchHistory() {
-      const url = `https://api.steampowered.com/IDOTA2Match_570/GetMatchHistory/v1/?key=${API_KEY}&account_id=${accountId32}&matches_requested=${MATCH_COUNT}`;
+      const url = `http://localhost:3000/api/matches?account_id=${accountId32}&count=${MATCH_COUNT}`;
       const res = await fetch(url);
-      const data = await res.json();
-      return data.result.matches || [];
+      return await res.json(); // OpenDota одразу повертає масив матчів
     }
 
     async function fetchMatchDetails(matchId) {
-      const url = `https://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v1/?key=${API_KEY}&match_id=${matchId}`;
+      const url = `http://localhost:3000/api/match/${matchId}`;
       const res = await fetch(url);
       return await res.json();
     }
 
     function analyzePlayer(match, accountId32) {
-      const player = match.players.find(p => p.account_id === accountId32);
-      if (!player) return null;
-      const k = player.kills;
-      const d = player.deaths;
-      const a = player.assists;
+      // OpenDota вже дає потрібні поля
+      const k = match.kills;
+      const d = match.deaths;
+      const a = match.assists;
       const kda = ((k + a) / Math.max(1, d)).toFixed(2);
-      const win = (player.player_slot < 128) === match.radiant_win;
+      const win = match.radiant_win === (match.player_slot < 128);
       return { k, d, a, kda: parseFloat(kda), win };
     }
 
     async function analyzeMatches() {
       const matches = await fetchMatchHistory();
-      if (!matches.length) {
-        document.getElementById("summary").innerHTML = "❌ Матчі не знайдено. Перевір ключ і Steam32 ID.";
-        return;
-      }
-
       const container = document.getElementById("matches");
-      let total = 0, wins = 0, sumKDA = 0, boosters = 0, ruiners = 0;
+
+      let total = 0, wins = 0, sumKDA = 0;
+      let boosters = 0, ruiners = 0;
 
       for (const m of matches) {
-        const details = await fetchMatchDetails(m.match_id);
-        const stats = analyzePlayer(details.result, accountId32);
-        if (!stats) continue;
-
+        const stats = analyzePlayer(m, accountId32);
         total++;
         if (stats.win) wins++;
         sumKDA += stats.kda;
+
         if (stats.kda >= 6 && stats.win) boosters++;
         if (stats.kda <= 1 && !stats.win) ruiners++;
 
@@ -70,7 +62,7 @@
         div.className = "match";
         div.innerHTML = `Match ${m.match_id}: 
           <span class="${stats.win ? 'good':'bad'}">${stats.win ? 'WIN':'LOSS'}</span> 
-          | K=${stats.k}, D=${stats.d}, A=${stats.a}, KDA=${stats.kda}`;
+          | Hero=${m.hero_id} | K=${stats.k}, D=${stats.d}, A=${stats.a}, KDA=${stats.kda}`;
         container.appendChild(div);
       }
 
@@ -78,13 +70,14 @@
       const avgKDA = (sumKDA / total).toFixed(2);
       const boosterChance = ((boosters / total) * 100).toFixed(1);
       const ruinerChance = ((ruiners / total) * 100).toFixed(1);
+      const nextWinChance = winrate;
 
       document.getElementById("summary").innerHTML = `
         <h2>📊 Summary (${total} матчів)</h2>
         Winrate: ${winrate}%<br>
         Середній KDA: ${avgKDA}<br><br>
         🔮 Прогноз:<br>
-        Шанс перемоги у наступному матчі: ${winrate}%<br>
+        Шанс перемоги у наступному матчі: ${nextWinChance}%<br>
         Шанс зустріти бустера: ${boosterChance}%<br>
         Шанс зустріти руінера: ${ruinerChance}%
       `;
