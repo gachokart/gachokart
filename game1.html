@@ -32,6 +32,22 @@
       return await res.json();
     }
 
+    async function getHeroesMap() {
+  const res = await fetch("https://api.opendota.com/api/heroes");
+  const heroes = await res.json();
+  const map = {};
+  for (const h of heroes) {
+    const short = h.name.replace("npc_dota_hero_", "");
+    map[h.id] = {
+      name: h.localized_name,
+      img: `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/${short}.png`
+    };
+  }
+  return map;
+}
+
+
+
     function analyzePlayer(match, accountId32) {
       // OpenDota вже дає потрібні поля
       const k = match.kills;
@@ -44,6 +60,8 @@
 
     async function analyzeMatches() {
   const matches = await fetchMatchHistory();
+  const heroesMap = await getHeroesMap();
+   
   if (!matches || matches.length === 0) {
     document.getElementById("summary").innerHTML =
       "❌ Матчі не знайдено. Перевір Steam32 ID або онови профіль на OpenDota.";
@@ -122,14 +140,28 @@
   html += `</table>`;
 
   // герої
-  html += `<h3>🦸‍♂️ Топ герої</h3><table border="1" cellpadding="4"><tr><th>Hero ID</th><th>Ігор</th><th>Winrate</th><th>Avg KDA</th></tr>`;
-  const topHeroes = Object.entries(heroes).sort((a,b)=>b[1].length-a[1].length).slice(0,5);
-  for (const [hid,arr] of topHeroes) {
-    const wr = (arr.filter(x=>x.win).length/arr.length*100).toFixed(1);
-    const ak = (arr.reduce((s,x)=>s+x.kda,0)/arr.length).toFixed(2);
-    html += `<tr><td>${hid}</td><td>${arr.length}</td><td>${wr}%</td><td>${ak}</td></tr>`;
-  }
-  html += `</table>`;
+  html += `<h3>🦸‍♂️ Топ герої</h3>
+<table border="1" cellpadding="4">
+<tr><th>Герой</th><th>Ігор</th><th>Winrate</th><th>Avg KDA</th></tr>`;
+
+const topHeroes = Object.entries(heroes)
+  .sort((a,b)=>b[1].length-a[1].length)
+  .slice(0,5);
+
+for (const [hid,arr] of topHeroes) {
+  const wr = (arr.filter(x=>x.win).length/arr.length*100).toFixed(1);
+  const ak = (arr.reduce((s,x)=>s+x.kda,0)/arr.length).toFixed(2);
+  const hero = heroesMap[hid];
+  html += `<tr>
+    <td><img src="${hero.img}" width="40" style="vertical-align:middle"> ${hero.name}</td>
+    <td>${arr.length}</td>
+    <td>${wr}%</td>
+    <td>${ak}</td>
+  </tr>`;
+}
+html += `</table>`;
+
+
 
   // темп ігор
   html += `<h3>⏱️ Темп ігор</h3><table border="1" cellpadding="4"><tr><th>Категорія</th><th>Ігор</th><th>Winrate</th></tr>`;
