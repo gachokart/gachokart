@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Dota 2 Match Predictor (OpenDota)</title>
   <style>
     body { background:#111; color:#eee; font-family:monospace; padding:20px; }
@@ -10,26 +10,32 @@
     h3 { color:#acf; }
     .match { margin:5px 0; padding:5px; border-bottom:1px solid #333; }
     .good { color:#6f6; }
-    .bad { color:#f66; }
+    .bad  { color:#f66; }
     table { border-collapse: collapse; margin:10px 0; width:auto; }
     th, td { border:1px solid #333; padding:6px 8px; text-align:left; }
     img.hero { width:40px; height:40px; vertical-align:middle; margin-right:6px; }
     #boosterRuinerStats { margin:8px 0 16px; }
+    .hint { color:#bbb; font-size:12px; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <h1>Dota 2 Match Predictor</h1>
 
+  <!-- Summary, прогноз, таблиці -->
   <div id="summary"></div>
 
-  <h3>📊 Прогноз по ролях (графік)</h3>
-<canvas id="roleChart" width="600" height="300"></canvas>
-
+  <!-- Графік матчів (бустери/руінери) -->
   <h3>📈 Графік матчів</h3>
   <canvas id="matchChart" width="900" height="260"></canvas>
   <div id="boosterRuinerStats"></div>
 
+  <!-- Графік прогнозу по ролях -->
+  <h3>📊 Прогноз по ролях (графік)</h3>
+  <canvas id="roleChart" width="700" height="300"></canvas>
+  <p class="hint">Зелений стовпчик — рекомендована роль (найвищий прогноз).</p>
+
+  <!-- Список матчів -->
   <div id="matches"></div>
 
   <script>
@@ -76,7 +82,7 @@
 
       // темп
       if (tempoWr.short > winrate) score += 3;
-      if (tempoWr.long > winrate) score += 3;
+      if (tempoWr.long  > winrate) score += 3;
 
       // рекомендована роль (найвищий WR серед наявних)
       let bestRole = null;
@@ -89,9 +95,9 @@
       score = Math.max(5, Math.min(95, score));
 
       const boosterChance = safePercent((boosters / total) * 100);
-      const ruinerChance = safePercent((ruiners / total) * 100);
-      const nextWinStreakChance = !lastResultBool ? "Високий" : "Низький";
-      const nextLoseStreakChance = lastResultBool ? "Високий" : "Низький";
+      const ruinerChance  = safePercent((ruiners  / total) * 100);
+      const nextWinStreakChance  = !lastResultBool ? "Високий" : "Низький";
+      const nextLoseStreakChance =  lastResultBool ? "Високий" : "Низький";
 
       return {
         score: score.toFixed(1),
@@ -101,6 +107,52 @@
         nextLoseStreakChance,
         recommendedRole: bestRole ? `${roleLabel(bestRole.id)} (${bestRole.wr.toFixed(1)}% WR)` : "недостатньо даних"
       };
+    }
+
+    // --- Прогноз по ролях (враховує бустерів/руінерів на ролях) ---
+    function predictByRole(matches, rolesAgg) {
+      const roleNames = {1:"Carry",2:"Mid",3:"Offlane",4:"Support",5:"Hard Support"};
+      const roleStats = {};
+
+      for (let r=1; r<=5; r++) {
+        const arr = matches.filter(m => m.lane_role === r);
+        if (arr.length === 0) continue;
+
+        const baseWR = (arr.filter(m => ((m.player_slot<128)===m.radiant_win)).length/arr.length)*100;
+
+        // матчі з бустерами на цій ролі (сигнал за KDA)
+        const boosterMatches = arr.filter(m => {
+          const kda = (m.kills+m.assists)/Math.max(1,m.deaths);
+          return kda>=6;
+        });
+        const boosterWR = boosterMatches.length
+          ? (boosterMatches.filter(m => ((m.player_slot<128)===m.radiant_win)).length/boosterMatches.length)*100
+          : baseWR;
+
+        // матчі з руінерами на цій ролі (сигнал за KDA)
+        const ruinerMatches = arr.filter(m => {
+          const kda = (m.kills+m.assists)/Math.max(1,m.deaths);
+          return kda<=1;
+        });
+        const ruinerWR = ruinerMatches.length
+          ? (ruinerMatches.filter(m => ((m.player_slot<128)===m.radiant_win)).length/ruinerMatches.length)*100
+          : baseWR;
+
+        // більш реалістичне змішування: бустер може програти, руінер може виграти.
+        // ваги обережні, щоб не переоцінити ефект
+        let predicted = baseWR;
+        if (boosterMatches.length>0) predicted = (predicted*0.65 + boosterWR*0.35);
+        if (ruinerMatches.length>0) predicted = (predicted*0.75 + ruinerWR*0.25);
+
+        roleStats[r] = {
+          name: roleNames[r],
+          baseWR: baseWR.toFixed(1),
+          boosterWR: boosterWR.toFixed(1),
+          ruinerWR:  ruinerWR.toFixed(1),
+          predicted: predicted.toFixed(1)
+        };
+      }
+      return roleStats;
     }
 
     async function analyzeMatches() {
@@ -143,9 +195,9 @@
           else streak = 1;
           lastResult = win;
 
-          // бустер/руінер сигнал для ВІЗУАЛУ
+          // бустер/руінер візуальний сигнал
           let color = "#888";
-          const isAlly = (m.player_slot < 128) === m.radiant_win; // моя команда = та, що виграла, якщо win===true
+          const isAlly = (m.player_slot < 128) === m.radiant_win;
           if (kda >= 6 && win) {
             boosters++;
             color = "green";
@@ -168,7 +220,7 @@
           else if (duration < 2400) durations.mid.push(win);
           else durations.long.push(win);
 
-          // для графіка
+          // графік матчів
           labels.push("M" + (idx + 1));
           colors.push(color);
 
@@ -202,11 +254,11 @@
         // WR за темпом
         const tempoWr = {
           short: durations.short.length ? (durations.short.filter(x => x).length / durations.short.length) * 100 : 0,
-          mid: durations.mid.length ? (durations.mid.filter(x => x).length / durations.mid.length) * 100 : 0,
-          long: durations.long.length ? (durations.long.filter(x => x).length / durations.long.length) * 100 : 0
+          mid:   durations.mid.length   ? (durations.mid.filter(x => x).length   / durations.mid.length)   * 100 : 0,
+          long:  durations.long.length  ? (durations.long.filter(x => x).length  / durations.long.length)  * 100 : 0
         };
 
-        // прогноз
+        // прогноз матчу
         const prediction = buildPrediction({
           winrate,
           streak,
@@ -218,7 +270,7 @@
           tempoWr
         });
 
-        // ——— Вивід Summary та Прогнозу ———
+        // Summary + Прогноз
         let html = `<h2>📊 Summary (${total} матчів)</h2>
           Winrate: ${winrate}%<br>
           Середній KDA: ${avgKDAstr}<br>
@@ -233,7 +285,7 @@
           Шанс початку lose-streak: ${prediction.nextLoseStreakChance}<br>
           Рекомендована роль: ${prediction.recommendedRole}<br><br>`;
 
-        // Ролі
+        // Ролі таблиця
         html += `<h3>🎭 Ролі</h3><table>
           <tr><th>Роль</th><th>Ігор</th><th>Winrate</th><th>Avg KDA</th></tr>`;
         for (let r = 1; r <= 5; r++) {
@@ -248,7 +300,7 @@
         }
         html += `</table>`;
 
-        // Топ герої
+        // Топ герої таблиця
         html += `<h3>🦸‍♂️ Топ герої</h3>
           <table>
             <tr><th>Герой</th><th>Ігор</th><th>Winrate</th><th>Avg KDA</th></tr>`;
@@ -271,13 +323,13 @@
         }
         html += `</table>`;
 
-        // Темп
+        // Темп ігор
         html += `<h3>⏱️ Темп ігор</h3><table>
           <tr><th>Категорія</th><th>Ігор</th><th>Winrate</th></tr>`;
         const tempoRows = [
-          { name: "<30 хв", arr: durations.short, wr: tempoWr.short },
-          { name: "30–40 хв", arr: durations.mid, wr: tempoWr.mid },
-          { name: ">40 хв", arr: durations.long, wr: tempoWr.long }
+          { name: "<30 хв",  arr: durations.short, wr: tempoWr.short },
+          { name: "30–40 хв",arr: durations.mid,   wr: tempoWr.mid },
+          { name: ">40 хв",  arr: durations.long,  wr: tempoWr.long }
         ];
         for (const row of tempoRows) {
           if (!row.arr.length) continue;
@@ -290,110 +342,76 @@
         html += `</table>`;
 
         // --- Прогноз по ролях ---
-function predictByRole(matches, rolesAgg) {
-  const roleNames = {1:"Carry",2:"Mid",3:"Offlane",4:"Support",5:"Hard Support"};
-  const roleStats = {};
-
-  for (let r=1;r<=5;r++) {
-    const arr = matches.filter(m => m.lane_role === r);
-    if (arr.length === 0) continue;
-
-    const baseWR = (arr.filter(m => ((m.player_slot<128)===m.radiant_win)).length/arr.length)*100;
-
-    // матчі з бустерами на цій ролі
-    const boosterMatches = arr.filter(m => {
-      const kda = (m.kills+m.assists)/Math.max(1,m.deaths);
-      return kda>=6;
-    });
-    const boosterWR = boosterMatches.length ? 
-      (boosterMatches.filter(m => ((m.player_slot<128)===m.radiant_win)).length/boosterMatches.length)*100 : baseWR;
-
-    // матчі з руінерами на цій ролі
-    const ruinerMatches = arr.filter(m => {
-      const kda = (m.kills+m.assists)/Math.max(1,m.deaths);
-      return kda<=1;
-    });
-    const ruinerWR = ruinerMatches.length ? 
-      (ruinerMatches.filter(m => ((m.player_slot<128)===m.radiant_win)).length/ruinerMatches.length)*100 : baseWR;
-
-    // прогноз: базовий + вплив бустерів/руінерів
-    let predicted = baseWR;
-    if (boosterMatches.length>0) predicted = (predicted*0.7 + boosterWR*0.3);
-    if (ruinerMatches.length>0) predicted = (predicted*0.7 + ruinerWR*0.3);
-
-    roleStats[r] = {
-      name: roleNames[r],
-      baseWR: baseWR.toFixed(1),
-      boosterWR: boosterWR.toFixed(1),
-      ruinerWR: ruinerWR.toFixed(1),
-      predicted: predicted.toFixed(1)
-    };
-  }
-  return roleStats;
-}
-
-const rolePredictions = predictByRole(matches, rolesAgg);
-// Побудова графіка прогнозів по ролях
-const ctxRole = document.getElementById("roleChart").getContext("2d");
-const roleLabels = Object.values(rolePredictions).map(r => r.name);
-const roleData = Object.values(rolePredictions).map(r => parseFloat(r.predicted));
-
-new Chart(ctxRole, {
-  type: "bar",
-  data: {
-    labels: roleLabels,
-    datasets: [{
-      label: "Шанс перемоги (%)",
-      data: roleData,
-      backgroundColor: roleData.map(val => val === Math.max(...roleData) ? "limegreen" : "#6cf")
-    }]
-  },
-  options: {
-    scales: {
-      y: {
-        beginAtZero: true,
-        max: 100,
-        ticks: { color: "#eee" }
-      },
-      x: {
-        ticks: { color: "#eee" }
-      }
-    },
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: ctx => ctx.raw.toFixed(1) + "%"
+        const rolePredictions = predictByRole(matches, rolesAgg);
+        html += `<h3>🎯 Прогноз по ролях</h3>
+        <table>
+          <tr><th>Роль</th><th>Базовий WR</th><th>WR з бустерами</th><th>WR з руінерами</th><th>Прогноз</th></tr>`;
+        let bestRole = null;
+        for (const r in rolePredictions) {
+          const rp = rolePredictions[r];
+          if (!bestRole || parseFloat(rp.predicted) > parseFloat(bestRole.predicted)) bestRole = rp;
+          html += `<tr>
+            <td>${rp.name}</td>
+            <td>${rp.baseWR}%</td>
+            <td>${rp.boosterWR}%</td>
+            <td>${rp.ruinerWR}%</td>
+            <td><b>${rp.predicted}%</b></td>
+          </tr>`;
         }
-      }
-    }
-  }
-});
-        
-// таблиця прогнозів
-html += `<h3>🎯 Прогноз по ролях</h3>
-<table>
-<tr><th>Роль</th><th>Базовий WR</th><th>WR з бустерами</th><th>WR з руінерами</th><th>Прогноз наступного матчу</th></tr>`;
-let bestRole = null;
-for (const r in rolePredictions) {
-  const rp = rolePredictions[r];
-  if (!bestRole || parseFloat(rp.predicted) > parseFloat(bestRole.predicted)) bestRole = rp;
-  html += `<tr>
-    <td>${rp.name}</td>
-    <td>${rp.baseWR}%</td>
-    <td>${rp.boosterWR}%</td>
-    <td>${rp.ruinerWR}%</td>
-    <td><b>${rp.predicted}%</b></td>
-  </tr>`;
-}
-html += `</table>`;
-if (bestRole) {
-  html += `<p>✅ Рекомендована роль для наступного матчу: <b>${bestRole.name}</b> (${bestRole.predicted}% шансів на перемогу)</p>`;
-}
+        html += `</table>`;
+        if (bestRole) {
+          html += `<p>✅ Рекомендована роль для наступного матчу: <b>${bestRole.name</b>} (${bestRole.predicted}% шансів на перемогу)</p>`;
+        }
 
+        // --- Фактори ризику та контекст ---
+        let contextHtml = `<h3>⚡ Контекст наступного матчу</h3><ul>`;
+
+        // Форма (останні 10 ігор)
+        const last10 = matches.slice(0,10);
+        if (last10.length > 0) {
+          const last10WR = (last10.filter(m => (m.player_slot<128)===m.radiant_win).length/last10.length*100).toFixed(1);
+          const last10KDA = (last10.reduce((s,m)=> s + ((m.kills+m.assists)/Math.max(1,m.deaths)),0)/last10.length).toFixed(2);
+          const avgKDA100 = (sumKDA/total).toFixed(2);
+          if (parseFloat(last10WR) > winrate) {
+            contextHtml += `<li>🔥 Форма: останні 10 ігор (${last10WR}% WR, KDA=${last10KDA}) кращі за середній (${winrate}% WR, KDA=${avgKDA100})</li>`;
+          } else {
+            contextHtml += `<li>🧊 Форма: останні 10 ігор (${last10WR}% WR, KDA=${last10KDA}) гірші за середній (${winrate}% WR, KDA=${avgKDA100})</li>`;
+          }
+        }
+
+        // Серії
+        if (streak >= 5 && lastResult) {
+          contextHtml += `<li>🔁 Серія з ${streak} перемог → можливе «балансування»</li>`;
+        }
+
+        // Рольові ризики (де частіше бустери/руінери за історією)
+        let mostBoostedRoleInfo = null, mostRuinedRoleInfo = null;
+        for (let r=1; r<=5; r++){
+          const arr = matches.filter(m => m.lane_role===r);
+          if (!arr.length) continue;
+          const boostersR = arr.filter(m => (m.kills+m.assists)/Math.max(1,m.deaths) >= 6).length;
+          const ruinersR  = arr.filter(m => (m.kills+m.assists)/Math.max(1,m.deaths) <= 1).length;
+          if (!mostBoostedRoleInfo || boostersR > mostBoostedRoleInfo.count) mostBoostedRoleInfo = { id:r, count:boostersR };
+          if (!mostRuinedRoleInfo  || ruinersR  > mostRuinedRoleInfo.count)  mostRuinedRoleInfo  = { id:r, count:ruinersR  };
+        }
+        if (mostBoostedRoleInfo) contextHtml += `<li>✅ Найчастіше бустери на ролі: ${roleLabel(mostBoostedRoleInfo.id)}</li>`;
+        if (mostRuinedRoleInfo)  contextHtml += `<li>❌ Найчастіше руінери на ролі: ${roleLabel(mostRuinedRoleInfo.id)}</li>`;
+
+        // Час доби / день тижня (плейсхолдери: потрібен аналіз start_time)
+        contextHtml += `<li>🕒 Час доби: додай аналіз за годинами (start_time) — уночі ризик руінерів зазвичай вищий</li>`;
+        contextHtml += `<li>📅 День тижня: додай аналіз за днями — у вихідні більше новачків, у будні стабільніше</li>`;
+
+        // Синергія/контрпики (плейсхолдери: потрібні дані по пікам союзників/ворогів)
+        contextHtml += `<li>🤝 Синергія героїв: перевір WR твого топ-героя з Mid/Carry бустерами</li>`;
+        contextHtml += `<li>⚔️ Контрпики: відстежуй героїв ворогів, що контрять твого мейна</li>`;
+
+        contextHtml += `</ul>`;
+        html += contextHtml;
+
+        // Оновлення DOM
         document.getElementById("summary").innerHTML = html;
 
-        // ——— Графік матчів (бар, кольори: зелений=бустер, червоний=руінер, сірий=звичайний) ———
+        // --- Графік матчів ---
         const ctx = document.getElementById("matchChart").getContext("2d");
         new Chart(ctx, {
           type: "bar",
@@ -407,15 +425,10 @@ if (bestRole) {
           },
           options: {
             plugins: { legend: { display: false }, tooltip: { enabled: false } },
-            scales: {
-              x: { display: false },
-              y: { display: false }
-            }
+            scales: { x: { display: false }, y: { display: false } }
           }
         });
 
-       
-        // Відсотки бустерів/руінерів у моїй та ворожій командах
         const allyEvents = allyBoosters + allyRuiners;
         const enemyEvents = enemyBoosters + enemyRuiners;
         const allyPercent = safePercent((allyEvents / total) * 100);
@@ -423,6 +436,34 @@ if (bestRole) {
         document.getElementById("boosterRuinerStats").innerHTML =
           `У твоїй команді: ${allyPercent}% матчів із бустером/руінером (зелений/червоний).<br>` +
           `У суперників: ${enemyPercent}% матчів із бустером/руінером (зелений/червоний).`;
+
+        // --- Графік прогнозу по ролях ---
+        const roleLabels = Object.values(rolePredictions).map(r => r.name);
+        const roleData   = Object.values(rolePredictions).map(r => parseFloat(r.predicted));
+        const bestVal    = roleData.length ? Math.max(...roleData) : 0;
+
+        const ctxRole = document.getElementById("roleChart").getContext("2d");
+        new Chart(ctxRole, {
+          type: "bar",
+          data: {
+            labels: roleLabels,
+            datasets: [{
+              label: "Шанс перемоги (%)",
+              data: roleData,
+              backgroundColor: roleData.map(val => val === bestVal ? "limegreen" : "#6cf")
+            }]
+          },
+          options: {
+            scales: {
+              y: { beginAtZero: true, max: 100, ticks: { color: "#eee" } },
+              x: { ticks: { color: "#eee" } }
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: { callbacks: { label: ctx => ctx.raw.toFixed(1) + "%" } }
+            }
+          }
+        });
 
       } catch (err) {
         document.getElementById("summary").innerHTML = "⚠️ Сервер недоступний або помилка запиту.";
@@ -434,7 +475,6 @@ if (bestRole) {
   </script>
 </body>
 </html>
-
     analyzeMatches();
   </script>
 </body>
