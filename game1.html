@@ -286,29 +286,6 @@
         }
         html += `</table>`;
 
-        document.getElementById("summary").innerHTML = html;
-
-        // ——— Графік матчів (бар, кольори: зелений=бустер, червоний=руінер, сірий=звичайний) ———
-        const ctx = document.getElementById("matchChart").getContext("2d");
-        new Chart(ctx, {
-          type: "bar",
-          data: {
-            labels,
-            datasets: [{
-              label: "Матчі",
-              data: new Array(labels.length).fill(1),
-              backgroundColor: colors
-            }]
-          },
-          options: {
-            plugins: { legend: { display: false }, tooltip: { enabled: false } },
-            scales: {
-              x: { display: false },
-              y: { display: false }
-            }
-          }
-        });
-
         // --- Прогноз по ролях ---
 function predictByRole(matches, rolesAgg) {
   const roleNames = {1:"Carry",2:"Mid",3:"Offlane",4:"Support",5:"Hard Support"};
@@ -375,6 +352,30 @@ if (bestRole) {
   html += `<p>✅ Рекомендована роль для наступного матчу: <b>${bestRole.name}</b> (${bestRole.predicted}% шансів на перемогу)</p>`;
 }
 
+        document.getElementById("summary").innerHTML = html;
+
+        // ——— Графік матчів (бар, кольори: зелений=бустер, червоний=руінер, сірий=звичайний) ———
+        const ctx = document.getElementById("matchChart").getContext("2d");
+        new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels,
+            datasets: [{
+              label: "Матчі",
+              data: new Array(labels.length).fill(1),
+              backgroundColor: colors
+            }]
+          },
+          options: {
+            plugins: { legend: { display: false }, tooltip: { enabled: false } },
+            scales: {
+              x: { display: false },
+              y: { display: false }
+            }
+          }
+        });
+
+       
         // Відсотки бустерів/руінерів у моїй та ворожій командах
         const allyEvents = allyBoosters + allyRuiners;
         const enemyEvents = enemyBoosters + enemyRuiners;
