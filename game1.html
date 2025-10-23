@@ -309,6 +309,72 @@
           }
         });
 
+        // --- Прогноз по ролях ---
+function predictByRole(matches, rolesAgg) {
+  const roleNames = {1:"Carry",2:"Mid",3:"Offlane",4:"Support",5:"Hard Support"};
+  const roleStats = {};
+
+  for (let r=1;r<=5;r++) {
+    const arr = matches.filter(m => m.lane_role === r);
+    if (arr.length === 0) continue;
+
+    const baseWR = (arr.filter(m => ((m.player_slot<128)===m.radiant_win)).length/arr.length)*100;
+
+    // матчі з бустерами на цій ролі
+    const boosterMatches = arr.filter(m => {
+      const kda = (m.kills+m.assists)/Math.max(1,m.deaths);
+      return kda>=6;
+    });
+    const boosterWR = boosterMatches.length ? 
+      (boosterMatches.filter(m => ((m.player_slot<128)===m.radiant_win)).length/boosterMatches.length)*100 : baseWR;
+
+    // матчі з руінерами на цій ролі
+    const ruinerMatches = arr.filter(m => {
+      const kda = (m.kills+m.assists)/Math.max(1,m.deaths);
+      return kda<=1;
+    });
+    const ruinerWR = ruinerMatches.length ? 
+      (ruinerMatches.filter(m => ((m.player_slot<128)===m.radiant_win)).length/ruinerMatches.length)*100 : baseWR;
+
+    // прогноз: базовий + вплив бустерів/руінерів
+    let predicted = baseWR;
+    if (boosterMatches.length>0) predicted = (predicted*0.7 + boosterWR*0.3);
+    if (ruinerMatches.length>0) predicted = (predicted*0.7 + ruinerWR*0.3);
+
+    roleStats[r] = {
+      name: roleNames[r],
+      baseWR: baseWR.toFixed(1),
+      boosterWR: boosterWR.toFixed(1),
+      ruinerWR: ruinerWR.toFixed(1),
+      predicted: predicted.toFixed(1)
+    };
+  }
+  return roleStats;
+}
+
+const rolePredictions = predictByRole(matches, rolesAgg);
+
+// таблиця прогнозів
+html += `<h3>🎯 Прогноз по ролях</h3>
+<table>
+<tr><th>Роль</th><th>Базовий WR</th><th>WR з бустерами</th><th>WR з руінерами</th><th>Прогноз наступного матчу</th></tr>`;
+let bestRole = null;
+for (const r in rolePredictions) {
+  const rp = rolePredictions[r];
+  if (!bestRole || parseFloat(rp.predicted) > parseFloat(bestRole.predicted)) bestRole = rp;
+  html += `<tr>
+    <td>${rp.name}</td>
+    <td>${rp.baseWR}%</td>
+    <td>${rp.boosterWR}%</td>
+    <td>${rp.ruinerWR}%</td>
+    <td><b>${rp.predicted}%</b></td>
+  </tr>`;
+}
+html += `</table>`;
+if (bestRole) {
+  html += `<p>✅ Рекомендована роль для наступного матчу: <b>${bestRole.name}</b> (${bestRole.predicted}% шансів на перемогу)</p>`;
+}
+
         // Відсотки бустерів/руінерів у моїй та ворожій командах
         const allyEvents = allyBoosters + allyRuiners;
         const enemyEvents = enemyBoosters + enemyRuiners;
