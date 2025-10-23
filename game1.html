@@ -2,135 +2,91 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <title>Dota 2 Role Analyzer</title>
+  <title>Dota 2 Match Predictor (OpenDota)</title>
   <style>
     body { background:#111; color:#eee; font-family:monospace; padding:20px; }
     h1 { color:#6cf; }
     .match { margin:5px 0; padding:5px; border-bottom:1px solid #333; }
     .good { color:#6f6; }
     .bad { color:#f66; }
-    table { border-collapse: collapse; margin-top:20px; }
-    td, th { border:1px solid #444; padding:5px 10px; }
   </style>
 </head>
 <body>
-  <h1>Dota 2 Match & Role Analyzer</h1>
+  <h1>Dota 2 Match Predictor</h1>
   <div id="summary"></div>
-  <div id="role-summary"></div>
   <div id="matches"></div>
 
   <script>
-    const steamApiKey = "F376439B1833C7DF76D6AB25A571755E";   // 🔑 встав свій ключ
-    const accountId32 = 863386304;        // заміни на свій Steam32 ID
-    const MATCH_COUNT = 100;               // можна збільшити до 100
-
-    // Мапа героїв до ролей (спрощено, можна розширювати)
-    const roleMap = {
-      1: "Carry", 2: "Carry", 3: "Mid", 4: "Offlane", 5: "Support",
-      6: "Support", 7: "Carry", 8: "Mid", 9: "Offlane", 10: "Support"
-      // TODO: додати всі hero_id з Dota 2
-    };
+    const accountId32 = 863386304; // твій Steam32 ID
+    const MATCH_COUNT = 20;
 
     async function fetchMatchHistory() {
-      const url = `https://api.steampowered.com/IDOTA2Match_570/GetMatchHistory/v1/?key=${steamApiKey}&account_id=${accountId32}&matches_requested=${MATCH_COUNT}`;
+      const url = `http://localhost:3000/api/matches?account_id=${accountId32}&count=${MATCH_COUNT}`;
       const res = await fetch(url);
-      const data = await res.json();
-      return data.result.matches;
+      return await res.json(); // OpenDota одразу повертає масив матчів
     }
 
     async function fetchMatchDetails(matchId) {
-      const url = `https://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v1/?key=${steamApiKey}&match_id=${matchId}`;
+      const url = `http://localhost:3000/api/match/${matchId}`;
       const res = await fetch(url);
-      const data = await res.json();
-      return data.result;
+      return await res.json();
     }
 
-    function analyzePlayer(matchDetails, accountId32) {
-      const player = matchDetails.players.find(p => p.account_id === accountId32);
-      if (!player) return null;
-      const k = player.kills;
-      const d = player.deaths;
-      const a = player.assists;
+    function analyzePlayer(match, accountId32) {
+      // OpenDota вже дає потрібні поля
+      const k = match.kills;
+      const d = match.deaths;
+      const a = match.assists;
       const kda = ((k + a) / Math.max(1, d)).toFixed(2);
-      const radiantWin = matchDetails.radiant_win;
-      const isRadiant = player.player_slot < 128;
-      const win = (radiantWin && isRadiant) || (!radiantWin && !isRadiant);
-      const role = roleMap[player.hero_id] || "Unknown";
-      return { k, d, a, kda, win, duration: matchDetails.duration, role, hero: player.hero_id };
+      const win = match.radiant_win === (match.player_slot < 128);
+      return { k, d, a, kda: parseFloat(kda), win };
     }
 
     async function analyzeMatches() {
       const matches = await fetchMatchHistory();
       const container = document.getElementById("matches");
-      let wins = 0, total = 0, sumKDA = 0, sumDur = 0;
+
+      let total = 0, wins = 0, sumKDA = 0;
       let boosters = 0, ruiners = 0;
 
-      // статистика по ролях
-      const roleStats = {};
-
       for (const m of matches) {
-        const details = await fetchMatchDetails(m.match_id);
-        const stats = analyzePlayer(details, accountId32);
-        if (!stats) continue;
-
+        const stats = analyzePlayer(m, accountId32);
         total++;
         if (stats.win) wins++;
-        sumKDA += parseFloat(stats.kda);
-        sumDur += stats.duration;
+        sumKDA += stats.kda;
 
-        // прості евристики
         if (stats.kda >= 6 && stats.win) boosters++;
         if (stats.kda <= 1 && !stats.win) ruiners++;
-
-        // накопичуємо по ролях
-        if (!roleStats[stats.role]) {
-          roleStats[stats.role] = { games:0, wins:0, sumKDA:0 };
-        }
-        roleStats[stats.role].games++;
-        if (stats.win) roleStats[stats.role].wins++;
-        roleStats[stats.role].sumKDA += parseFloat(stats.kda);
 
         const div = document.createElement("div");
         div.className = "match";
         div.innerHTML = `Match ${m.match_id}: 
           <span class="${stats.win ? 'good':'bad'}">${stats.win ? 'WIN':'LOSS'}</span> 
-          | Hero=${stats.hero} | Role=${stats.role} 
-          | K=${stats.k}, D=${stats.d}, A=${stats.a}, KDA=${stats.kda}`;
+          | Hero=${m.hero_id} | K=${stats.k}, D=${stats.d}, A=${stats.a}, KDA=${stats.kda}`;
         container.appendChild(div);
       }
 
-      const avgKDA = (sumKDA / total).toFixed(2);
-      const avgDur = (sumDur / total / 60).toFixed(1);
       const winrate = ((wins / total) * 100).toFixed(1);
-
-      // простий прогноз
-      const nextWinChance = winrate;
+      const avgKDA = (sumKDA / total).toFixed(2);
       const boosterChance = ((boosters / total) * 100).toFixed(1);
       const ruinerChance = ((ruiners / total) * 100).toFixed(1);
+      const nextWinChance = winrate;
 
       document.getElementById("summary").innerHTML = `
-        <h2>📊 Загальна статистика (${total} матчів)</h2>
+        <h2>📊 Summary (${total} матчів)</h2>
         Winrate: ${winrate}%<br>
-        Середній KDA: ${avgKDA}<br>
-        Середня тривалість: ${avgDur} хв<br><br>
+        Середній KDA: ${avgKDA}<br><br>
         🔮 Прогноз:<br>
         Шанс перемоги у наступному матчі: ${nextWinChance}%<br>
         Шанс зустріти бустера: ${boosterChance}%<br>
         Шанс зустріти руінера: ${ruinerChance}%
       `;
-
-      // таблиця по ролях
-      let table = `<h2>📌 Статистика по ролях</h2><table><tr><th>Роль</th><th>Ігор</th><th>Winrate</th><th>Середній KDA</th></tr>`;
-      for (const role in roleStats) {
-        const r = roleStats[role];
-        const wr = ((r.wins / r.games) * 100).toFixed(1);
-        const rkda = (r.sumKDA / r.games).toFixed(2);
-        table += `<tr><td>${role}</td><td>${r.games}</td><td>${wr}%</td><td>${rkda}</td></tr>`;
-      }
-      table += "</table>";
-      document.getElementById("role-summary").innerHTML = table;
     }
 
+    analyzeMatches();
+  </script>
+</body>
+</html>
     analyzeMatches();
   </script>
 </body>
