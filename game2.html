@@ -259,7 +259,24 @@ button:hover {
   </div>
 </div>
 <div id="behaviorInfo" style="display:none; margin-top:15px; color:#ff6666;"></div>
-
+<h3 style="margin-top:40px; color:#ffcc66; font-family:'Fira Sans'; text-align:center;">
+  Моя статистика з OpenDota
+</h3>
+<div style="overflow-x:auto;">
+  <table id="heroStatsTable" style="width:100%; border-collapse:collapse; color:#eee; font-family:'Fira Sans';">
+    <thead style="background:#333;">
+      <tr>
+        <th>Герой</th>
+        <th>Ігор</th>
+        <th>Перемог</th>
+        <th>Winrate</th>
+        <th>KDA</th>
+        <th>Середній бал</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
 
 
 
@@ -1641,6 +1658,10 @@ function calculateBestPicks() {
   heroes.forEach(hero => {
     if (myHeroes.includes(hero.name) || enemyHeroes.includes(hero.name)) return;
     let score = 0;
+    if (heroUserWeights[hero.name]) {
+  score += heroUserWeights[hero.name] * 0.3; // 0.3 = сила впливу твоєї статистики
+}
+
     const winNorm = (hero.winrate-0.5)/0.5;
     const pickNorm = Math.log(1+hero.pickrate*100)/Math.log(101);
     score += weights.winrate*winNorm + weights.pickrate*pickNorm;
@@ -1886,6 +1907,59 @@ function showFinalChance() {
         myChance *= stability * (1 + influence);
         myChance = Math.max(5, Math.min(95, myChance));
     }
+
+  // ===================== OpenDota інтеграція =====================
+const accountId = 863386335;
+let heroUserWeights = {}; // { "Hero Name": score }
+
+async function loadUserHeroStats(account_id) {
+  const url = `https://api.opendota.com/api/players/${account_id}/heroes`;
+  try {
+    const resp = await fetch(url);
+    const data = await resp.json();
+
+    const tbody = document.querySelector('#heroStatsTable tbody');
+    tbody.innerHTML = '';
+
+    // Сортуємо за кількістю ігор (або можна за winrate)
+    data.sort((a, b) => b.games - a.games);
+
+    // Обмежуємо 100 героями
+    data.slice(0, 100).forEach(hero => {
+      const heroName = mapHeroIdToName(hero.hero_id);
+      if (!heroName) return;
+
+      const winrate = hero.games > 0 ? hero.win / hero.games : 0;
+      const kda = hero.deaths > 0 ? (hero.kills + hero.assists) / hero.deaths : hero.kills + hero.assists;
+      const score = (winrate * 0.7 + (kda / 10) * 0.3).toFixed(3); // формула ваги
+
+      // додаємо рядок у таблицю
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${heroName}</td>
+        <td>${hero.games}</td>
+        <td>${hero.win}</td>
+        <td>${(winrate * 100).toFixed(1)}%</td>
+        <td>${kda.toFixed(2)}</td>
+        <td>${score}</td>
+      `;
+      tbody.appendChild(row);
+
+      // зберігаємо вагу для драфта
+      heroUserWeights[heroName] = parseFloat(score);
+    });
+
+    console.log("✅ OpenDota hero stats loaded:", heroUserWeights);
+  } catch (err) {
+    console.error("❌ Error loading OpenDota stats:", err);
+  }
+}
+
+// Викликаємо після завантаження сторінки
+window.addEventListener("load", () => {
+  loadUserHeroStats(accountId);
+});
+
 
     // відображення
     document.getElementById('summaryMyTeam').innerHTML = myTeam.map(h=>`<li>🟩 ${h}</li>`).join('');
