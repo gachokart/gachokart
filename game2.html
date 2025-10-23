@@ -264,31 +264,7 @@ button:hover {
 
 
 <script>
-  const accountId32 = 863386335; // твій Steam32 ID
-    const MATCH_COUNT = 100;
-
-    async function fetchMatchHistory() {
-      const url = `http://localhost:3000/api/matches?account_id=${accountId32}&count=${MATCH_COUNT}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Server unavailable");
-      return await res.json();
-    }
-
-    async function getHeroesMap() {
-      const res = await fetch("https://api.opendota.com/api/heroes");
-      const heroes = await res.json();
-      const map = {};
-      for (const h of heroes) {
-        const short = h.name.replace("npc_dota_hero_", "");
-        map[h.id] = {
-          name: h.localized_name,
-          img: `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/${short}.png`
-        };
-      }
-      return map;
-    }
-
-// =========================
+  // =========================
 // 🔥 ВШИТИЙ heroes.json
 // =========================
 const heroes = [
