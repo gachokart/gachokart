@@ -35,6 +35,14 @@
   <canvas id="roleChart" width="700" height="300"></canvas>
   <p class="hint">Зелений стовпчик — рекомендована роль (найвищий прогноз).</p>
 
+  <h3>📈 Графік матчів (моя команда)</h3>
+<canvas id="allyChart" width="900" height="200"></canvas>
+
+<h3>📈 Графік матчів (суперники)</h3>
+<canvas id="enemyChart" width="900" height="200"></canvas>
+
+
+
   <!-- Список матчів -->
   <div id="matches"></div>
 
@@ -194,6 +202,63 @@
           if (lastResult === null || lastResult === win) streak++;
           else streak = 1;
           lastResult = win;
+
+          const kda = (m.kills+m.assists)/Math.max(1,m.deaths);
+const isBooster = kda >= 6;
+const isRuiner  = kda <= 1;
+const isAlly    = (m.player_slot < 128); // Radiant = ally
+
+let allyColor = "gray";
+let enemyColor = "gray";
+
+if (isAlly) {
+  if (isBooster && isRuiner) allyColor = "yellow";
+  else if (isBooster) allyColor = "green";
+  else if (isRuiner)  allyColor = "red";
+} else {
+  if (isBooster || isRuiner) enemyColor = "blue";
+}
+
+// зберігаємо кольори у масиви
+allyColors.push(allyColor);
+enemyColors.push(enemyColor);
+labels.push("M"+(idx+1));
+
+// --- Графік моєї команди ---
+const ctxAlly = document.getElementById("allyChart").getContext("2d");
+new Chart(ctxAlly, {
+  type: "bar",
+  data: {
+    labels,
+    datasets: [{
+      label: "Моя команда",
+      data: new Array(labels.length).fill(1),
+      backgroundColor: allyColors
+    }]
+  },
+  options: {
+    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+    scales: { x: { display: false }, y: { display: false } }
+  }
+});
+
+// --- Графік суперників ---
+const ctxEnemy = document.getElementById("enemyChart").getContext("2d");
+new Chart(ctxEnemy, {
+  type: "bar",
+  data: {
+    labels,
+    datasets: [{
+      label: "Суперники",
+      data: new Array(labels.length).fill(1),
+      backgroundColor: enemyColors
+    }]
+  },
+  options: {
+    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+    scales: { x: { display: false }, y: { display: false } }
+  }
+});
 
           // бустер/руінер візуальний сигнал
           let color = "#888";
