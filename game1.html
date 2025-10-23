@@ -1,754 +1,137 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Game3 — Предикт матчу, бустери/руйнери, шанси та закономірності</title>
+  <meta charset="UTF-8">
+  <title>Dota 2 Role Analyzer</title>
   <style>
-    :root{
-      --bg:#0b0e12;
-      --card:#12161c;
-      --accent:#6ee7ff;
-      --accent2:#a5ff6e;
-      --danger:#ff6e6e;
-      --warn:#ffd36e;
-      --text:#e7eef7;
-      --muted:#a9b4c7;
-      --grid-gap:16px;
-      --radius:12px;
-    }
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
-    a{color:var(--accent)}
-    .wrap{max-width:1100px;margin:0 auto;padding:24px}
-    header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:24px;border-bottom:1px solid #1c222b;padding-bottom:12px}
-    header h1{font-size:24px;margin:0}
-    header .desc{color:var(--muted);font-size:14px;max-width:700px}
-    .grid{display:grid;grid-template-columns:1.2fr 1fr;gap:var(--grid-gap)}
-    @media (max-width: 900px){ .grid{grid-template-columns:1fr} }
-    .card{background:var(--card);border:1px solid #1c222b;border-radius:var(--radius);padding:16px}
-    .card h2{font-size:18px;margin:0 0 12px}
-    .row{display:flex;gap:12px;flex-wrap:wrap}
-    .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;border:1px solid #1f2631;background:#0e1217;color:var(--text);font-size:13px}
-    .muted{color:var(--muted)}
-    .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-    @media (max-width: 700px){ .kpi{grid-template-columns:1fr 1fr} }
-    .k{background:#0e1217;border:1px solid #1f2631;border-radius:10px;padding:12px}
-    .k .label{font-size:12px;color:var(--muted)}
-    .k .val{font-size:22px;margin-top:6px}
-    .bar{height:12px;background:#0e1217;border:1px solid #1f2631;border-radius:999px;overflow:hidden}
-    .bar > span{display:block;height:100%;background:linear-gradient(90deg, var(--accent), var(--accent2));width:0%}
-    .list{display:grid;gap:10px}
-    .list .item{display:flex;gap:12px;align-items:flex-start}
-    .bullet{width:10px;height:10px;border-radius:50%;margin-top:5px;background:var(--accent)}
-    .bullet.warn{background:var(--warn)}
-    .bullet.danger{background:var(--danger)}
-    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-size:12px;color:#cbd5e1;background:#0e1217;border:1px dashed #1f2631;border-radius:8px;padding:10px}
-    .table{width:100%;border-collapse:collapse;font-size:14px}
-    .table th,.table td{border-bottom:1px solid #1f2631;padding:10px 8px;text-align:left}
-    .table th{color:var(--muted);font-weight:600}
-    .tag{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid #1f2631;background:#0e1217;font-size:12px}
-    .tag.good{border-color:#244631;color:#a8ffb4;background:#0c1b12}
-    .tag.bad{border-color:#452424;color:#ffb4b4;background:#1b0c0c}
-    .tag.mid{border-color:#454224;color:#ffe7a8;background:#1b190c}
-    footer{margin-top:24px;color:var(--muted);font-size:13px}
+    body { background:#111; color:#eee; font-family:monospace; padding:20px; }
+    h1 { color:#6cf; }
+    .match { margin:5px 0; padding:5px; border-bottom:1px solid #333; }
+    .good { color:#6f6; }
+    .bad { color:#f66; }
+    table { border-collapse: collapse; margin-top:20px; }
+    td, th { border:1px solid #444; padding:5px 10px; }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div>
-        <h1>Game3 — Предикт майбутнього матчу</h1>
-        <div class="desc">Статичний аналіз твоєї історії ігор: ймовірність перемоги, ризик бустерів/руйнерів, ключові сигнали та закономірності. Замени змінну DATA у коді на свій масив матчів — сторінка сама перерахує все.</div>
-      </div>
-      <div class="pill">
-        <span>Без інтерактиву</span>
-        <span class="muted">•</span>
-        <span>Прозора вагова логіка</span>
-      </div>
-    </header>
-
-    <div class="grid">
-      <!-- LEFT: Prediction & Signals -->
-      <section class="card">
-        <h2>Предикт на наступний матч</h2>
-
-        <div class="kpi">
-          <div class="k">
-            <div class="label">Оціночний вінрейт</div>
-            <div class="val"><span id="winRate">—</span>%</div>
-            <div class="bar" style="margin-top:8px"><span id="winRateBar"></span></div>
-          </div>
-          <div class="k">
-            <div class="label">Ймовірність бустера у ворогів</div>
-            <div class="val"><span id="enemyBooster">—</span>%</div>
-            <div class="bar" style="margin-top:8px"><span id="enemyBoosterBar"></span></div>
-          </div>
-          <div class="k">
-            <div class="label">Ризик руйнера у союзників</div>
-            <div class="val"><span id="allyRuiner">—</span>%</div>
-            <div class="bar" style="margin-top:8px"><span id="allyRuinerBar"></span></div>
-          </div>
-        </div>
-
-        <div class="row" style="margin-top:14px">
-          <div class="pill"><strong>Висновок:</strong> <span id="verdict">—</span></div>
-          <div class="pill"><strong>Впевненість моделі:</strong> <span id="confidence">—</span></div>
-        </div>
-
-        <div style="margin-top:16px" class="mono" id="weightsNote">
-          Логіка оцінки: WinRate = 40% історія + 35% сила міду + 15% стабільність саппортів + 10% форма основних героїв.
-          Бустер = аномальний KPM, низькі смерті, велика частка команди; Руйнер = високі смерті, низькі асисти, трол-пік історично.
-        </div>
-
-        <div style="margin-top:18px">
-          <h2>Ключові сигнали</h2>
-          <div class="list" id="signals">
-            <!-- Filled by JS -->
-          </div>
-        </div>
-      </section>
-
-      <!-- RIGHT: Patterns & Hero tiers -->
-      <section class="card">
-        <h2>Закономірності з історії</h2>
-        <div class="list" id="patterns">
-          <!-- Filled by JS -->
-        </div>
-
-        <div style="margin-top:18px">
-          <h2>Топи та антирейтинги героїв</h2>
-          <table class="table" id="heroTable">
-            <thead>
-              <tr>
-                <th>Герой</th>
-                <th>Матчів</th>
-                <th>Вінрейт</th>
-                <th>Сер. KDA внесок</th>
-                <th>Тег</th>
-              </tr>
-            </thead>
-            <tbody><!-- Filled by JS --></tbody>
-          </table>
-        </div>
-      </section>
-    </div>
-
-    <footer>
-      Підказка: заміни значення змінної DATA в коді на свій масив матчів (JSON). Структура підтримує поля: hero, position, result, durationMinutes, kda, teammates, opponents. Аналітика перераховується автоматично.
-    </footer>
-  </div>
+  <h1>Dota 2 Match & Role Analyzer</h1>
+  <div id="summary"></div>
+  <div id="role-summary"></div>
+  <div id="matches"></div>
 
   <script>
-    // ====== ВСТАВ СЮДИ СВІЙ МАСИВ МАТЧІВ ======
-    // Заміни DATA на повний масив із твого файлу. Формат має відповідати наведеним прикладам.
-    const DATA = [
-    {
-      "matchId": "1",
-      "date": "2025-09-24",
-      "hero": "Juggernaut",
-      "position": "Core",
-      "result": "LOSS",
-      "durationMinutes": 35,
-      "kda": { "kills": 3, "deaths": 11, "assists": 5 },
-      "teammates": [
-        { "hero": "Weaver", "position": "Hard Support", "kda": { "kills": 2, "deaths": 6, "assists": 13 } },
-        { "hero": "Clockwerk", "position": "Support", "kda": { "kills": 3, "deaths": 12, "assists": 7 } },
-        { "hero": "Necrophos", "position": "Offlane", "kda": { "kills": 5, "deaths": 12, "assists": 8 } },
-        { "hero": "Arc Warden", "position": "Mid", "kda": { "kills": 12, "deaths": 8, "assists": 1 } }
-      ],
-      "opponents": [
-        { "hero": "Lina", "position": "Support", "result": "WIN", "kda": { "kills": 7, "deaths": 7, "assists": 17 } },
-        { "hero": "Phantom Lancer", "position": "Core", "result": "WIN", "kda": { "kills": 5, "deaths": 6, "assists": 10 } },
-        { "hero": "Lich", "position": "Hard Support", "result": "WIN", "kda": { "kills": 8, "deaths": 6, "assists": 21 } },
-        { "hero": "Lone Druid", "position": "Mid", "result": "WIN", "kda": { "kills": 16, "deaths": 1, "assists": 14 } },
-        { "hero": "Queen of Pain", "position": "Offlane", "result": "WIN", "kda": { "kills": 13, "deaths": 6, "assists": 8 } }
-      ]
-    },
-    {
-      "matchId": "2",
-      "date": "2025-09-24",
-      "hero": "Lifestealer",
-      "position": "Core",
-      "result": "WIN",
-      "durationMinutes": 23,
-      "kda": { "kills": 2, "deaths": 1, "assists": 9 },
-      "teammates": [
-        { "hero": "Nature's Prophet", "position": "Support", "kda": { "kills": 5, "deaths": 2, "assists": 14 } },
-        { "hero": "Lina", "position": "Mid", "kda": { "kills": 13, "deaths": 2, "assists": 8 } },
-        { "hero": "Ogre Magi", "position": "Hard Support", "kda": { "kills": 3, "deaths": 1, "assists": 14 } },
-        { "hero": "Axe", "position": "Offlane", "kda": { "kills": 6, "deaths": 0, "assists": 6 } }
-      ],
-      "opponents": [
-        { "hero": "Bane", "position": "Hard Support", "result": "LOSS", "kda": { "kills": 1, "deaths": 6, "assists": 4 } },
-        { "hero": "Earthshaker", "position": "Mid", "result": "LOSS", "kda": { "kills": 1, "deaths": 10, "assists": 0 } },
-        { "hero": "Chaos Knight", "position": "Offlane", "result": "LOSS", "kda": { "kills": 1, "deaths": 6, "assists": 1 } },
-        { "hero": "Juggernaut", "position": "Core", "result": "LOSS", "kda": { "kills": 1, "deaths": 5, "assists": 1 } },
-        { "hero": "Windranger", "position": "Support", "result": "LOSS", "kda": { "kills": 2, "deaths": 3, "assists": 1 } }
-      ]
-    },
-    {
-      "matchId": "3",
-      "date": "2025-09-24",
-      "hero": "Juggernaut",
-      "position": "Core",
-      "result": "WIN",
-      "durationMinutes": 33,
-      "kda": { "kills": 6, "deaths": 9, "assists": 9 },
-      "teammates": [
-        { "hero": "Lion", "position": "Hard Support", "kda": { "kills": 2, "deaths": 10, "assists": 19 } },
-        { "hero": "Shadow Fiend", "position": "Mid", "kda": { "kills": 26, "deaths": 1, "assists": 9 } },
-        { "hero": "Wraith King", "position": "Offlane", "kda": { "kills": 8, "deaths": 4, "assists": 15 } },
-        { "hero": "Weaver", "position": "Support", "kda": { "kills": 7, "deaths": 7, "assists": 17 } }
-      ],
-      "opponents": [
-        { "hero": "Zeus", "position": "Support", "result": "LOSS", "kda": { "kills": 6, "deaths": 12, "assists": 13 } },
-        { "hero": "Puck", "position": "Mid", "result": "LOSS", "kda": { "kills": 5, "deaths": 7, "assists": 5 } },
-        { "hero": "Shadow Shaman", "position": "Hard Support", "result": "LOSS", "kda": { "kills": 6, "deaths": 11, "assists": 10 } },
-        { "hero": "Underlord", "position": "Offlane", "result": "LOSS", "kda": { "kills": 8, "deaths": 12, "assists": 15 } },
-        { "hero": "Sven", "position": "Core", "result": "LOSS", "kda": { "kills": 5, "deaths": 8, "assists": 11 } }
-      ]
-    },
-    {
-      "matchId": "4",
-      "date": "2025-09-23",
-      "hero": "Riki",
-      "position": "Core",
-      "result": "WIN",
-      "durationMinutes": 36,
-      "kda": { "kills": 19, "deaths": 5, "assists": 14 },
-      "teammates": [
-        { "hero": "Witch Doctor", "position": "Support", "kda": { "kills": 13, "deaths": 3, "assists": 14 } },
-        { "hero": "Dazzle", "position": "Hard Support", "kda": { "kills": 6, "deaths": 7, "assists": 29 } },
-        { "hero": "Dawnbreaker", "position": "Offlane", "kda": { "kills": 11, "deaths": 6, "assists": 24 } },
-        { "hero": "Puck", "position": "Mid", "kda": { "kills": 14, "deaths": 6, "assists": 11 } }
-      ],
-      "opponents": [
-        { "hero": "Sven", "position": "Core", "result": "LOSS", "kda": { "kills": 2, "deaths": 7, "assists": 3 } },
-        { "hero": "Hoodwink", "position": "Support", "result": "LOSS", "kda": { "kills": 8, "deaths": 11, "assists": 10 } },
-        { "hero": "Necrophos", "position": "Offlane", "result": "LOSS", "kda": { "kills": 7, "deaths": 15, "assists": 8 } },
-        { "hero": "Venomancer", "position": "Hard Support", "result": "LOSS", "kda": { "kills": 5, "deaths": 19, "assists": 12 } },
-        { "hero": "Skywrath Mage", "position": "Mid", "result": "LOSS", "kda": { "kills": 5, "deaths": 13, "assists": 14 } }
-      ]
-    },
-    {
-      "matchId": "5",
-      "date": "2025-09-22",
-      "hero": "Phantom Lancer",
-      "position": "Core",
-      "result": "WIN",
-      "durationMinutes": 42,
-      "kda": { "kills": 11, "deaths": 3, "assists": 15 },
-      "teammates": [
-        { "hero": "Invoker", "position": "Mid", "kda": { "kills": 20, "deaths": 5, "assists": 12 } },
-        { "hero": "Dazzle", "position": "Support", "kda": { "kills": 1, "deaths": 6, "assists": 18 } },
-        { "hero": "Elder Titan", "position": "Offlane", "kda": { "kills": 0, "deaths": 10, "assists": 6 } },
-        { "hero": "Disruptor", "position": "Hard Support", "kda": { "kills": 4, "deaths": 12, "assists": 22 } }
-      ],
-      "opponents": [
-        { "hero": "Phoenix", "position": "Hard Support", "result": "LOSS", "kda": { "kills": 6, "deaths": 12, "assists": 13 } },
-        { "hero": "Sniper", "position": "Mid", "result": "LOSS", "kda": { "kills": 13, "deaths": 8, "assists": 11 } },
-        { "hero": "Wraith King", "position": "Offlane", "result": "LOSS", "kda": { "kills": 8, "deaths": 10, "assists": 12 } },
-        { "hero": "Rubick", "position": "Support", "result": "LOSS", "kda": { "kills": 2, "deaths": 4, "assists": 16 } },
-        { "hero": "Riki", "position": "Core", "result": "LOSS", "kda": { "kills": 9, "deaths": 8, "assists": 7 } }
-      ]
-    },
-    {
-      "matchId": "6",
-      "date": "2025-09-22",
-      "hero": "Lifestealer",
-      "position": "Core",
-      "result": "LOSS",
-      "durationMinutes": 45,
-      "kda": { "kills": 7, "deaths": 4, "assists": 11 },
-      "teammates": [
-        { "hero": "Dawnbreaker", "position": "Offlane", "kda": { "kills": 9, "deaths": 8, "assists": 9 } },
-        { "hero": "Elder Titan", "position": "Support", "kda": { "kills": 4, "deaths": 18, "assists": 16 } },
-        { "hero": "Earthshaker", "position": "Mid", "kda": { "kills": 6, "deaths": 9, "assists": 5 } },
-        { "hero": "Enigma", "position": "Hard Support", "kda": { "kills": 1, "deaths": 13, "assists": 11 } }
-      ],
-      "opponents": [
-        { "hero": "Medusa", "position": "Core", "result": "WIN", "kda": { "kills": 11, "deaths": 4, "assists": 13 } },
-        { "hero": "Tidehunter", "position": "Offlane", "result": "WIN", "kda": { "kills": 7, "deaths": 8, "assists": 20 } },
-        { "hero": "Witch Doctor", "position": "Hard Support", "result": "WIN", "kda": { "kills": 6, "deaths": 10, "assists": 24 } },
-        { "hero": "Queen of Pain", "position": "Mid", "result": "WIN", "kda": { "kills": 21, "deaths": 3, "assists": 10 } },
-        { "hero": "Nyx Assassin", "position": "Support", "result": "WIN", "kda": { "kills": 7, "deaths": 4, "assists": 19 } }
-      ]
-    },
-     {
-      "matchId": "7",
-      "date": "2025-09-22",
-      "hero": "Ursa",
-      "position": "Core",
-      "result": "LOSS",
-      "durationMinutes": 33,
-      "kda": { "kills": 6, "deaths": 8, "assists": 5 },
-      "teammates": [
-        { "hero": "Puck", "position": "Mid", "kda": { "kills": 5, "deaths": 5, "assists": 7 } },
-        { "hero": "Earthshaker", "position": "Support", "kda": { "kills": 1, "deaths": 7, "assists": 6 } },
-        { "hero": "Dragon Knight", "position": "Offlane", "kda": { "kills": 3, "deaths": 10, "assists": 2 } },
-        { "hero": "Vengeful Spirit", "position": "Hard Support", "kda": { "kills": 3, "deaths": 11, "assists": 11 } }
-      ],
-      "opponents": [
-        { "hero": "Luna", "position": "Core", "result": "Win", "kda": { "kills": 12, "deaths": 2, "assists": 9 } },
-        { "hero": "Alchemist", "position": "Mid", "result": "WIN", "kda": { "kills": 7, "deaths": 0, "assists": 18 } },
-        { "hero": "Silencer", "position": "Support", "result": "WIN", "kda": { "kills": 3, "deaths": 5, "assists": 23 } },
-        { "hero": "Pudge", "position": "Offlane", "result": "WIN", "kda": { "kills": 10, "deaths": 9, "assists": 18 } },
-        { "hero": "Dazzle", "position": "Hard Support", "result": "WIN", "kda": { "kills": 9, "deaths": 3, "assists": 23 } }
-      ]
-    },
-    {
-      "matchId": "8",
-      "date": "2025-09-22",
-      "hero": "Weaver",
-      "position": "Core",
-      "result": "LOSS",
-      "durationMinutes": 38,
-      "kda": { "kills": 10, "deaths": 6, "assists": 6 },
-      "teammates": [
-        { "hero": "Rubick", "position": "Mid", "kda": { "kills": 23, "deaths": 5, "assists": 10 } },
-        { "hero": "Invoker", "position": "Support", "kda": { "kills": 3, "deaths": 13, "assists": 16 } },
-        { "hero": "Magnus", "position": "Offlane", "kda": { "kills": 3, "deaths": 9, "assists": 14 } },
-        { "hero": "Hoodwink", "position": "Hard Support", "kda": { "kills": 4, "deaths": 6, "assists": 24 } }
-      ],
-      "opponents": [
-        { "hero": "Earthshaker", "position": "Mid", "result": "WIN", "kda": { "kills": 10, "deaths": 9, "assists": 16 } },
-        { "hero": "Morphling", "position": "Core", "result": "WIN", "kda": { "kills": 12, "deaths": 3, "assists": 11 } },
-        { "hero": "Ancient Apparition", "position": "Support", "result": "WIN", "kda": { "kills": 4, "deaths": 16, "assists": 13 } },
-        { "hero": "Riki", "position": "Hard Support", "result": "WIN", "kda": { "kills": 5, "deaths": 10, "assists": 17 } },
-        { "hero": "Necrophos", "position": "Offlane", "result": "WIN", "kda": { "kills": 7, "deaths": 6, "assists": 12 } }
-      ]
-    },
-     {
-      "matchId": "9",
-      "date": "2025-09-21",
-      "hero": "Lifestealer",
-      "position": "Core",
-      "result": "WIN",
-      "durationMinutes": 39,
-      "kda": { "kills": 12, "deaths": 2, "assists": 14 },
-      "teammates": [
-        { "hero": "Nature's Prophet", "position": "Mid", "kda": { "kills": 15, "deaths": 7, "assists": 21 } },
-        { "hero": "Io", "position": "Hard Support", "kda": { "kills": 2, "deaths": 12, "assists": 24 } },
-        { "hero": "Dark Willow", "position": "Support", "kda": { "kills": 6, "deaths": 7, "assists": 29 } },
-        { "hero": "Primal Beast", "position": "Offlane", "kda": { "kills": 13, "deaths": 6, "assists": 31 } }
-      ],
-      "opponents": [
-        { "hero": "Disruptor", "position": "Hard Support", "result": "LOSS", "kda": { "kills": 2, "deaths": 16, "assists": 24 } },
-        { "hero": "Necrophos", "position": "Mid", "result": "LOSS", "kda": { "kills": 8, "deaths": 9, "assists": 13 } },
-        { "hero": "Pudge", "position": "Support", "result": "LOSS", "kda": { "kills": 8, "deaths": 9, "assists": 15 } },
-        { "hero": "Weaver", "position": "Offlane", "result": "LOSS", "kda": { "kills": 8, "deaths": 7, "assists": 11 } },
-        { "hero": "Phantom Assassin", "position": "Core", "result": "LOSS", "kda": { "kills": 6, "deaths": 8, "assists": 5 } }
-      ]
-    },
-    {
-      "matchId": "10",
-      "date": "2025-09-20",
-      "hero": "Lifestealer",
-      "position": "Core",
-      "result": "WIN",
-      "durationMinutes": 45,
-      "kda": { "kills": 2, "deaths": 4, "assists": 10 },
-      "teammates": [
-        { "hero": "Necrophos", "position": "Offlane", "kda": { "kills": 20, "deaths": 10, "assists": 16 } },
-        { "hero": "Razor", "position": "Mid", "kda": { "kills": 11, "deaths": 8, "assists": 20 } },
-        { "hero": "Earthshaker", "position": "Hard Support", "kda": { "kills": 9, "deaths": 12, "assists": 26 } },
-        { "hero": "Magnus", "position": "Support", "kda": { "kills": 10, "deaths": 12, "assists": 23 } }
-      ],
-      "opponents": [
-        { "hero": "Queen of Pain", "position": "Support", "result": "LOSS", "kda": { "kills": 5, "deaths": 9, "assists": 24 } },
-        { "hero": "Silencer", "position": "Hard Support", "result": "LOSS", "kda": { "kills": 9, "deaths": 13, "assists": 26 } },
-        { "hero": "Invoker", "position": "Mid", "result": "LOSS", "kda": { "kills": 5, "deaths": 14, "assists": 23 } },
-        { "hero": "Sniper", "position": "Core", "result": "LOSS", "kda": { "kills": 10, "deaths": 5, "assists": 11 } },
-        { "hero": "Huskar", "position": "Offlane", "result": "LOSS", "kda": { "kills": 17, "deaths": 13, "assists": 12 } }
-      ]
-    },
-    {
-      "matchId": "11",
-      "date": "2025-09-20",
-      "hero": "Wraith King",
-      "position": "Core",
-      "result": "WIN",
-      "durationMinutes": 41,
-      "kda": { "kills": 12, "deaths": 9, "assists": 17 },
-      "teammates": [
-        { "hero": "Weaver", "position": "Support", "kda": { "kills": 3, "deaths": 2, "assists": 25 } },
-        { "hero": "Pudge", "position": "Offlane", "kda": { "kills": 19, "deaths": 5, "assists": 8 } },
-        { "hero": "Undying", "position": "Hard Support", "kda": { "kills": 4, "deaths": 11, "assists": 25 } },
-        { "hero": "Lion", "position": "Mid", "kda": { "kills": 24, "deaths": 10, "assists": 10 } }
-      ],
-      "opponents": [
-        { "hero": "Zeus", "position": "Hard Support", "result": "LOSS", "kda": { "kills": 8, "deaths": 10, "assists": 16 } },
-        { "hero": "Ursa", "position": "Core", "result": "LOSS", "kda": { "kills": 12, "deaths": 9, "assists": 12 } },
-        { "hero": "Techies", "position": "Offlane", "result": "LOSS", "kda": { "kills": 8, "deaths": 10, "assists": 16 } },
-        { "hero": "Vengeful Spirit", "position": "Support", "result": "LOSS", "kda": { "kills": 1, "deaths": 15, "assists": 19 } },
-        { "hero": "Storm Spirit", "position": "MId", "result": "LOSS", "kda": { "kills": 7, "deaths": 18, "assists": 16 } }
-      ]
-    },
-    {
-      "matchId": "12",
-      "date": "2025-09-20",
-      "hero": "Wraith King",
-      "position": "Core",
-      "result": "LOSS",
-      "durationMinutes": 46,
-      "kda": { "kills": 1, "deaths": 7, "assists": 6 },
-      "teammates": [
-        { "hero": "Shadow Shaman", "position": "Support", "kda": { "kills": 3, "deaths": 15, "assists": 14 } },
-        { "hero": "Lion", "position": "Hard Support", "kda": { "kills": 6, "deaths": 6, "assists": 7 } },
-        { "hero": "Slardar", "position": "Offlane", "kda": { "kills": 5, "deaths": 6, "assists": 12 } },
-        { "hero": "Nature's Prophet", "position": "Mid", "kda": { "kills": 10, "deaths": 7, "assists": 6 } }
-      ],
-      "opponents": [
-        { "hero": "Outworld Destroyer", "position": "Mid", "result": "WIN", "kda": { "kills": 18, "deaths": 1, "assists": 9 } },
-        { "hero": "Juggernaut", "position": "Core", "result": "WIN", "kda": { "kills": 4, "deaths": 6, "assists": 11 } },
-        { "hero": "Silencer", "position": "Support", "result": "WIN", "kda": { "kills": 4, "deaths": 4, "assists": 25 } },
-        { "hero": "Dawnbreaker", "position": "Offlane", "result": "WIN", "kda": { "kills": 10, "deaths": 7, "assists": 21 } },
-        { "hero": "Vengeful Spirit", "position": "Hard Support", "result": "WIN", "kda": { "kills": 5, "deaths": 7, "assists": 25 } }
-      ]
-    },
-    {
-      "matchId": "13",
-      "date": "2025-09-20",
-      "hero": "Queen of Pain",
-      "position": "Mid",
-      "result": "WIN",
-      "durationMinutes": 39,
-      "kda": { "kills": 15, "deaths": 5, "assists": 19 },
-      "teammates": [
-        { "hero": "Bounty Hunter", "position": "Support", "kda": { "kills": 6, "deaths": 6, "assists": 19 } },
-        { "hero": "Medusa", "position": "Core", "kda": { "kills": 7, "deaths": 4, "assists": 15 } },
-        { "hero": "Earthshaker", "position": "Offlane", "kda": { "kills": 8, "deaths": 12, "assists": 16 } },
-        { "hero": "Lion", "position": "Hard Support", "kda": { "kills": 11, "deaths": 13, "assists": 15 } }
-      ],
-      "opponents": [
-        { "hero": "Zeus", "position": "Mid", "result": "LOSS", "kda": { "kills": 9, "deaths": 7, "assists": 9 } },
-        { "hero": "Ogre Magi", "position": "Hard Support", "result": "LOSS", "kda": { "kills": 4, "deaths": 10, "assists": 20 } },
-        { "hero": "Silencer", "position": "Support", "result": "LOSS", "kda": { "kills": 10, "deaths": 11, "assists": 17 } },
-        { "hero": "Pudge", "position": "Offlane", "result": "LOSS", "kda": { "kills": 8, "deaths": 10, "assists": 15 } },
-        { "hero": "Phantom Lancer", "position": "Core", "result": "LOSS", "kda": { "kills": 7, "deaths": 9, "assists": 8 } }
-      ]
-    },
-    {
-      "matchId": "14",
-      "date": "2025-09-19",
-      "hero": "Abaddon",
-      "position": "Hard Support",
-      "result": "WIN",
-      "durationMinutes": 53,
-      "kda": { "kills": 3, "deaths": 8, "assists": 25 },
-      "teammates": [
-        { "hero": "Windranger", "position": "Support", "kda": { "kills": 8, "deaths": 10, "assists": 14 } },
-        { "hero": "Sven", "position": "Mid", "kda": { "kills": 10, "deaths": 9, "assists": 17 } },
-        { "hero": "Mars", "position": "Offlane", "kda": { "kills": 9, "deaths": 9, "assists": 23 } },
-        { "hero": "Phantom Lancer", "position": "Core", "kda": { "kills": 15, "deaths": 7, "assists": 12 } }
-      ],
-      "opponents": [
-        { "hero": "Ogre Magi", "position": "Offlane", "result": "LOSS", "kda": { "kills": 3, "deaths": 11, "assists": 16 } },
-        { "hero": "Mirana", "position": "Hard Support", "result": "LOSS", "kda": { "kills": 2, "deaths": 9, "assists": 27 } },
-        { "hero": "Ursa", "position": "Core", "result": "LOSS", "kda": { "kills": 15, "deaths": 7, "assists": 16 } },
-        { "hero": "Silencer", "position": "Support", "result": "LOSS", "kda": { "kills": 7, "deaths": 11, "assists": 27 } },
-        { "hero": "Puck", "position": "Mid", "result": "LOSS", "kda": { "kills": 15, "deaths": 7, "assists": 17 } }
-      ]
-    },
-    {
-      "matchId": "15",
-      "date": "2025-09-19",
-      "hero": "Ogre Magi",
-      "position": "Hard Support",
-      "result": "LOSS",
-      "durationMinutes": 58,
-      "kda": { "kills": 0, "deaths": 14, "assists": 28 },
-      "teammates": [
-        { "hero": "Windranger", "position": "Offlane", "kda": { "kills": 19, "deaths": 14, "assists": 12 } },
-        { "hero": "Earth Spirit", "position": "Support", "kda": { "kills": 6, "deaths": 6, "assists": 7 } },
-        { "hero": "Pudge", "position": "Mid", "kda": { "kills": 6, "deaths": 12, "assists": 23 } },
-        { "hero": "Phantom Lancer", "position": "Core", "kda": { "kills": 17, "deaths": 12, "assists": 14 } }
-      ],
-      "opponents": [
-        { "hero": "Huskar", "position": "Offlane", "result": "WIN", "kda": { "kills": 10, "deaths": 17, "assists": 19 } },
-        { "hero": "Shadow Demon", "position": "Hard Support", "result": "WIN", "kda": { "kills": 4, "deaths": 16, "assists": 34 } },
-        { "hero": "Puck", "position": "Mid", "result": "WIN", "kda": { "kills": 26, "deaths": 7, "assists": 19 } },
-        { "hero": "Phantom Assassin", "position": "Offlane", "result": "WIN", "kda": { "kills": 10, "deaths": 9, "assists": 20 } },
-        { "hero": "Riki", "position": "Support", "result": "WIN", "kda": { "kills": 15, "deaths": 6, "assists": 18 } }
-    
-        ]
-      }
-    ];
+    const steamApiKey = "F376439B1833C7DF76D6AB25A571755E";   // 🔑 встав свій ключ
+    const accountId32 = 863386304;        // заміни на свій Steam32 ID
+    const MATCH_COUNT = 100;               // можна збільшити до 100
 
-    DATA.sort((a, b) => new Date(b.date) - new Date(a.date));
+    // Мапа героїв до ролей (спрощено, можна розширювати)
+    const roleMap = {
+      1: "Carry", 2: "Carry", 3: "Mid", 4: "Offlane", 5: "Support",
+      6: "Support", 7: "Carry", 8: "Mid", 9: "Offlane", 10: "Support"
+      // TODO: додати всі hero_id з Dota 2
+    };
 
+    async function fetchMatchHistory() {
+      const url = `https://api.steampowered.com/IDOTA2Match_570/GetMatchHistory/v1/?key=${steamApiKey}&account_id=${accountId32}&matches_requested=${MATCH_COUNT}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      return data.result.matches;
+    }
 
+    async function fetchMatchDetails(matchId) {
+      const url = `https://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v1/?key=${steamApiKey}&match_id=${matchId}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      return data.result;
+    }
 
-    // ====== АНАЛІТИЧНА ЛОГІКА ======
-    const avg = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
-    const sum = arr => arr.reduce((a,b)=>a+b,0);
-    const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
-    const pct = (num,den)=> den>0 ? (100 * num / den) : 0;
+    function analyzePlayer(matchDetails, accountId32) {
+      const player = matchDetails.players.find(p => p.account_id === accountId32);
+      if (!player) return null;
+      const k = player.kills;
+      const d = player.deaths;
+      const a = player.assists;
+      const kda = ((k + a) / Math.max(1, d)).toFixed(2);
+      const radiantWin = matchDetails.radiant_win;
+      const isRadiant = player.player_slot < 128;
+      const win = (radiantWin && isRadiant) || (!radiantWin && !isRadiant);
+      const role = roleMap[player.hero_id] || "Unknown";
+      return { k, d, a, kda, win, duration: matchDetails.duration, role, hero: player.hero_id };
+    }
 
-    function collectHeroStats(matches){
-      const byHero = new Map();
-      for(const m of matches){
-        const h = m.hero;
-        const kda = m.kda || {kills:0,deaths:0,assists:0};
-        if(!byHero.has(h)){
-          byHero.set(h,{games:0,wins:0,kills:0,deaths:0,assists:0,durations:[],positions:new Set()});
+    async function analyzeMatches() {
+      const matches = await fetchMatchHistory();
+      const container = document.getElementById("matches");
+      let wins = 0, total = 0, sumKDA = 0, sumDur = 0;
+      let boosters = 0, ruiners = 0;
+
+      // статистика по ролях
+      const roleStats = {};
+
+      for (const m of matches) {
+        const details = await fetchMatchDetails(m.match_id);
+        const stats = analyzePlayer(details, accountId32);
+        if (!stats) continue;
+
+        total++;
+        if (stats.win) wins++;
+        sumKDA += parseFloat(stats.kda);
+        sumDur += stats.duration;
+
+        // прості евристики
+        if (stats.kda >= 6 && stats.win) boosters++;
+        if (stats.kda <= 1 && !stats.win) ruiners++;
+
+        // накопичуємо по ролях
+        if (!roleStats[stats.role]) {
+          roleStats[stats.role] = { games:0, wins:0, sumKDA:0 };
         }
-        const s = byHero.get(h);
-        s.games += 1;
-        s.wins += (m.result === 'WIN') ? 1 : 0;
-        s.kills += kda.kills;
-        s.deaths += kda.deaths;
-        s.assists += kda.assists;
-        s.durations.push(m.durationMinutes||0);
-        if(m.position) s.positions.add(m.position);
-      }
-      return [...byHero.entries()].map(([hero,s])=>({
-        hero,
-        games: s.games,
-        winrate: pct(s.wins, s.games),
-        avgKills: s.kills / s.games,
-        avgDeaths: s.deaths / s.games,
-        avgAssists: s.assists / s.games,
-        avgDuration: avg(s.durations),
-        positions: [...s.positions]
-      }));
-    }
+        roleStats[stats.role].games++;
+        if (stats.win) roleStats[stats.role].wins++;
+        roleStats[stats.role].sumKDA += parseFloat(stats.kda);
 
-    function roleBuckets(match){
-      const team = [ {hero:match.hero, position:match.position, kda:match.kda}, ...(match.teammates||[]) ];
-      const opp = match.opponents || [];
-      const mid = team.filter(x=> x.position && x.position.toLowerCase()==='mid');
-      const supp = team.filter(x=> x.position && x.position.toLowerCase().includes('support'));
-      const off = team.filter(x=> x.position && x.position.toLowerCase()==='offlane');
-      const core = team.filter(x=> x.position && x.position.toLowerCase()==='core');
-      const oppMid = opp.filter(x=> x.position && x.position.toLowerCase()==='mid');
-      return {team, opp, mid, supp, off, core, oppMid};
-    }
-
-    function kpm(player, match){
-      // Kills per minute + assists per minute as impact proxy
-      const mins = Math.max(1, match.durationMinutes||1);
-      const k = (player.kda?.kills||0) / mins;
-      const a = (player.kda?.assists||0) / mins;
-      return k + 0.7*a; // ассисти теж релевантні, але трохи менше ніж кіли
-    }
-
-    function boosterLikelihood(match){
-      // Оцінюємо наявність "бустера" у ворогів за аномальними показниками топ-2 опонентів
-      const oppSorted = [...(match.opponents||[])].sort((a,b)=>{
-        const ka = (a.kda?.kills||0) + 0.6*(a.kda?.assists||0) - 0.8*(a.kda?.deaths||0);
-        const kb = (b.kda?.kills||0) + 0.6*(b.kda?.assists||0) - 0.8*(b.kda?.deaths||0);
-        return kb - ka;
-      });
-      const top = oppSorted.slice(0,2);
-      const mins = Math.max(1, match.durationMinutes||1);
-      let score = 0;
-      for(const p of top){
-        const kpmVal = (p.kda?.kills||0)/mins;
-        const apmVal = (p.kda?.assists||0)/mins;
-        const dpmVal = (p.kda?.deaths||0)/mins;
-        const isMid = (p.position||'').toLowerCase()==='mid';
-        // аномалії: високі kpm/apm, низькі deaths, мід позиція бустить вагу
-        const s = 50*kpmVal + 35*apmVal - 25*dpmVal + (isMid?10:0);
-        score += s;
-      }
-      // нормалізуємо
-      return clamp(score, 0, 100);
-    }
-
-    function ruinerRisk(match){
-      // Оцінка ризику руйнера у союзників за найгіршим гравцем з команди
-      const {team} = roleBuckets(match);
-      const mins = Math.max(1, match.durationMinutes||1);
-      let worst = 0;
-      for(const p of team){
-        const deaths = (p.kda?.deaths||0)/mins;
-        const assists = (p.kda?.assists||0)/mins;
-        const kills = (p.kda?.kills||0)/mins;
-        const isHardSupp = (p.position||'').toLowerCase().includes('hard support');
-        // ознаки руйнера: високі смерті + низькі асисти + низькі кіли, поза hard support це гірше
-        const s = 60*deaths - 25*assists - 15*kills + (isHardSupp? -5 : 5);
-        worst = Math.max(worst, s);
-      }
-      return clamp(worst*2, 0, 100); // підсилюємо для видимості
-    }
-
-    function midPowerFactor(matches){
-      // Середня "сила міду" у твоїх перемогах vs поразках
-      let winMid = [], loseMid = [];
-      for(const m of matches){
-        const {mid} = roleBuckets(m);
-        const mider = mid[0];
-        if(!mider) continue;
-        const score = (mider.kda?.kills||0) + 0.6*(mider.kda?.assists||0) - 0.8*(mider.kda?.deaths||0);
-        if(m.result==='WIN') winMid.push(score);
-        else loseMid.push(score);
-      }
-      const w = avg(winMid), l = avg(loseMid);
-      // перетворимо у 0..100 шкалу
-      const rel = w - (isFinite(l)?l:0);
-      return clamp(50 + rel*2, 0, 100);
-    }
-
-    function supportStability(matches){
-      // Стабільність саппортів: середні асисти/хв та смерті/хв у перемогах
-      let assistsPM = [], deathsPM = [];
-      for(const m of matches){
-        const mins = Math.max(1, m.durationMinutes||1);
-        const {supp} = roleBuckets(m);
-        if(!supp.length) continue;
-        const a = avg(supp.map(s=> (s.kda?.assists||0)/mins));
-        const d = avg(supp.map(s=> (s.kda?.deaths||0)/mins));
-        if(m.result==='WIN'){ assistsPM.push(a); deathsPM.push(d); }
-      }
-      const A = avg(assistsPM), D = avg(deathsPM);
-      // більше асистів і менше смертей = краще
-      return clamp(50 + (A*40) - (D*30), 0, 100);
-    }
-
-    function coreForm(matches){
-      // Форма твоїх основних керрі (за героями з найбільшою кількістю ігор)
-      const hs = collectHeroStats(matches).sort((a,b)=> b.games - a.games);
-      const top = hs.slice(0,3);
-      // баланс: winrate + відносний KDA без смертей
-      return clamp(avg(top.map(h => clamp(h.winrate,0,100)*0.6 + (h.avgKills*20 + h.avgAssists*15 - h.avgDeaths*25))), 0, 100);
-    }
-
-    function overallWinRate(matches){
-      const wins = matches.filter(m=>m.result==='WIN').length;
-      return pct(wins, matches.length);
-    }
-
-    function predictedWinRate(matches){
-      const base = overallWinRate(matches);            // 40%
-      const midPow = midPowerFactor(matches);          // 35%
-      const suppStab = supportStability(matches);      // 15%
-      const coreF = coreForm(matches);                 // 10%
-      const pr = 0.40*base + 0.35*midPow + 0.15*suppStab + 0.10*coreF;
-      return clamp(pr, 5, 95); // обмежимо крайнощі для реалістичності
-    }
-
-    function buildSignals(matches){
-      const S = [];
-      // 1) Мід вплив
-      const midF = midPowerFactor(matches);
-      S.push({lvl: midF>60?'good': (midF<45?'danger':'warn'), text:`Сила міду: ${midF.toFixed(0)}. Перемоги корелюють із потужним мідуером.`});
-      // 2) Саппорти стабільність
-      const supF = supportStability(matches);
-      S.push({lvl: supF>55?'good': (supF<40?'danger':'warn'), text:`Стабільність саппортів: ${supF.toFixed(0)}. Асисти у перемогах — ключ до темпу.`});
-      // 3) Форма керрі
-      const cF = coreForm(matches);
-      S.push({lvl: cF>58?'good': (cF<42?'danger':'warn'), text:`Форма основних керрі: ${cF.toFixed(0)}. Вплив по KDA і винрейту.`});
-      // 4) Тривалість ігор
-      const durations = matches.map(m=>m.durationMinutes||0);
-      const longShare = pct(durations.filter(d=>d>=38).length, durations.length);
-      if(longShare>=40) S.push({lvl:'warn', text:`Частка довгих ігор: ${longShare.toFixed(0)}%. Варто мати лейт-план і скейл.`});
-      // 5) Ризики руйнера
-      const worstR = avg(matches.map(ruinerRisk));
-      S.push({lvl: worstR>55?'danger':'warn', text:`Середній ризик руйнера у союзників: ${worstR.toFixed(0)}%. Командна дисципліна — критично.`});
-      return S;
-    }
-
-    function buildPatterns(matches){
-      const P = [];
-      // Мід домінує у перемогах
-      const midF = midPowerFactor(matches);
-      P.push({lvl:'good', text:`Перемоги тісно пов’язані з сильним мідером (індикатор: ${midF.toFixed(0)}).`});
-      // Саппорти: асисти
-      const supF = supportStability(matches);
-      P.push({lvl: supF>55?'good':'warn', text:`Високі асисти саппортів і низькі смерті у перемогах (стабільність: ${supF.toFixed(0)}).`});
-      // Керрі: стабільність героя
-      const hs = collectHeroStats(matches);
-      const best = [...hs].sort((a,b)=> b.winrate - a.winrate)[0];
-      if(best) P.push({lvl:'good', text:`Найкраще заходить герой: ${best.hero} з вінрейтом ${best.winrate.toFixed(0)}%.`});
-      // Тривалість
-      const dAvg = avg(matches.map(m=>m.durationMinutes||0));
-      P.push({lvl:'mid', text:`Середня тривалість матчу: ${dAvg.toFixed(0)} хв. Підлаштовуй пік під темп.`});
-      // Антирейтинг героя (найнижчий винрейт серед ≥2 ігор)
-      const multi = hs.filter(h=>h.games>=2).sort((a,b)=> a.winrate - b.winrate)[0];
-      if(multi) P.push({lvl:'bad', text:`Ризикований герой для тебе: ${multi.hero} (винрейт ${multi.winrate.toFixed(0)}% на ${multi.games} матчах).`});
-      return P;
-    }
-
-    function renderHeroTable(matches){
-      const hs = collectHeroStats(matches);
-      const tbody = document.querySelector('#heroTable tbody');
-      tbody.innerHTML = '';
-      for(const h of hs.sort((a,b)=> b.winrate - a.winrate)){
-        const tag = h.winrate>=65?'good': (h.winrate<=45?'bad':'mid');
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${h.hero}</td>
-          <td>${h.games}</td>
-          <td>${h.winrate.toFixed(0)}%</td>
-          <td>${(h.avgKills+h.avgAssists - 0.6*h.avgDeaths).toFixed(1)}</td>
-          <td><span class="tag ${tag}">${tag==='good'?'Сильний': tag==='bad'?'Ризиковий':'Ситуативний'}</span></td>
-        `;
-        tbody.appendChild(tr);
-      }
-    }
-
-    function main(){
-      if(!Array.isArray(DATA) || !DATA.length){
-        document.getElementById('verdict').textContent = 'Немає даних';
-        return;
+        const div = document.createElement("div");
+        div.className = "match";
+        div.innerHTML = `Match ${m.match_id}: 
+          <span class="${stats.win ? 'good':'bad'}">${stats.win ? 'WIN':'LOSS'}</span> 
+          | Hero=${stats.hero} | Role=${stats.role} 
+          | K=${stats.k}, D=${stats.d}, A=${stats.a}, KDA=${stats.kda}`;
+        container.appendChild(div);
       }
 
-      const winPr = predictedWinRate(DATA);
-      const boosterPr = avg(DATA.map(boosterLikelihood));
-      const ruinerPr = avg(DATA.map(ruinerRisk));
+      const avgKDA = (sumKDA / total).toFixed(2);
+      const avgDur = (sumDur / total / 60).toFixed(1);
+      const winrate = ((wins / total) * 100).toFixed(1);
 
-      // KPI values
-      const setVal = (id, v)=> document.getElementById(id).textContent = v.toFixed(0);
-      setVal('winRate', winPr);
-      setVal('enemyBooster', clamp(boosterPr,0,100));
-      setVal('allyRuiner', clamp(ruinerPr,0,100));
+      // простий прогноз
+      const nextWinChance = winrate;
+      const boosterChance = ((boosters / total) * 100).toFixed(1);
+      const ruinerChance = ((ruiners / total) * 100).toFixed(1);
 
-      // Bars
-      document.getElementById('winRateBar').style.width = `${winPr}%`;
-      document.getElementById('allyRuinerBar').style.width = `${clamp(ruinerPr,0,100)}%`;
-      document.getElementById('enemyBoosterBar').style.width = `${clamp(boosterPr,0,100)}%`;
+      document.getElementById("summary").innerHTML = `
+        <h2>📊 Загальна статистика (${total} матчів)</h2>
+        Winrate: ${winrate}%<br>
+        Середній KDA: ${avgKDA}<br>
+        Середня тривалість: ${avgDur} хв<br><br>
+        🔮 Прогноз:<br>
+        Шанс перемоги у наступному матчі: ${nextWinChance}%<br>
+        Шанс зустріти бустера: ${boosterChance}%<br>
+        Шанс зустріти руінера: ${ruinerChance}%
+      `;
 
-      // Verdict & Confidence
-      const verd = winPr>=60 ? 'Схильність до перемоги' :
-                   winPr<=45 ? 'Схильність до поразки' :
-                               'Балансовано/50-50';
-      document.getElementById('verdict').textContent = verd;
-
-      // Confidence: ширина історії + узгодженість факторів
-      const sizeFac = clamp(20 + DATA.length*2, 20, 85);
-      const alignFac = (midPowerFactor(DATA)*0.4 + supportStability(DATA)*0.3 + coreForm(DATA)*0.3)/100;
-      const conf = clamp(sizeFac * alignFac, 15, 95);
-      document.getElementById('confidence').textContent = conf.toFixed(0) + '%';
-
-      // Signals
-      const signals = buildSignals(DATA);
-      const sRoot = document.getElementById('signals');
-      sRoot.innerHTML = '';
-      for(const s of signals){
-        const div = document.createElement('div');
-        div.className = 'item';
-        div.innerHTML = `<div class="bullet ${s.lvl==='warn'?'warn': s.lvl==='danger'?'danger':''}"></div><div>${s.text}</div>`;
-        sRoot.appendChild(div);
+      // таблиця по ролях
+      let table = `<h2>📌 Статистика по ролях</h2><table><tr><th>Роль</th><th>Ігор</th><th>Winrate</th><th>Середній KDA</th></tr>`;
+      for (const role in roleStats) {
+        const r = roleStats[role];
+        const wr = ((r.wins / r.games) * 100).toFixed(1);
+        const rkda = (r.sumKDA / r.games).toFixed(2);
+        table += `<tr><td>${role}</td><td>${r.games}</td><td>${wr}%</td><td>${rkda}</td></tr>`;
       }
-
-      // Patterns
-      const patterns = buildPatterns(DATA);
-      const pRoot = document.getElementById('patterns');
-      pRoot.innerHTML = '';
-      for(const p of patterns){
-        const div = document.createElement('div');
-        div.className = 'item';
-        div.innerHTML = `<div class="bullet ${p.lvl==='warn'?'warn': p.lvl==='danger'?'danger':''}"></div><div>${p.text}</div>`;
-        pRoot.appendChild(div);
-      }
-
-      // Hero table
-      renderHeroTable(DATA);
+      table += "</table>";
+      document.getElementById("role-summary").innerHTML = table;
     }
 
-    main();
+    analyzeMatches();
   </script>
 </body>
 </html>
