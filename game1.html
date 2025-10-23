@@ -23,6 +23,9 @@
 
   <div id="summary"></div>
 
+  <h3>📊 Прогноз по ролях (графік)</h3>
+<canvas id="roleChart" width="600" height="300"></canvas>
+
   <h3>📈 Графік матчів</h3>
   <canvas id="matchChart" width="900" height="260"></canvas>
   <div id="boosterRuinerStats"></div>
@@ -330,7 +333,43 @@ function predictByRole(matches, rolesAgg) {
 }
 
 const rolePredictions = predictByRole(matches, rolesAgg);
+// Побудова графіка прогнозів по ролях
+const ctxRole = document.getElementById("roleChart").getContext("2d");
+const roleLabels = Object.values(rolePredictions).map(r => r.name);
+const roleData = Object.values(rolePredictions).map(r => parseFloat(r.predicted));
 
+new Chart(ctxRole, {
+  type: "bar",
+  data: {
+    labels: roleLabels,
+    datasets: [{
+      label: "Шанс перемоги (%)",
+      data: roleData,
+      backgroundColor: roleData.map(val => val === Math.max(...roleData) ? "limegreen" : "#6cf")
+    }]
+  },
+  options: {
+    scales: {
+      y: {
+        beginAtZero: true,
+        max: 100,
+        ticks: { color: "#eee" }
+      },
+      x: {
+        ticks: { color: "#eee" }
+      }
+    },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: ctx => ctx.raw.toFixed(1) + "%"
+        }
+      }
+    }
+  }
+});
+        
 // таблиця прогнозів
 html += `<h3>🎯 Прогноз по ролях</h3>
 <table>
