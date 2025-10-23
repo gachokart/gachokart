@@ -27,11 +27,112 @@
   <canvas id="matchChart" width="900" height="260"></canvas>
   <div id="boosterRuinerStats"></div>
 
+  <h2>📊 Таблиця героїв і балів</h2>
+<div id="hero-scores"></div>
+
+
+
   <div id="matches"></div>
 
   <script>
-    const accountId32 = 863386335; // твій Steam32 ID
-    const MATCH_COUNT = 100;
+    const accountId = 863386335; // твій Steam32 ID
+let myHeroStats = {}; // {hero_id: {games, winrate}}
+
+// Завантаження з кешем
+async function fetchPlayerStats() {
+  const cacheKey = "myHeroStats";
+  const cached = localStorage.getItem(cacheKey);
+  if (cached) {
+    myHeroStats = JSON.parse(cached);
+    return;
+  }
+
+  try {
+    const res = await fetch(`https://api.opendota.com/api/players/${accountId}/heroes`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    data.forEach(h => {
+      myHeroStats[h.hero_id] = {
+        games: h.games,
+        winrate: h.games ? (h.win / h.games) * 100 : 50
+      };
+    });
+
+    localStorage.setItem(cacheKey, JSON.stringify(myHeroStats));
+  } catch (err) {
+    console.error("API error:", err);
+  }
+}
+
+// Оцінка героя
+function evaluateHeroByStats(heroName) {
+  const heroId = nameToId[heroName];
+  if (!heroId) return {myWR:"50.0", allyWR:"50.0", enemyWR:"50.0", score:"50.0"};
+
+  const my = myHeroStats[heroId] || {games:0, winrate:50};
+
+  // Поки що allyWR і enemyWR ставимо 50 (бо ми не тягнемо інші ендпоінти)
+  const allyWR = 50;
+  const enemyWR = 50;
+
+  const score = (my.winrate * 0.5) + (allyWR * 0.3) + ((100 - enemyWR) * 0.2);
+
+  return {
+    myWR: my.winrate.toFixed(1),
+    allyWR: allyWR.toFixed(1),
+    enemyWR: enemyWR.toFixed(1),
+    score: score.toFixed(1)
+  };
+}
+
+// Побудова таблиці
+function renderHeroScoresTable() {
+  const container = document.getElementById("hero-scores");
+  if (!container) return;
+
+  const rows = heroes.map(h => {
+    const eval = evaluateHeroByStats(h.name);
+    return {
+      name: h.name,
+      myWR: eval.myWR,
+      allyWR: eval.allyWR,
+      enemyWR: eval.enemyWR,
+      score: parseFloat(eval.score)
+    };
+  }).sort((a,b)=> b.score - a.score);
+
+  let html = `<table border="1" cellspacing="0" cellpadding="4" 
+                style="border-collapse:collapse; width:100%; text-align:center;">
+    <tr style="background:#333; color:#fff;">
+      <th>Герой</th>
+      <th>Мій WR</th>
+      <th>WR союзників</th>
+      <th>WR ворогів</th>
+      <th>Score</th>
+    </tr>`;
+
+  rows.forEach(r => {
+    html += `<tr>
+      <td>${r.name}</td>
+      <td>${r.myWR}%</td>
+      <td>${r.allyWR}%</td>
+      <td>${r.enemyWR}%</td>
+      <td><b>${r.score.toFixed(1)}%</b></td>
+    </tr>`;
+  });
+
+  html += `</table>`;
+  container.innerHTML = html;
+}
+
+// Виклик
+(async () => {
+  await fetchPlayerStats();
+  renderHeroScoresTable();
+})();
+
+
 
     async function fetchMatchHistory() {
       const url = `http://localhost:3000/api/matches?account_id=${accountId32}&count=${MATCH_COUNT}`;
