@@ -203,7 +203,7 @@
           else streak = 1;
           lastResult = win;
 
-          const kda = (m.kills+m.assists)/Math.max(1,m.deaths);
+          
 const isBooster = kda >= 6;
 const isRuiner  = kda <= 1;
 const isAlly    = (m.player_slot < 128); // Radiant = ally
