@@ -304,7 +304,7 @@ async function fetchHeroesFromOpenDota(){
                 });
             } catch(e){ console.error('Помилка matchups для', hero.name, e);}
         }
-
+calculateBestPicks();
         populateSelectors();
     } catch(e){
         console.error('Помилка завантаження героїв з OpenDota:', e);
