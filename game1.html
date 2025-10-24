@@ -145,7 +145,64 @@ function analyzeMatches(matches){
 }
 
 // Тут можна додати функції для прогнозів, закономірностей, топ-3 героїв і статистики героїв за 100 матчів
+function fillHeroStatsTable(matches, heroesConstants, myTeamTableId, enemyTeamTableId) {
+    const heroStatsMy = {};
+    const heroStatsEnemy = {};
 
+    matches.forEach(m => {
+        const hid = m.hero_id;
+        const won = playerWon(m);
+        const team = (m.player_slot < 128) ? 'my' : 'enemy';
+        const target = (team==='my') ? heroStatsMy : heroStatsEnemy;
+
+        if(!target[hid]) target[hid] = {games:0, wins:0, k:0, d:0, a:0};
+        target[hid].games++;
+        if(won) target[hid].wins++;
+        target[hid].k += m.kills;
+        target[hid].d += m.deaths;
+        target[hid].a += m.assists;
+    });
+
+    function buildTable(stats, tableId){
+        const tbody = document.getElementById(tableId).querySelector('tbody');
+        tbody.innerHTML = '';
+        const arr = Object.entries(stats).map(([hid, data])=>{
+            const name = heroesConstants[hid]?.localized_name || hid;
+            const img = heroesConstants[hid]?.img ? 'https://cdn.cloudflare.steamstatic.com'+heroesConstants[hid].img : '';
+            const winrate = ((data.wins/data.games)*100).toFixed(1);
+            const avgK = (data.k/data.games).toFixed(1);
+            const avgD = (data.d/data.games).toFixed(1);
+            const avgA = (data.a/data.games).toFixed(1);
+            const kda = avgD>0 ? ((avgK+avgA)/avgD).toFixed(2) : (avgK+avgA).toFixed(2);
+            const score = ((avgK+avgA)/1 + parseFloat(winrate)).toFixed(1); // приклад оцінки
+            return {name,img,games:data.games,winrate,avgKDA:`${avgK}/${avgD}/${avgA}`,score};
+        });
+        arr.sort((a,b)=>b.games-a.games); // сортуємо за кількістю виборів
+
+        arr.forEach(hero=>{
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td><img src="${hero.img}" style="width:32px;height:18px"/> ${hero.name}</td>
+                            <td>${hero.games}</td>
+                            <td>${hero.winrate}</td>
+                            <td>${hero.avgKDA}</td>
+                            <td>${hero.score}</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    buildTable(heroStatsMy, myTeamTableId);
+    buildTable(heroStatsEnemy, enemyTeamTableId);
+}
+
+// Виклик після отримання останніх матчів та підвантаження героїв
+async function updateHeroStats(accountId){
+    const matches = await fetchOpenDotaMatches(accountId, 100);
+    const heroesConstants = await fetchHeroesConstants();
+    fillHeroStatsTable(matches, heroesConstants, 'heroStatsMy', 'heroStatsEnemy');
+}
+
+// Прив'язка кнопки
+document.getElementById('demoBtn').addEventListener('click', ()=>updateHeroStats(863386335));
 </script>
 </body>
 </html>
