@@ -1,16 +1,16 @@
-app.get("/api/predict", async (req, res) => {
-  try {
-    const url = `http://api.opendota.com/api/players/${STEAM_ID64}/recentMatches`;
-    const response = await fetch(url);
-    const matches = await response.json();
+// server.js
+const express = require("express");
+const app = express();
+const PORT = 3000;
 
-    if (!Array.isArray(matches) || matches.length === 0) {
-      return res.status(500).json({ error: "Матчі не знайдено. Перевір, чи профіль відкритий." });
-    }
+// віддавати статичні файли (наприклад game1.html)
+app.use(express.static(__dirname));
 
-    res.json({ sample: matches.slice(0, 3) }); // просто віддай перші 3 матчі
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Помилка запиту до OpenDota" });
-  }
+// тестовий маршрут
+app.get("/api/predict", (req, res) => {
+  res.json({ message: "Привіт, маршрут працює!" });
+});
+
+app.listen(PORT, () => {
+  console.log(`Сервер запущено: http://localhost:${PORT}`);
 });
