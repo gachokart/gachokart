@@ -681,7 +681,7 @@
     "winrate": 0.4893,
     "pickrate": 0.1053,
     "BestCounters": ["Batrider","Queen of Pain","Invoker","Phantom Lancer","Dark Willow","Anti-Mage","Weaver","Magnus","Ancient Apparition","Storm Spirit"],
-    "commonCounters": [,"Broodmother","Riki","Night Stalker","Io","Huskar","Lone Druid","Spectre","Dragon Knight","Arc Warden","Tiny"]
+    "commonCounters": ["Broodmother","Riki","Night Stalker","Io","Huskar","Lone Druid","Spectre","Dragon Knight","Arc Warden","Tiny"]
   },
   {
     
