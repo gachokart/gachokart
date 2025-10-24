@@ -736,6 +736,11 @@ function displayTop(scores) {
     }
   }
 }
+  function updateStageTitle() {
+    const stageTitle = document.getElementById('stageTitle');
+    stageTitle.textContent = `Stage ${stage}`;
+}
+
 
   function calculateCounters(enemyHeroes) {
   const keyRoles = ['Carry', 'Support', 'Disabler', 'Initiator'];
