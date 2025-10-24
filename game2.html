@@ -267,66 +267,79 @@ button:hover {
 // =========================
 // 🔥 ВШИТИЙ heroes.json
 // =========================
+<script>
+// ====================== ГЛОБАЛЬНІ ЗМІННІ ======================
+let stage = 1;
+let allMyHeroes = [];
+let allEnemyHeroes = [];
 let heroes = [];
 let heroStats = [];
 
+// ====================== ЗАВАНТАЖЕННЯ ГЕРОЇВ ======================
 async function fetchHeroes() {
   try {
-    // Завантажуємо статистику героїв з OpenDota
     const res = await fetch("https://api.opendota.com/api/heroStats");
     const data = await res.json();
     heroStats = data;
 
-    // Формуємо масив heroes з усіма потрібними полями
-    heroes = data.map(h => {
-      const totalGames = h.pick || 1;
-      const totalWins = h.win || 0;
-      const winrate = totalGames > 0 ? totalWins / totalGames : 0;
-      const pickrate = totalGames / 10000; // можна масштабувати під твій алгоритм
-
-      return {
-        id: h.id,
-        name: h.localized_name,
-        roles: h.roles,
-        winrate: Number(winrate.toFixed(4)),
-        pickrate: Number(pickrate.toFixed(4)),
-        BestCounters: [],    // буде заповнюватися при виборі героя
-        commonCounters: []   // буде заповнюватися при виборі героя
-      };
-    });
-
-    // Автоматично створюємо селектори після завантаження
-    createSelectors();
-    calculateBestPicks();
-    showBehaviorInfo();
-
+    heroes = data.map(h => ({
+      id: h.id,
+      name: h.localized_name,
+      roles: h.roles,
+      winrate: h.win ? Number((h.win / (h.pick || 1)).toFixed(4)) : 0,
+      pickrate: h.pick ? Number((h.pick / 10000).toFixed(4)) : 0,
+      BestCounters: [],
+      commonCounters: [],
+      score: 0
+    }));
   } catch (err) {
     console.error("Помилка завантаження героїв:", err);
   }
 }
 
-// Запускаємо на DOMContentLoaded
-document.addEventListener('DOMContentLoaded', fetchHeroes);
-
-
-  heroes.forEach(h => {
-  h.score = (h.winrate * 0.7 + h.pickrate * 0.3);
+// ====================== ІНІЦІАЛІЗАЦІЯ ======================
+document.addEventListener('DOMContentLoaded', async () => {
+  await fetchHeroes();             // спочатку завантажуємо героїв
+  updateStageTitle();              // показуємо першу стадію
+  createSelectors();               // створюємо селектори для Stage 1
+  updateTeamDisplays();            // оновлюємо списки команд
+  document.getElementById('nextBtn').onclick = nextStage; // кнопка Go
 });
 
-
-// Припустимо, у тебе є масив heroes (як у прикладі з Wraith King)
-const carryHeroes = heroes.filter(h => h.roles.includes("Carry") && !h.roles.includes("Support"));
-const supportHeroes = heroes.filter(h => h.roles.includes("Support") && !h.roles.includes("Carry"));
-const universalHeroes = heroes.filter(h => h.roles.includes("Carry") && h.roles.includes("Support"));
-// ====================== ВАГИ РОЛЕЙ ======================
-const roleWeights = { Carry: 1.0, Disabler: 0.9, Durable: 0.8, Initiator: 0.9, Escape: 0.6, Nuker: 0.7, Pusher: 0.8, Support: 0.9, Ranged: 0.5, Melee: 0.5 };
-
-// ====================== ЕТАПИ ======================
-const stageLimits = [ { my: 2, enemy: 2 }, { my: 2, enemy: 2 }, { my: 1, enemy: 1 } ];
+// ====================== ОНОВЛЕННЯ СТАДІЇ ======================
+function updateStageTitle() {
+  document.getElementById('stageTitle').textContent = `Stage ${stage}`;
+}
 
 
-// ====================== ІНІЦІАЛІЗАЦІЯ ======================
-document.addEventListener('DOMContentLoaded', () => { createSelectors(); updateTeamDisplays()});
+
+// ====================== ОНОВЛЕННЯ СПИСКІВ КОМАНД ======================
+function updateStageTitle() {
+  document.getElementById('stageTitle').textContent = `Stage ${stage}`;
+}
+
+function updateTeamDisplays(currentOnly = true) {
+  const myTeamList = document.getElementById('myTeamList');
+  const enemyTeamList = document.getElementById('enemyTeamList');
+
+  const myHeroes = currentOnly ? getSelectedHeroes('#myTeam') : allMyHeroes;
+  const enemyHeroes = currentOnly ? getSelectedHeroes('#enemyTeam') : allEnemyHeroes;
+
+  myTeamList.innerHTML = myHeroes.length
+      ? myHeroes.map(h => `<li style="margin:4px 0;">🟩 ${h}</li>`).join('')
+      : '<li style="opacity:0.6;">(поки не вибрано)</li>';
+
+  enemyTeamList.innerHTML = enemyHeroes.length
+      ? enemyHeroes.map(h => `<li style="margin:4px 0;">🟥 ${h}</li>`).join('')
+      : '<li style="opacity:0.6;">(поки не вибрано)</li>';
+}
+// ====================== ОТРИМАННЯ ВИБРАНИХ ГЕРОЇВ ======================
+function getSelectedHeroes(selector) {
+  return Array.from(document.querySelectorAll(selector + ' select'))
+    .map(s => s.value)
+    .filter(v => v !== '');
+}
+
 
  
 
@@ -736,10 +749,7 @@ function displayTop(scores) {
     }
   }
 }
-  function updateStageTitle() {
-    const stageTitle = document.getElementById('stageTitle');
-    stageTitle.textContent = `Stage ${stage}`;
-}
+  
 
 
   function calculateCounters(enemyHeroes) {
@@ -784,45 +794,38 @@ function displayTop(scores) {
     universal: categorized.filter(h => h.category === 'universal').slice(0,5)
   };
 }
-
+function getSelectedHeroes(selector) {
+  return Array.from(document.querySelectorAll(selector + ' select'))
+    .map(s => s.value)
+    .filter(v => v !== '');
+}
 // ====================== ЕТАПИ ======================
-let stage = 1;
-let allMyHeroes = [];
-let allEnemyHeroes = [];
-
 async function nextStage() {
   const mySelected = getSelectedHeroes('#myTeam');
   const enemySelected = getSelectedHeroes('#enemyTeam');
   const limits = stageLimits[stage - 1];
 
-  // перевірка
   if (mySelected.length < limits.my || enemySelected.length < limits.enemy) {
     alert(`⚠️ Обери ${limits.my} героїв у свою команду та ${limits.enemy} у суперника!`);
     return;
   }
 
-  // зберігаємо вибраних героїв
   allMyHeroes.push(...mySelected);
   allEnemyHeroes.push(...enemySelected);
 
-  // Підвантажуємо контрпіки тільки для вибраних героїв
   await loadCountersForSelected([...mySelected, ...enemySelected]);
 
   if (stage < 3) {
-    stage++; 
+    stage++;
     updateStageTitle();
     updateTeamDisplays(false);
     createSelectors([], []);
     calculateBestPicks();
-    displayEnemyCounters(); // оновлюємо контрпіки проти суперника
     showBehaviorInfo();
   } else {
     showFinalChance();
   }
 }
-
-
-
 
 
 
