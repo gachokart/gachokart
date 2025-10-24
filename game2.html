@@ -274,7 +274,7 @@ async function loadHeroes() {
   // 1. Завантажуємо базову статистику
   const statsRes = await fetch("https://api.opendota.com/api/heroStats");
   const stats = await statsRes.json();
-
+}
   // 2. Перетворюємо у потрібний формат
   heroes = await Promise.all(stats.map(async h => {
     // winrate/pickrate
