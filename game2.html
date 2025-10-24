@@ -487,153 +487,135 @@ function getRandomPlayerInfluence() {
 }
 
 // ====================== РОЗРАХУНОК ======================
-function calculateBestPicks() {
+async function calculateBestPicks() {
+    // Поточні вибрані герої
     const myHeroes = [...allMyHeroes, ...getSelectedHeroes('#myTeam')];
     const enemyHeroes = [...allEnemyHeroes, ...getSelectedHeroes('#enemyTeam')];
+
     const stageNow = Math.min(stage, 3);
     const weights = getWeightsByStage(stageNow);
-
     const keyRoles = ['Carry', 'Support', 'Disabler', 'Initiator'];
     const stageRoleMultiplier = stageNow === 1 ? 1.2 : stageNow === 2 ? 1.1 : 1.0;
 
+    // Підрахунок ролей у команді
     const roleCount = {};
-    myHeroes.forEach(my => {
-        const h = heroes.find(x => x.name === my);
-        if (h) h.roles.forEach(r => roleCount[r] = (roleCount[r] || 0) + 1);
+    myHeroes.forEach(name => {
+        const hero = heroes.find(h => h.name === name);
+        if (hero) hero.roles.forEach(r => roleCount[r] = (roleCount[r] || 0) + 1);
     });
 
+    // Функція підрахунку балів героя за контргероїв
     function getCounterScore(hero) {
         let score = 0;
         enemyHeroes.forEach(enemyName => {
             const enemyHero = heroes.find(h => h.name === enemyName);
             if (!enemyHero) return;
+
             if (hero.BestCounters?.includes(enemyName)) score += 2.5;  // сильний контр
             else if (hero.commonCounters?.includes(enemyName)) score += 1.5; // звичайний контр
         });
-        // якщо герой ключової ролі, множимо на стадію
+
         if (hero.roles.some(r => keyRoles.includes(r))) score *= stageRoleMultiplier;
         return score;
     }
 
+    // Поведінкові фактори
     const behaviorMode = document.getElementById('behaviorMode')?.checked || false;
     const stability = behaviorMode ? getPlayerStability() : 1.0;
     const influence = behaviorMode ? getRandomPlayerInfluence() : 0.0;
     const harmony = behaviorMode ? getTeamHarmony(myHeroes) : 1.0;
 
-    let scores = [];
-    heroes.forEach(hero => {
-        if (myHeroes.includes(hero.name) || enemyHeroes.includes(hero.name)) return;
+    // Основний цикл підрахунку балів для кожного героя
+    const scores = heroes
+        .filter(h => !myHeroes.includes(h.name) && !enemyHeroes.includes(h.name))
+        .map(hero => {
+            // Нормалізація winrate і pickrate
+            const winNorm = (hero.winrate - 0.5) / 0.5; // -1…+1
+            const pickNorm = Math.log(1 + hero.pickrate * 100) / Math.log(101); // 0…1
 
-        let score = 0;
-        score += getCounterScore(hero); // основний бал – контрпіки
-        score *= harmony * stability * (1 + influence); // поведінкові фактори
-        scores.push({ hero: hero.name, score: Number(score.toFixed(4)) });
-    });
+            let score = 0;
+            score += weights.winrate * winNorm;
+            score += weights.pickrate * pickNorm;
+            score += getCounterScore(hero) * weights.counters;
 
-    scores.sort((a,b)=>b.score - a.score);
-    displayTopCounters(scores);
-}
-  function showBehaviorInfo() {
-  const behaviorMode = document.getElementById('behaviorMode').checked;
-  const behaviorDiv = document.getElementById('behaviorInfo');
+            // синергія і ролі
+            let synergy = 0;
+            hero.roles.forEach(r => {
+                if (roleCount[r]) synergy += (roleWeights[r] || 1) * (roleCount[r]);
+            });
+            score += synergy * weights.synergy;
 
-  if (!behaviorMode) {
-    behaviorDiv.style.display = 'none';
-    return;
-  }
+            // Поведінкові фактори
+            score *= harmony * stability * (1 + influence);
 
-  // Генеруємо фактори
-  const stability = getPlayerStability();
-  const influence = getRandomPlayerInfluence();
-  const harmony = getTeamHarmony([...allMyHeroes, ...getSelectedHeroes('#myTeam')]);
+            return { hero: hero.name, score: Number(score.toFixed(3)), roles: hero.roles };
+        });
 
-  behaviorDiv.innerHTML = `
-    <h3>Поведінкові фактори</h3>
-    <ul>
-      <li>Ризик токсичних героїв: ${ (getToxicityRisk({name:'Invoker'})*100).toFixed(0) }% (приклад)</li>
-      <li>Гармонія команди: ${(harmony*100).toFixed(0)}%</li>
-      <li>Стабільність гравця: ${(stability*100).toFixed(0)}%</li>
-      <li>Вплив випадкового профілю: ${(influence*100).toFixed(0)}%</li>
-    </ul>
-  `;
-  behaviorDiv.style.display = 'block';
-}
+    // Сортування за балами
+    scores.sort((a, b) => b.score - a.score);
 
-// ====================== ВІДОБРАЖЕННЯ ======================
-// Категорії з вагами
-// Категорії з вагами
-// Категорії з вагами
-const roleCategories = {
-  carry: { roles: ["Carry", "Pusher", "Nuker"], weight: 3 },
-  support: { roles: ["Support", "Disabler"], weight: 2 },
-  universal: { roles: ["Melee", "Ranged", "Durable", "Initiator", "Escape"], weight: 1 }
-};
-
-function getCategory(role) {
-  for (const [cat, data] of Object.entries(roleCategories)) {
-    if (data.roles.includes(role)) return cat;
-  }
-  return null;
-}
-
-function calculateHeroWeight(hero) {
-  const result = { carry: 0, support: 0, universal: 0, total: 0 };
-  hero.roles.forEach(role => {
-    const cat = getCategory(role);
-    if (cat) {
-      const w = roleCategories[cat].weight;
-      result[cat] += w;
-      result.total += w;
-    }
-  });
-  return result;
-}
-
-// Автоматичне визначення категорії героя
-function getHeroMainCategory(hero) {
-  const w = calculateHeroWeight(hero);
-  const max = Math.max(w.carry, w.support, w.universal);
-  if (max === 0) return 'universal'; // якщо ролей немає
-
-  // Пріоритет при однакових значеннях
-  if (w.carry === max) return 'carry';
-  if (w.support === max) return 'support';
-  return 'universal';
-}
-
-function displayTopCounters(scores) {
-    const resultDiv = document.getElementById('results');
-    const topHeroes = scores.slice(0, 30);
-
-    // категорії
-    const categorized = topHeroes.map(t => {
+    // Визначення категорії героя
+    const categorized = scores.map(t => {
         const hero = heroes.find(h => h.name === t.hero);
         const category = hero ? getHeroMainCategory(hero) : 'universal';
         return { ...t, category };
     });
 
-    const carryHeroes = categorized.filter(h => h.category === 'carry').slice(0,5);
-    const supportHeroes = categorized.filter(h => h.category === 'support').slice(0,5);
-    const universalHeroes = categorized.filter(h => h.category === 'universal').slice(0,5);
+    // Розподіл по колонках
+    const carryHeroes = categorized.filter(h => h.category === 'carry').slice(0, 5);
+    const supportHeroes = categorized.filter(h => h.category === 'support').slice(0, 5);
+    const universalHeroes = categorized.filter(h => h.category === 'universal').slice(0, 5);
 
-    // HTML
+    // HTML-відображення
+    const resultDiv = document.getElementById('results');
     resultDiv.innerHTML = `
-    <h2 style="text-align:center; margin-bottom:15px;">Топ герої для контрпіків</h2>
-    <div id="resultsGrid" style="display:flex; justify-content:space-around;">
-      <div>
-        <h3 style="color:#ffcc00;">⚔ Carry</h3>
-        ${carryHeroes.map(t => `<div><strong>${t.hero}</strong><br><small>Score: ${t.score}</small></div>`).join('')}
-      </div>
-      <div>
-        <h3 style="color:#66ff99;">🛡 Support</h3>
-        ${supportHeroes.map(t => `<div><strong>${t.hero}</strong><br><small>Score: ${t.score}</small></div>`).join('')}
-      </div>
-      <div>
-        <h3 style="color:#66ccff;">🔄 Universal</h3>
-        ${universalHeroes.map(t => `<div><strong>${t.hero}</strong><br><small>Score: ${t.score}</small></div>`).join('')}
-      </div>
-    </div>
+        <h2 style="text-align:center; margin-bottom:15px;">Топ герої для наступного піку</h2>
+        <div id="resultsGrid" style="display:flex; justify-content:space-around;">
+            <div>
+                <h3 style="color:#ffcc00;">⚔ Carry</h3>
+                ${carryHeroes.map(t => `<div><strong>${t.hero}</strong> - Score: ${t.score}</div>`).join('')}
+            </div>
+            <div>
+                <h3 style="color:#66ff99;">🛡 Support</h3>
+                ${supportHeroes.map(t => `<div><strong>${t.hero}</strong> - Score: ${t.score}</div>`).join('')}
+            </div>
+            <div>
+                <h3 style="color:#66ccff;">🔄 Universal</h3>
+                ${universalHeroes.map(t => `<div><strong>${t.hero}</strong> - Score: ${t.score}</div>`).join('')}
+            </div>
+        </div>
     `;
+}
+
+// Допоміжна функція для визначення категорії героя
+function getHeroMainCategory(hero) {
+    const w = calculateHeroWeight(hero);
+    const max = Math.max(w.carry, w.support, w.universal);
+    if (max === 0) return 'universal';
+
+    if (w.carry === max) return 'carry';
+    if (w.support === max) return 'support';
+    return 'universal';
+}
+
+function calculateHeroWeight(hero) {
+    const result = { carry: 0, support: 0, universal: 0, total: 0 };
+    hero.roles.forEach(role => {
+        const cat = getCategory(role);
+        if (cat) {
+            const w = roleCategories[cat].weight;
+            result[cat] += w;
+            result.total += w;
+        }
+    });
+    return result;
+}
+
+function getCategory(role) {
+    for (const [cat, data] of Object.entries(roleCategories)) {
+        if (data.roles.includes(role)) return cat;
+    }
+    return null;
 }
 
 
