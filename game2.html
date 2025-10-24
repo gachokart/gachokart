@@ -708,41 +708,112 @@ function displayTop(scores) {
   `;
 }
 
+  async function loadCountersForSelected(selectedHeroes) {
+  for (const heroName of selectedHeroes) {
+    const hero = heroes.find(h => h.name === heroName);
+    if (!hero || hero.BestCounters.length) continue; // пропускаємо якщо вже є
+
+    try {
+      const res = await fetch(`https://api.opendota.com/api/heroes/${hero.id}/matchups`);
+      if (res.ok) {
+        const matchups = await res.json();
+        const sorted = matchups.map(m => ({
+          id: m.hero_id,
+          winrate: m.wins / m.games_played
+        })).sort((a,b) => b.winrate - a.winrate);
+
+        hero.BestCounters = sorted.slice(0,10).map(m => {
+          const h = heroStats.find(x => x.id === m.id);
+          return h ? h.localized_name : m.id;
+        });
+        hero.commonCounters = sorted.slice(-10).map(m => {
+          const h = heroStats.find(x => x.id === m.id);
+          return h ? h.localized_name : m.id;
+        });
+      }
+    } catch(e) {
+      console.error("Matchups error", e);
+    }
+  }
+}
+
+  function calculateCounters(enemyHeroes) {
+  const keyRoles = ['Carry', 'Support', 'Disabler', 'Initiator'];
+  const stageNow = Math.min(stage, 3);
+  const weights = getWeightsByStage(stageNow);
+  const stageRoleMultiplier = stageNow === 1 ? 1.2 : stageNow === 2 ? 1.1 : 1.0;
+
+  let counterScores = [];
+
+  heroes.forEach(hero => {
+    if (allMyHeroes.includes(hero.name) || allEnemyHeroes.includes(hero.name)) return;
+
+    let score = 0;
+    enemyHeroes.forEach(enemy => {
+      const eHero = heroes.find(h => h.name === enemy);
+      if (!eHero) return;
+
+      if (hero.BestCounters?.includes(enemy)) score += 2.0;
+      if (hero.commonCounters?.includes(enemy)) score += 1.0;
+    });
+
+    // Більший вплив на ключові ролі
+    if (hero.roles.some(r=>keyRoles.includes(r))) score *= stageRoleMultiplier;
+
+    counterScores.push({ hero: hero.name, score: Number(score.toFixed(4)) });
+  });
+
+  // сортуємо за балами
+  counterScores.sort((a,b)=>b.score - a.score);
+
+  // категоризуємо по ролях
+  const categorized = counterScores.map(t => {
+    const hero = heroes.find(h => h.name === t.hero);
+    const category = hero ? getHeroMainCategory(hero) : 'universal';
+    return { ...t, category };
+  });
+
+  return {
+    carry: categorized.filter(h => h.category === 'carry').slice(0,5),
+    support: categorized.filter(h => h.category === 'support').slice(0,5),
+    universal: categorized.filter(h => h.category === 'universal').slice(0,5)
+  };
+}
 
 // ====================== ЕТАПИ ======================
 let stage = 1;
 let allMyHeroes = [];
 let allEnemyHeroes = [];
 
-function nextStage() {
-    const mySelected = getSelectedHeroes('#myTeam');
-    const enemySelected = getSelectedHeroes('#enemyTeam');
-    const limits = stageLimits[stage - 1];
-  const stageTitle = document.getElementById('stageTitle');
-function updateStageTitle() {
-  stageTitle.textContent = `Stage ${stage}`;
-}
+async function nextStage() {
+  const mySelected = getSelectedHeroes('#myTeam');
+  const enemySelected = getSelectedHeroes('#enemyTeam');
+  const limits = stageLimits[stage - 1];
 
-    // перевіряємо, чи обрано потрібну кількість героїв
-    if (mySelected.length < limits.my || enemySelected.length < limits.enemy) {
-        alert(`⚠️ Обери ${limits.my} героїв у свою команду та ${limits.enemy} у суперника!`);
-        return;
-    }
+  // перевірка
+  if (mySelected.length < limits.my || enemySelected.length < limits.enemy) {
+    alert(`⚠️ Обери ${limits.my} героїв у свою команду та ${limits.enemy} у суперника!`);
+    return;
+  }
 
-    // зберігаємо вибраних героїв
-    allMyHeroes.push(...mySelected);
-    allEnemyHeroes.push(...enemySelected);
+  // зберігаємо вибраних героїв
+  allMyHeroes.push(...mySelected);
+  allEnemyHeroes.push(...enemySelected);
 
-    if (stage < 3) {
-        stage++; // переходимо на наступну стадію
-      updateStageTitle();
-        updateTeamDisplays(false);
-        createSelectors([], []); // створюємо чисті селектори для нової стадії
-       calculateBestPicks();
-showBehaviorInfo();
-    } else {
-        showFinalChance(); // фінальна стадія
-    }
+  // Підвантажуємо контрпіки тільки для вибраних героїв
+  await loadCountersForSelected([...mySelected, ...enemySelected]);
+
+  if (stage < 3) {
+    stage++; 
+    updateStageTitle();
+    updateTeamDisplays(false);
+    createSelectors([], []);
+    calculateBestPicks();
+    displayEnemyCounters(); // оновлюємо контрпіки проти суперника
+    showBehaviorInfo();
+  } else {
+    showFinalChance();
+  }
 }
 
 
