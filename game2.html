@@ -268,94 +268,45 @@ button:hover {
 // 🔥 ВШИТИЙ heroes.json
 // =========================
 let heroes = [];
-    let heroStats = [];
+let heroStats = [];
 
-    async function loadHeroes() {
-      try {
-        // кеш у localStorage
-        let stats = JSON.parse(localStorage.getItem("heroStats"));
-        if (!stats) {
-          const res = await fetch("https://api.opendota.com/api/heroStats");
-          if (!res.ok) throw new Error("OpenDota error " + res.status);
-          stats = await res.json();
-          localStorage.setItem("heroStats", JSON.stringify(stats));
-        }
-        heroStats = stats;
+async function fetchHeroes() {
+  try {
+    // Завантажуємо статистику героїв з OpenDota
+    const res = await fetch("https://api.opendota.com/api/heroStats");
+    const data = await res.json();
+    heroStats = data;
 
-        heroes = stats.map(h => {
-          const totalGames = (h["1_pick"]||0)+(h["2_pick"]||0)+(h["3_pick"]||0)+(h["4_pick"]||0)+(h["5_pick"]||0)+(h["6_pick"]||0)+(h["7_pick"]||0)+(h["8_pick"]||0);
-          const totalWins  = (h["1_win"]||0)+(h["2_win"]||0)+(h["3_win"]||0)+(h["4_win"]||0)+(h["5_win"]||0)+(h["6_win"]||0)+(h["7_win"]||0)+(h["8_win"]||0);
-          const winrate = totalGames > 0 ? totalWins / totalGames : 0;
-          const pickrate = totalGames / 1000000;
+    // Формуємо масив heroes з усіма потрібними полями
+    heroes = data.map(h => {
+      const totalGames = h.pick || 1;
+      const totalWins = h.win || 0;
+      const winrate = totalGames > 0 ? totalWins / totalGames : 0;
+      const pickrate = totalGames / 10000; // можна масштабувати під твій алгоритм
 
-          return {
-            id: h.id,
-            name: h.localized_name,
-            roles: h.roles,
-            winrate,
-            pickrate,
-            BestCounters: [],
-            commonCounters: []
-          };
-        });
+      return {
+        id: h.id,
+        name: h.localized_name,
+        roles: h.roles,
+        winrate: Number(winrate.toFixed(4)),
+        pickrate: Number(pickrate.toFixed(4)),
+        BestCounters: [],    // буде заповнюватися при виборі героя
+        commonCounters: []   // буде заповнюватися при виборі героя
+      };
+    });
 
-        // заповнюємо селект
-        const select = document.getElementById("heroSelect");
-        heroes.forEach(h => {
-          const opt = document.createElement("option");
-          opt.value = h.id;
-          opt.textContent = h.name;
-          select.appendChild(opt);
-        });
+    // Автоматично створюємо селектори після завантаження
+    createSelectors();
+    calculateBestPicks();
+    showBehaviorInfo();
 
-        select.addEventListener("change", () => showHero(select.value));
-      } catch (err) {
-        console.error("Помилка завантаження героїв:", err);
-      }
-    }
+  } catch (err) {
+    console.error("Помилка завантаження героїв:", err);
+  }
+}
 
-    async function showHero(heroId) {
-      const hero = heroes.find(h => h.id == heroId);
-      if (!hero) return;
-
-      // якщо контрпіки ще не завантажені — тягнемо
-      if (hero.BestCounters.length === 0) {
-        try {
-          const res = await fetch(`https://api.opendota.com/api/heroes/${heroId}/matchups`);
-          if (res.ok) {
-            const matchups = await res.json();
-            const sorted = matchups.map(m => ({
-              id: m.hero_id,
-              winrate: m.wins / m.games_played
-            })).sort((a,b) => b.winrate - a.winrate);
-
-            hero.BestCounters = sorted.slice(0,10).map(m => {
-              const h = heroStats.find(x => x.id === m.id);
-              return h ? h.localized_name : m.id;
-            });
-            hero.commonCounters = sorted.slice(-10).map(m => {
-              const h = heroStats.find(x => x.id === m.id);
-              return h ? h.localized_name : m.id;
-            });
-          }
-        } catch(e) {
-          console.error("Matchups error", e);
-        }
-      }
-
-      // показуємо інформацію
-      const div = document.getElementById("heroInfo");
-      div.innerHTML = `
-        <div class="hero-card">
-          <h2>${hero.name}</h2>
-          <div class="roles">Ролі: ${hero.roles.join(", ")}</div>
-          <p>Winrate: ${(hero.winrate*100).toFixed(1)}%</p>
-          <p>Pickrate: ${(hero.pickrate*100).toFixed(2)}%</p>
-          <p><strong>Best Counters:</strong> ${hero.BestCounters.join(", ")}</p>
-          <p><strong>Common Counters:</strong> ${hero.commonCounters.join(", ")}</p>
-        </div>
-      `;
-    }
+// Запускаємо на DOMContentLoaded
+document.addEventListener('DOMContentLoaded', fetchHeroes);
 
 
   heroes.forEach(h => {
