@@ -654,7 +654,7 @@
     "winrate": 0.4924,
     "pickrate": 0.0664,
     "BestCounters": ["Phantom Lancer","Terrorblade","Chaos Knight","Wraith King","Meepo","Enigma","Arc Warden","Visage","Lone Druid","Io"],
-    "commonCounters": [,"Dark Seer","Keeper of the Light","Tidehunter","Sand King","Weaver","Chen","Bristleback","Pangolier","Lycan","Muerta"]
+    "commonCounters": ["Dark Seer","Keeper of the Light","Tidehunter","Sand King","Weaver","Chen","Bristleback","Pangolier","Lycan","Muerta"]
   },
   {
     
