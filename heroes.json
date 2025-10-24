@@ -171,7 +171,7 @@
     "commonCounters": ["Wraith King", "Brewmaster", "Phantom Lancer", "Broodmother", "Riki", "Razor", "Troll Warlord", "Venomancer", "Arc Warden", "Clinkz"]
   },
   {
-    "
+    
     "name": "Omniknight",
     "roles": ["Melee", "Durable", "Nuker", "Support"],
     "winrate": 0.5228,
