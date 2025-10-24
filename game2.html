@@ -909,7 +909,13 @@ document.getElementById('results').style.display = 'none';
 
     updateTeamDisplays(false); // залишаємо останні вибрані герої в списках
 }
- 
+ document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('nextBtn').onclick = nextStage;
+  createSelectors();
+  updateTeamDisplays();
+  updateStageTitle(); // відразу показуємо заголовок
+});
+
 
 
 
