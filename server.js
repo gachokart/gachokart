@@ -1,6 +1,6 @@
 app.get("/api/predict", async (req, res) => {
   try {
-    const url = `https://api.opendota.com/api/players/${STEAM_ID64}/recentMatches`;
+    const url = `http://api.opendota.com/api/players/${STEAM_ID64}/recentMatches`;
     const response = await fetch(url);
     const matches = await response.json();
 
