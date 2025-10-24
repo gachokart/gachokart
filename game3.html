@@ -1,158 +1,139 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dota 2 Draft Helper</title>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fira+Sans:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    body {
-      background-color: #1e1e1e;
-      color: #fff;
-      font-family: 'Fira Sans', sans-serif;
-      margin: 0;
-      padding: 20px;
-    }
-    h1, h2, h3 {
-      text-align: center;
-      color: #ffcc66;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-    th, td {
-      border: 1px solid #444;
-      padding: 6px;
-      text-align: center;
-    }
-    th {
-      background: #333;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>game3 — Draft Helper з вибором героїв</title>
+<style>
+body{background:#0b1220;color:#e6eef6;font-family:sans-serif;padding:20px;}
+.card{background:#09111a;padding:12px;border-radius:8px;margin-bottom:12px;}
+button{padding:6px 12px;margin:4px;cursor:pointer;border-radius:6px;}
+.hero-select{margin:6px 0;}
+.column{display:inline-block;vertical-align:top;width:32%;margin-right:1%;}
+.column:last-child{margin-right:0;}
+.column h4{text-align:center;margin-bottom:6px;}
+.hero-item{background:rgba(255,255,255,0.05);margin:2px;padding:4px;border-radius:4px;text-align:center;cursor:pointer;}
+.hero-item.selected{background:#1f8feb;}
+.result{margin-top:12px;padding:8px;border-radius:6px;background:rgba(255,255,255,0.05);}
+.flex-row{display:flex;gap:10px;flex-wrap:wrap;}
+</style>
 </head>
 <body>
+<div class="card">
+<h2>Game3 — Draft Helper</h2>
+<div id="stageInfo">Стадія 1: оберіть 2 своїх героїв та 2 героїв ворога</div>
+<div>Моя команда: <span id="myHeroesCount">0/2</span></div>
+<div>Ворожа команда: <span id="enemyHeroesCount">0/2</span></div>
+<button id="nextStageBtn">GO</button>
+</div>
 
-  <h1>Dota 2 Draft Helper</h1>
-  <div id="results"></div>
+<div class="card" id="recommendations" style="display:none;">
+<h3>Рекомендації героїв</h3>
+<div class="column" id="carryCol"><h4>Carry</h4></div>
+<div class="column" id="supportCol"><h4>Support</h4></div>
+<div class="column" id="universalCol"><h4>Universal</h4></div>
+</div>
 
-  <!-- =================== Таблиця з OpenDota =================== -->
-  <h3 style="margin-top:40px;">Моя статистика з OpenDota</h3>
-  <div style="overflow-x:auto;">
-    <table id="heroStatsTable">
-      <thead>
-        <tr>
-          <th>Герой</th>
-          <th>Ігор</th>
-          <th>Перемог</th>
-          <th>Winrate</th>
-          <th>KDA</th>
-          <th>Середній бал</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+<div class="card result" id="finalResult" style="display:none;"></div>
 
-  <script>
-  // ===================== ФУНКЦІЯ РЕКОМЕНДАЦІЙ =====================
-  function calculateBestPicks(hero) {
-      let score = 0;
-      // тут твоя логіка для ваг ролей, синергій тощо...
+<script>
+let stage=1;
+let myTeam=[], enemyTeam=[];
+let stageLimits=[2,2,1]; // Скільки героїв обираємо кожної стадії
+let mySelectionCount=0, enemySelectionCount=0;
 
-      // додатковий бонус із OpenDota статистики
-      if (heroUserWeights[hero.name]) {
-        score += heroUserWeights[hero.name] * 0.3;
-      }
+const carryCol=document.getElementById('carryCol');
+const supportCol=document.getElementById('supportCol');
+const universalCol=document.getElementById('universalCol');
+const stageInfo=document.getElementById('stageInfo');
+const finalResult=document.getElementById('finalResult');
+const myHeroesCount=document.getElementById('myHeroesCount');
+const enemyHeroesCount=document.getElementById('enemyHeroesCount');
+const nextStageBtn=document.getElementById('nextStageBtn');
 
-      return score;
-  }
+let heroesList=[];
 
-  // ===================== MAP HERO ID → NAME =====================
-  function mapHeroIdToName(id) {
-    const heroList = {
-      1: "Anti-Mage", 2: "Axe", 3: "Bane", 4: "Bloodseeker", 5: "Crystal Maiden",
-      6: "Drow Ranger", 7: "Earthshaker", 8: "Juggernaut", 9: "Mirana",
-      10: "Morphling", 11: "Shadow Fiend", 12: "Phantom Lancer",
-      13: "Puck", 14: "Pudge", 15: "Razor", 16: "Sand King", 17: "Storm Spirit",
-      18: "Sven", 19: "Tiny", 20: "Vengeful Spirit", 21: "Windranger",
-      22: "Zeus", 23: "Kunkka", 25: "Lina", 26: "Lion", 27: "Shadow Shaman",
-      28: "Slardar", 29: "Tidehunter", 30: "Witch Doctor", 31: "Lich",
-      32: "Riki", 33: "Enigma", 34: "Tinker", 35: "Sniper", 36: "Necrophos",
-      37: "Warlock", 38: "Beastmaster", 39: "Queen of Pain", 40: "Venomancer",
-      41: "Faceless Void", 42: "Wraith King", 43: "Death Prophet",
-      44: "Phantom Assassin", 45: "Pugna", 46: "Templar Assassin",
-      47: "Viper", 48: "Luna", 49: "Dragon Knight", 50: "Dazzle",
-      51: "Clockwerk", 52: "Leshrac", 53: "Nature's Prophet", 54: "Lifestealer",
-      55: "Dark Seer", 56: "Clinkz", 57: "Omniknight", 58: "Enchantress",
-      59: "Huskar", 60: "Night Stalker", 61: "Broodmother", 62: "Bounty Hunter",
-      63: "Weaver", 64: "Jakiro", 65: "Batrider", 66: "Chen", 67: "Spectre",
-      68: "Ancient Apparition", 69: "Doom", 70: "Ursa", 71: "Spirit Breaker",
-      72: "Gyrocopter", 73: "Alchemist", 74: "Invoker", 75: "Silencer",
-      76: "Outworld Destroyer", 77: "Lycan", 78: "Brewmaster", 79: "Shadow Demon",
-      80: "Lone Druid", 81: "Chaos Knight", 82: "Meepo", 83: "Treant Protector",
-      84: "Ogre Magi", 85: "Undying", 86: "Rubick", 87: "Disruptor",
-      88: "Nyx Assassin", 89: "Naga Siren", 90: "Keeper of the Light",
-      91: "Io", 92: "Visage", 93: "Slark", 94: "Medusa", 95: "Troll Warlord",
-      96: "Centaur Warrunner", 97: "Magnus", 98: "Timbersaw", 99: "Bristleback",
-      100: "Tusk", 101: "Skywrath Mage", 102: "Abaddon", 103: "Elder Titan",
-      104: "Legion Commander", 105: "Techies", 106: "Ember Spirit",
-      107: "Earth Spirit", 108: "Underlord", 109: "Terrorblade",
-      110: "Phoenix", 111: "Oracle", 112: "Winter Wyvern", 113: "Arc Warden",
-      114: "Monkey King", 120: "Pangolier", 121: "Dark Willow", 123: "Grimstroke",
-      126: "Void Spirit", 128: "Snapfire", 129: "Mars", 135: "Dawnbreaker",
-      136: "Marci", 137: "Primal Beast", 138: "Muerta"
-    };
-    return heroList[id] || null;
-  }
+// Завантаження героїв
+async function fetchHeroes(){
+    const res=await fetch('https://api.opendota.com/api/constants/heroes');
+    const data=await res.json();
+    heroesList=Object.values(data).map(h=>({
+        id:h.id, name:h.localized_name, roles:h.roles, img:h.img, avg_score:Math.random()*10+5
+    }));
+}
+fetchHeroes().then(()=>{updateRecommendations();});
 
-  // ===================== OpenDota інтеграція =====================
-  const accountId = 863386335;
-  let heroUserWeights = {}; // { "Hero Name": score }
+// Функція оновлення рекомендацій
+function updateRecommendations(){
+    carryCol.innerHTML=''; supportCol.innerHTML=''; universalCol.innerHTML='';
+    const remaining=heroesList.filter(h=>!myTeam.includes(h.id)&&!enemyTeam.includes(h.id));
+    remaining.forEach(h=>{
+        const div=document.createElement('div');
+        div.className='hero-item';
+        div.textContent=h.name+' ('+h.avg_score.toFixed(1)+')';
+        div.onclick=()=>selectHero(h.id);
+        if(h.roles.includes('Carry')) carryCol.appendChild(div);
+        else if(h.roles.includes('Support')) supportCol.appendChild(div);
+        else universalCol.appendChild(div);
+    });
+}
 
-  async function loadUserHeroStats(account_id) {
-    const url = `https://api.opendota.com/api/players/${account_id}/heroes`;
-    try {
-      const resp = await fetch(url);
-      const data = await resp.json();
-
-      const tbody = document.querySelector('#heroStatsTable tbody');
-      tbody.innerHTML = '';
-
-      data.sort((a, b) => b.games - a.games);
-      data.slice(0, 100).forEach(hero => {
-        const heroName = mapHeroIdToName(hero.hero_id);
-        if (!heroName) return;
-
-        const winrate = hero.games > 0 ? hero.win / hero.games : 0;
-        const kda = hero.deaths > 0 ? (hero.kills + hero.assists) / hero.deaths : hero.kills + hero.assists;
-        const score = (winrate * 0.7 + (kda / 10) * 0.3).toFixed(3);
-
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${heroName}</td>
-          <td>${hero.games}</td>
-          <td>${hero.win}</td>
-          <td>${(winrate * 100).toFixed(1)}%</td>
-          <td>${kda.toFixed(2)}</td>
-          <td>${score}</td>
-        `;
-        tbody.appendChild(row);
-
-        heroUserWeights[heroName] = parseFloat(score);
-      });
-
-      console.log("✅ OpenDota hero stats loaded:", heroUserWeights);
-    } catch (err) {
-      console.error("❌ Error loading OpenDota stats:", err);
+// Вибір героя
+function selectHero(id){
+    // Визначаємо чи обираємо свою команду чи ворога
+    if(mySelectionCount<stageLimits[stage-1]){
+        if(!myTeam.includes(id)){
+            myTeam.push(id);
+            mySelectionCount++;
+        }
+    } else if(enemySelectionCount<stageLimits[stage-1]){
+        if(!enemyTeam.includes(id)){
+            enemyTeam.push(id);
+            enemySelectionCount++;
+        }
     }
-  }
+    myHeroesCount.textContent=mySelectionCount+'/'+stageLimits[stage-1];
+    enemyHeroesCount.textContent=enemySelectionCount+'/'+stageLimits[stage-1];
+    updateRecommendations();
+}
 
-  window.addEventListener("load", () => {
-    loadUserHeroStats(accountId);
-  });
-  </script>
+// Обчислення середнього балу
+function avgScore(team){
+    if(team.length===0) return 0;
+    let sum=0;
+    team.forEach(id=>{
+        const h=heroesList.find(x=>x.id===id);
+        if(h) sum+=h.avg_score;
+    });
+    return sum/team.length;
+}
 
+// Перехід на наступну стадію
+nextStageBtn.onclick=()=>{
+    if(mySelectionCount<stageLimits[stage-1] || enemySelectionCount<stageLimits[stage-1]){
+        alert("Обирайте всіх героїв цієї стадії!");
+        return;
+    }
+    if(stage<3){
+        stage++;
+        mySelectionCount=0;
+        enemySelectionCount=0;
+        myHeroesCount.textContent='0/'+stageLimits[stage-1];
+        enemyHeroesCount.textContent='0/'+stageLimits[stage-1];
+        stageInfo.textContent=`Стадія ${stage}: оберіть ${stageLimits[stage-1]} героїв своєї команди та ворога`;
+        updateRecommendations();
+    } else {
+        // Після стадії 3
+        recommendations.style.display='none';
+        stageInfo.textContent='Всі стадії завершено';
+        finalResult.style.display='block';
+        const allAvg=heroesList.reduce((sum,h)=>sum+h.avg_score,0)/heroesList.length;
+        const myAvg=avgScore(myTeam)/2;
+        const winChance=Math.min(100, Math.max(0,50+(myAvg-allAvg)*5));
+        finalResult.textContent=`Середній бал усіх героїв: ${allAvg.toFixed(1)}, середній бал моїх героїв /2: ${myAvg.toFixed(1)}. Прогнозований шанс на перемогу: ${winChance.toFixed(1)}%`;
+    }
+}
+</script>
 </body>
 </html>
+
