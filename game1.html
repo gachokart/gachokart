@@ -112,6 +112,106 @@ document.getElementById("fetchBtn").addEventListener("click", async ()=>{
         alert("Помилка: "+e.message);
         console.error(e);
     }
+    });
+
+    <script>
+function playerWon(m){
+    const radiant = (m.player_slot||0) < 128;
+    return (radiant && m.radiant_win) || (!radiant && !m.radiant_win);
+}
+
+async function fetchOpenDotaMatches(id,limit=100){
+    const res = await fetch(`https://api.opendota.com/api/players/${id}/matches?limit=${limit}`);
+    if(!res.ok) throw new Error("Помилка отримання матчів");
+    return res.json();
+}
+
+async function fetchHeroesConstants(){
+    const res = await fetch("https://api.opendota.com/api/constants/heroes");
+    if(!res.ok) throw new Error("Помилка завантаження героїв");
+    return res.json();
+}
+
+function fillHeroStatsTableWithAverage(matches, heroesConstants, myTableId, enemyTableId){
+    const myStats = {};
+    const enemyStats = {};
+
+    // збираємо дані
+    matches.forEach(m=>{
+        const hid = m.hero_id;
+        const won = playerWon(m);
+        const team = (m.player_slot<128)? myStats: enemyStats;
+        if(!team[hid]) team[hid] = {games:0,wins:0,k:0,d:0,a:0};
+        team[hid].games++;
+        if(won) team[hid].wins++;
+        team[hid].k += m.kills;
+        team[hid].d += m.deaths;
+        team[hid].a += m.assists;
+    });
+
+    function buildTable(stats, tableId){
+        const tbody = document.getElementById(tableId).querySelector("tbody");
+        tbody.innerHTML="";
+
+        let sumGames=0,sumWin=0,sumK=0,sumD=0,sumA=0;
+
+        Object.entries(stats).map(([hid,data])=>{
+            const hero = heroesConstants[hid]||{localized_name:hid,img:""};
+            const imgUrl = hero.img ? "https://cdn.cloudflare.steamstatic.com"+hero.img : "";
+            const winrate = ((data.wins/data.games)*100).toFixed(1);
+            const avgK = (data.k/data.games).toFixed(1);
+            const avgD = (data.d/data.games).toFixed(1);
+            const avgA = (data.a/data.games).toFixed(1);
+            const kda = (parseFloat(avgD)>0)? ((parseFloat(avgK)+parseFloat(avgA))/parseFloat(avgD)).toFixed(2) : (parseFloat(avgK)+parseFloat(avgA)).toFixed(2);
+            const score = ((parseFloat(winrate)+parseFloat(kda)*10)/2).toFixed(1);
+
+            sumGames += data.games;
+            sumWin += parseFloat(winrate);
+            sumK += parseFloat(avgK);
+            sumD += parseFloat(avgD);
+            sumA += parseFloat(avgA);
+
+            return {name:hero.localized_name,img:imgUrl,games:data.games,winrate,avgKDA:`${avgK}/${avgD}/${avgA}`,score};
+        }).sort((a,b)=>b.games-a.games)
+        .forEach(hero=>{
+            const tr = document.createElement("tr");
+            tr.innerHTML = `<td><img src="${hero.img}" width="32" height="18"/> ${hero.name}</td>
+                            <td>${hero.games}</td>
+                            <td>${hero.winrate}</td>
+                            <td>${hero.avgKDA}</td>
+                            <td>${hero.score}</td>`;
+            tbody.appendChild(tr);
+        });
+
+        // додаємо рядок з середнім значенням команди
+        const teamSize = Object.keys(stats).length || 1;
+        const avgTr = document.createElement("tr");
+        avgTr.style.fontWeight="bold";
+        avgTr.innerHTML = `<td>Середнє по команді</td>
+                           <td>${(sumGames/teamSize).toFixed(1)}</td>
+                           <td>${(sumWin/teamSize).toFixed(1)}</td>
+                           <td>${(sumK/teamSize).toFixed(1)}/${(sumD/teamSize).toFixed(1)}/${(sumA/teamSize).toFixed(1)}</td>
+                           <td>${((sumWin/teamSize + (sumK/teamSize+sumA/teamSize)/Math.max(sumD/teamSize,1)*10)/2).toFixed(1)}</td>`;
+        tbody.appendChild(avgTr);
+    }
+
+    buildTable(myStats,myTableId);
+    buildTable(enemyStats,enemyTableId);
+}
+
+// кнопка виклику
+document.getElementById("fetchBtn").addEventListener("click", async ()=>{
+    const id = document.getElementById("idInput").value || "863386335";
+    try{
+        const [matches, heroesConstants] = await Promise.all([
+            fetchOpenDotaMatches(id,100),
+            fetchHeroesConstants()
+        ]);
+        fillHeroStatsTableWithAverage(matches, heroesConstants,"heroStatsMy","heroStatsEnemy");
+    }catch(e){
+        alert("Помилка: "+e.message);
+        console.error(e);
+    }
 });
 </script>
 
