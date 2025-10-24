@@ -3,27 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>game3 — Draft Helper з вибором героїв</title>
+<title>Game3 Draft Helper з OpenDota</title>
 <style>
 body{background:#0b1220;color:#e6eef6;font-family:sans-serif;padding:20px;}
 .card{background:#09111a;padding:12px;border-radius:8px;margin-bottom:12px;}
 button{padding:6px 12px;margin:4px;cursor:pointer;border-radius:6px;}
-.hero-select{margin:6px 0;}
+.select-group{margin-bottom:12px;}
 .column{display:inline-block;vertical-align:top;width:32%;margin-right:1%;}
 .column:last-child{margin-right:0;}
 .column h4{text-align:center;margin-bottom:6px;}
-.hero-item{background:rgba(255,255,255,0.05);margin:2px;padding:4px;border-radius:4px;text-align:center;cursor:pointer;}
-.hero-item.selected{background:#1f8feb;}
+.hero-item{background:rgba(255,255,255,0.05);margin:2px;padding:4px;border-radius:4px;text-align:center;}
 .result{margin-top:12px;padding:8px;border-radius:6px;background:rgba(255,255,255,0.05);}
-.flex-row{display:flex;gap:10px;flex-wrap:wrap;}
 </style>
 </head>
 <body>
+
 <div class="card">
-<h2>Game3 — Draft Helper</h2>
+<h2>Game3 — Draft Helper з OpenDota</h2>
 <div id="stageInfo">Стадія 1: оберіть 2 своїх героїв та 2 героїв ворога</div>
-<div>Моя команда: <span id="myHeroesCount">0/2</span></div>
-<div>Ворожа команда: <span id="enemyHeroesCount">0/2</span></div>
+
+<div class="select-group" id="mySelectors"></div>
+<div class="select-group" id="enemySelectors"></div>
+
 <button id="nextStageBtn">GO</button>
 </div>
 
@@ -35,127 +36,106 @@ button{padding:6px 12px;margin:4px;cursor:pointer;border-radius:6px;}
 </div>
 
 <div class="card result" id="finalResult" style="display:none;"></div>
-<div class="column" id="carryCol"><h4>Carry</h4></div>
-<div class="column" id="supportCol"><h4>Support</h4></div>
-<div class="column" id="universalCol"><h4>Universal</h4></div>
+
 <script>
 let stage=1;
 let myTeam=[], enemyTeam=[];
-let stageLimits=[2,2,1]; // Скільки героїв обираємо кожної стадії
-let mySelectionCount=0, enemySelectionCount=0;
+const stageLimits=[2,2,1];
 
+const mySelectorsDiv=document.getElementById('mySelectors');
+const enemySelectorsDiv=document.getElementById('enemySelectors');
+const stageInfo=document.getElementById('stageInfo');
+const nextStageBtn=document.getElementById('nextStageBtn');
+const finalResult=document.getElementById('finalResult');
 const carryCol=document.getElementById('carryCol');
 const supportCol=document.getElementById('supportCol');
 const universalCol=document.getElementById('universalCol');
-const stageInfo=document.getElementById('stageInfo');
-const finalResult=document.getElementById('finalResult');
-const myHeroesCount=document.getElementById('myHeroesCount');
-const enemyHeroesCount=document.getElementById('enemyHeroesCount');
-const nextStageBtn=document.getElementById('nextStageBtn');
+const recommendations=document.getElementById('recommendations');
 
 let heroesList=[];
 
-// Завантаження героїв з OpenDota
+// Завантажуємо героїв з OpenDota
 async function fetchHeroes(){
     const res=await fetch('https://api.opendota.com/api/constants/heroes');
     const data=await res.json();
-    heroesList=Object.values(data).map(h=>({
-        id:h.id,
-        name:h.localized_name,
-        roles:h.roles,
-        img:'https://cdn.cloudflare.steamstatic.com'+h.img,
-        avg_score:Math.random()*10+5
-    }));
-    updateRecommendations(); // після завантаження оновлюємо колонки
+    heroesList=Object.values(data).map(h=>({id:h.id, name:h.localized_name, roles:h.roles, avg_score:Math.random()*10+5}));
+    createSelectors(stageLimits[stage-1]);
+    updateRecommendations();
 }
 
-// Створення клікабельних карток героїв
-function updateRecommendations(){
-    ['carryCol','supportCol','universalCol'].forEach(id=>document.getElementById(id).innerHTML='');
-    const remaining=heroesList.filter(h=>!myTeam.includes(h.id) && !enemyTeam.includes(h.id));
-    remaining.forEach(h=>{
-        const div=document.createElement('div');
-        div.className='hero-item';
-        div.innerHTML=`<img src="${h.img}" width="48" height="27"><br>${h.name}<br>(${h.avg_score.toFixed(1)})`;
-        div.onclick=()=>selectHero(h.id);
-        if(h.roles.includes('Carry')) document.getElementById('carryCol').appendChild(div);
-        else if(h.roles.includes('Support')) document.getElementById('supportCol').appendChild(div);
-        else document.getElementById('universalCol').appendChild(div);
-    });
-}
-fetchHeroes().then(()=>{updateRecommendations();});
+fetchHeroes();
 
-// Функція оновлення рекомендацій
+function createSelectors(count){
+    mySelectorsDiv.innerHTML='';
+    enemySelectorsDiv.innerHTML='';
+    for(let i=0;i<count;i++){
+        const mySel=document.createElement('select');
+        const enemySel=document.createElement('select');
+        heroesList.forEach(h=>{
+            const opt1=document.createElement('option'); opt1.value=h.id; opt1.textContent=h.name; mySel.appendChild(opt1);
+            const opt2=document.createElement('option'); opt2.value=h.id; opt2.textContent=h.name; enemySel.appendChild(opt2);
+        });
+        mySelectorsDiv.appendChild(mySel);
+        enemySelectorsDiv.appendChild(enemySel);
+    }
+}
+
+// Підрахунок середнього балу команди
+function avgScore(team){
+    if(team.length===0) return 0;
+    return team.reduce((sum,id)=>sum+heroesList.find(h=>h.id==id).avg_score,0)/team.length;
+}
+
+// Оновлення рекомендацій
 function updateRecommendations(){
+    recommendations.style.display='block';
     carryCol.innerHTML=''; supportCol.innerHTML=''; universalCol.innerHTML='';
-    const remaining=heroesList.filter(h=>!myTeam.includes(h.id)&&!enemyTeam.includes(h.id));
+    const selectedIds=[...myTeam,...enemyTeam];
+    const remaining=heroesList.filter(h=>!selectedIds.includes(h.id));
     remaining.forEach(h=>{
         const div=document.createElement('div');
         div.className='hero-item';
         div.textContent=h.name+' ('+h.avg_score.toFixed(1)+')';
-        div.onclick=()=>selectHero(h.id);
         if(h.roles.includes('Carry')) carryCol.appendChild(div);
         else if(h.roles.includes('Support')) supportCol.appendChild(div);
         else universalCol.appendChild(div);
     });
 }
 
-// Вибір героя
-function selectHero(id){
-    // Визначаємо чи обираємо свою команду чи ворога
-    if(mySelectionCount<stageLimits[stage-1]){
-        if(!myTeam.includes(id)){
-            myTeam.push(id);
-            mySelectionCount++;
-        }
-    } else if(enemySelectionCount<stageLimits[stage-1]){
-        if(!enemyTeam.includes(id)){
-            enemyTeam.push(id);
-            enemySelectionCount++;
-        }
-    }
-    myHeroesCount.textContent=mySelectionCount+'/'+stageLimits[stage-1];
-    enemyHeroesCount.textContent=enemySelectionCount+'/'+stageLimits[stage-1];
-    updateRecommendations();
-}
-
-// Обчислення середнього балу
-function avgScore(team){
-    if(team.length===0) return 0;
-    let sum=0;
-    team.forEach(id=>{
-        const h=heroesList.find(x=>x.id===id);
-        if(h) sum+=h.avg_score;
-    });
-    return sum/team.length;
-}
-
-// Перехід на наступну стадію
+// Після натискання GO
 nextStageBtn.onclick=()=>{
-    if(mySelectionCount<stageLimits[stage-1] || enemySelectionCount<stageLimits[stage-1]){
-        alert("Обирайте всіх героїв цієї стадії!");
-        return;
-    }
+    // Збираємо вибір
+    const mySel=document.querySelectorAll('#mySelectors select');
+    const enemySel=document.querySelectorAll('#enemySelectors select');
+    myTeam.push(...Array.from(mySel).map(s=>parseInt(s.value)));
+    enemyTeam.push(...Array.from(enemySel).map(s=>parseInt(s.value)));
+
     if(stage<3){
         stage++;
-        mySelectionCount=0;
-        enemySelectionCount=0;
-        myHeroesCount.textContent='0/'+stageLimits[stage-1];
-        enemyHeroesCount.textContent='0/'+stageLimits[stage-1];
         stageInfo.textContent=`Стадія ${stage}: оберіть ${stageLimits[stage-1]} героїв своєї команди та ворога`;
+        createSelectors(stageLimits[stage-1]);
         updateRecommendations();
     } else {
         // Після стадії 3
         recommendations.style.display='none';
-        stageInfo.textContent='Всі стадії завершено';
+        mySelectorsDiv.innerHTML=''; enemySelectorsDiv.innerHTML=''; nextStageBtn.style.display='none';
         finalResult.style.display='block';
+
+        // Середній бал усіх героїв
         const allAvg=heroesList.reduce((sum,h)=>sum+h.avg_score,0)/heroesList.length;
-        const myAvg=avgScore(myTeam)/2;
+        const myAvg=avgScore(myTeam)/2; // поділ на 2
         const winChance=Math.min(100, Math.max(0,50+(myAvg-allAvg)*5));
-        finalResult.textContent=`Середній бал усіх героїв: ${allAvg.toFixed(1)}, середній бал моїх героїв /2: ${myAvg.toFixed(1)}. Прогнозований шанс на перемогу: ${winChance.toFixed(1)}%`;
+
+        // Вивід
+        finalResult.innerHTML=`Моя команда: ${myTeam.map(id=>heroesList.find(h=>h.id==id).name).join(', ')}<br>
+Ворожа команда: ${enemyTeam.map(id=>heroesList.find(h=>h.id==id).name).join(', ')}<br>
+Середній бал усіх героїв: ${allAvg.toFixed(1)}<br>
+Середній бал моїх героїв /2: ${myAvg.toFixed(1)}<br>
+Прогнозований шанс на перемогу: ${winChance.toFixed(1)}%`;
     }
 }
 </script>
 </body>
 </html>
+
 
