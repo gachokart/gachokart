@@ -264,55 +264,33 @@ button:hover {
 
 
 <script>
-// =========================
-// 🔥 ВШИТИЙ heroes.json
-// =========================
-// ====================== ЗМІННІ ======================
 let stage = 1;
 let allMyHeroes = [];
 let allEnemyHeroes = [];
-
-// ====================== ЕТАПИ ======================
 const stageLimits = [
   { my: 2, enemy: 2 },
   { my: 2, enemy: 2 },
   { my: 1, enemy: 1 }
 ];
-
-// ====================== ГЕРОЇ ======================
 let heroes = [];
 let heroStats = [];
 
-// ====================== ЗАВАНТАЖЕННЯ ГЕРОЇВ ======================
 async function fetchHeroes() {
   try {
     const res = await fetch("https://api.opendota.com/api/heroStats");
     const data = await res.json();
     heroStats = data;
-
-    heroes = data.map(h => ({
-      id: h.id,
-      name: h.localized_name,
-      roles: h.roles,
-      winrate: h.win / (h.pick || 1),
-      pickrate: (h.pick || 0) / 10000,
-      BestCounters: [],
-      commonCounters: []
-    }));
+    heroes = data.map(h => ({ id: h.id, name: h.localized_name, roles: h.roles }));
 
     createSelectors();
     updateTeamDisplays();
     updateStageTitle();
-    calculateBestPicks();
-    showBehaviorInfo();
-
   } catch (err) {
     console.error("Помилка завантаження героїв:", err);
   }
 }
 
-// ====================== СТВОРЕННЯ СЕЛЕКТОРІВ ======================
-function createSelectors(savedMy = [], savedEnemy = []) {
+function createSelectors() {
   const myTeamDiv = document.getElementById('myTeam');
   const enemyTeamDiv = document.getElementById('enemyTeam');
 
@@ -320,8 +298,8 @@ function createSelectors(savedMy = [], savedEnemy = []) {
   enemyTeamDiv.innerHTML = "<h2>Суперник</h2>";
 
   const limits = stageLimits[stage - 1];
-  createTeamSelectors(myTeamDiv, limits.my, savedMy);
-  createTeamSelectors(enemyTeamDiv, limits.enemy, savedEnemy);
+  createTeamSelectors(myTeamDiv, limits.my, allMyHeroes);
+  createTeamSelectors(enemyTeamDiv, limits.enemy, allEnemyHeroes);
 
   document.getElementById('nextBtn').onclick = nextStage;
 }
@@ -333,74 +311,20 @@ function createTeamSelectors(container, count, saved = []) {
 
   for (let i = 0; i < count; i++) {
     const wrapper = document.createElement('div');
-    const input = document.createElement('input');
     const select = document.createElement('select');
     select.innerHTML = heroOptions;
-
     if (saved[i]) select.value = saved[i];
 
-    input.placeholder = 'Пиши героя...';
-    input.addEventListener('input', () => {
-      const val = input.value.trim().toLowerCase();
-      const opt = Array.from(select.options).find(o => o.text.toLowerCase().startsWith(val));
-      if (opt) {
-        select.value = opt.value;
-        select.style.background = '#ffd700';
-        setTimeout(() => select.style.background = '', 400);
-      }
-      updateSelects();
-      updateTeamDisplays();
-    });
+    select.addEventListener('change', updateTeamDisplays);
 
-    select.addEventListener('change', () => {
-      input.value = select.value;
-      updateSelects();
-      updateTeamDisplays();
-    });
-
-    wrapper.appendChild(input);
     wrapper.appendChild(select);
     container.appendChild(wrapper);
   }
 }
 
-// ====================== БЛОКУВАННЯ ПОВТОРІВ ======================
-function updateSelects() {
-  const selects = Array.from(document.querySelectorAll('select'));
-  const selectedCurrentStage = [
-    ...getSelectedHeroes('#myTeam'),
-    ...getSelectedHeroes('#enemyTeam')
-  ];
-
-  const lockedHeroes = new Set([...allMyHeroes, ...allEnemyHeroes]);
-
-  selects.forEach(select => {
-    const current = select.value;
-    const optionsHtml = ['<option value="">Вибери героя</option>'].concat(
-      heroes
-        .filter(h => {
-          if (current && h.name === current) return true;
-          if (lockedHeroes.has(h.name)) return false;
-          if (selectedCurrentStage.includes(h.name)) return false;
-          return true;
-        })
-        .map(h => `<option value="${h.name}">${h.name}</option>`)
-    ).join('');
-
-    select.innerHTML = optionsHtml;
-    if (current) select.value = current;
-  });
-}
-
-// ====================== ДОПОМІЖНІ ======================
 function getSelectedHeroes(selector) {
   return Array.from(document.querySelectorAll(selector + ' select'))
     .map(s => s.value).filter(v => v !== '');
-}
-
-function updateStageTitle() {
-  const stageTitle = document.getElementById('stageTitle');
-  stageTitle.textContent = `Stage ${stage}`;
 }
 
 function updateTeamDisplays(currentOnly = true) {
@@ -419,41 +343,12 @@ function updateTeamDisplays(currentOnly = true) {
     : '<li style="opacity:0.6;">(поки не вибрано)</li>';
 }
 
-// ====================== ПОВЕДІНКОВІ ФАКТОРИ ======================
-function getTeamHarmony(myHeroes) {
-  const roleCount = {};
-  myHeroes.forEach(h => {
-    const hero = heroes.find(x => x.name === h);
-    if (hero) hero.roles.forEach(r => roleCount[r] = (roleCount[r] || 0) + 1);
-  });
-  const carryDup = Math.max(0, (roleCount['Carry'] || 0) - 1);
-  const supportDup = Math.max(0, (roleCount['Support'] || 0) - 1);
-  return 1 - 0.15 * (carryDup + supportDup);
+function updateStageTitle() {
+  const stageTitle = document.getElementById('stageTitle');
+  stageTitle.textContent = `Stage ${stage}`;
 }
 
-function getToxicityRisk(hero) {
-  const toxicHeroes = ['Invoker', 'Meepo', 'Tinker', 'Techies', 'Broodmother'];
-  return toxicHeroes.includes(hero.name) ? 0.9 : 1.0;
-}
-
-function getPlayerStability() { return Math.random() * 0.4 + 0.6; }
-function getRandomPlayerInfluence() {
-  const profiles = [{ type: "booster", influence: +0.2 }, { type: "smurf", influence: +0.1 }, { type: "ruiner", influence: -0.3 }, { type: "tilter", influence: -0.15 }, { type: "calm", influence: +0.05 }];
-  return Array.from({ length: 5 }, () => profiles[Math.floor(Math.random() * profiles.length)].influence)
-    .reduce((a, b) => a + b, 0) / 5;
-}
-
-// ====================== РОЗРАХУНОК ======================
-function getWeightsByStage(stage) {
-  switch (stage) {
-    case 1: return { synergy: 0.4, counters: 0.25, winrate: 0.15, pickrate: 0.1, roles: 0.1 };
-    case 2: return { synergy: 0.3, counters: 0.3, winrate: 0.2, pickrate: 0.1, roles: 0.1 };
-    default: return { synergy: 0.2, counters: 0.45, winrate: 0.15, pickrate: 0.05, roles: 0.15 };
-  }
-}
-
-// ====================== КОНТРОЛЬ СТАДІЇ ======================
-async function nextStage() {
+function nextStage() {
   const mySelected = getSelectedHeroes('#myTeam');
   const enemySelected = getSelectedHeroes('#enemyTeam');
   const limits = stageLimits[stage - 1];
@@ -466,50 +361,20 @@ async function nextStage() {
   allMyHeroes.push(...mySelected);
   allEnemyHeroes.push(...enemySelected);
 
-  await loadCountersForSelected([...mySelected, ...enemySelected]);
-
   if (stage < 3) {
     stage++;
     updateStageTitle();
     updateTeamDisplays(false);
     createSelectors();
-    calculateBestPicks();
-    showBehaviorInfo();
   } else {
-    showFinalChance();
+    alert("Draft завершено!");
   }
 }
 
-// ====================== ЗАВАНТАЖЕННЯ КОНТРПІКІВ ======================
-async function loadCountersForSelected(selectedHeroes) {
-  for (const heroName of selectedHeroes) {
-    const hero = heroes.find(h => h.name === heroName);
-    if (!hero || hero.BestCounters.length) continue;
-
-    try {
-      const res = await fetch(`https://api.opendota.com/api/heroes/${hero.id}/matchups`);
-      if (res.ok) {
-        const matchups = await res.json();
-        const sorted = matchups.map(m => ({ id: m.hero_id, winrate: m.wins / m.games_played })).sort((a,b)=>b.winrate-a.winrate);
-
-        hero.BestCounters = sorted.slice(0,10).map(m => {
-          const h = heroStats.find(x => x.id === m.id);
-          return h ? h.localized_name : m.id;
-        });
-        hero.commonCounters = sorted.slice(-10).map(m => {
-          const h = heroStats.find(x => x.id === m.id);
-          return h ? h.localized_name : m.id;
-        });
-      }
-    } catch(e) { console.error("Matchups error", e); }
-  }
-}
-
-// ====================== DOMContentLoaded ======================
 document.addEventListener('DOMContentLoaded', () => {
   fetchHeroes();
 });
-
 </script>
+
 </body>
 </html>
