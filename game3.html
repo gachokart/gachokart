@@ -35,7 +35,9 @@ button{padding:6px 12px;margin:4px;cursor:pointer;border-radius:6px;}
 </div>
 
 <div class="card result" id="finalResult" style="display:none;"></div>
-
+<div class="column" id="carryCol"><h4>Carry</h4></div>
+<div class="column" id="supportCol"><h4>Support</h4></div>
+<div class="column" id="universalCol"><h4>Universal</h4></div>
 <script>
 let stage=1;
 let myTeam=[], enemyTeam=[];
@@ -53,13 +55,33 @@ const nextStageBtn=document.getElementById('nextStageBtn');
 
 let heroesList=[];
 
-// Завантаження героїв
+// Завантаження героїв з OpenDota
 async function fetchHeroes(){
     const res=await fetch('https://api.opendota.com/api/constants/heroes');
     const data=await res.json();
     heroesList=Object.values(data).map(h=>({
-        id:h.id, name:h.localized_name, roles:h.roles, img:h.img, avg_score:Math.random()*10+5
+        id:h.id,
+        name:h.localized_name,
+        roles:h.roles,
+        img:'https://cdn.cloudflare.steamstatic.com'+h.img,
+        avg_score:Math.random()*10+5
     }));
+    updateRecommendations(); // після завантаження оновлюємо колонки
+}
+
+// Створення клікабельних карток героїв
+function updateRecommendations(){
+    ['carryCol','supportCol','universalCol'].forEach(id=>document.getElementById(id).innerHTML='');
+    const remaining=heroesList.filter(h=>!myTeam.includes(h.id) && !enemyTeam.includes(h.id));
+    remaining.forEach(h=>{
+        const div=document.createElement('div');
+        div.className='hero-item';
+        div.innerHTML=`<img src="${h.img}" width="48" height="27"><br>${h.name}<br>(${h.avg_score.toFixed(1)})`;
+        div.onclick=()=>selectHero(h.id);
+        if(h.roles.includes('Carry')) document.getElementById('carryCol').appendChild(div);
+        else if(h.roles.includes('Support')) document.getElementById('supportCol').appendChild(div);
+        else document.getElementById('universalCol').appendChild(div);
+    });
 }
 fetchHeroes().then(()=>{updateRecommendations();});
 
