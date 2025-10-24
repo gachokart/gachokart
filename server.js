@@ -7,7 +7,7 @@ const app = express();
 const PORT = 3000;
 
 // Твій SteamID64
-const STEAM_ID64 = "76561198823652063";
+const STEAM_ID64 = "863386335";
 
 app.use(express.static(path.join(__dirname)));
 
