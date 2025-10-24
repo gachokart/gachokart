@@ -268,61 +268,95 @@ button:hover {
 // 🔥 ВШИТИЙ heroes.json
 // =========================
 let heroes = [];
+    let heroStats = [];
 
-async function loadHeroes() {
-  // 1. Завантажуємо базову статистику
-  const statsRes = await fetch("https://api.opendota.com/api/heroStats");
-  const stats = await statsRes.json();
+    async function loadHeroes() {
+      try {
+        // кеш у localStorage
+        let stats = JSON.parse(localStorage.getItem("heroStats"));
+        if (!stats) {
+          const res = await fetch("https://api.opendota.com/api/heroStats");
+          if (!res.ok) throw new Error("OpenDota error " + res.status);
+          stats = await res.json();
+          localStorage.setItem("heroStats", JSON.stringify(stats));
+        }
+        heroStats = stats;
 
-  // 2. Перетворюємо у потрібний формат
-  heroes = await Promise.all(stats.map(async h => {
-    // winrate/pickrate
-    const totalGames = h["1_pick"] + h["2_pick"] + h["3_pick"] + h["4_pick"] + h["5_pick"] + h["6_pick"] + h["7_pick"] + h["8_pick"];
-    const totalWins  = h["1_win"]  + h["2_win"]  + h["3_win"]  + h["4_win"]  + h["5_win"]  + h["6_win"]  + h["7_win"]  + h["8_win"];
-    const winrate = totalGames > 0 ? totalWins / totalGames : 0;
-    const pickrate = totalGames / 1000000; // умовна нормалізація
+        heroes = stats.map(h => {
+          const totalGames = (h["1_pick"]||0)+(h["2_pick"]||0)+(h["3_pick"]||0)+(h["4_pick"]||0)+(h["5_pick"]||0)+(h["6_pick"]||0)+(h["7_pick"]||0)+(h["8_pick"]||0);
+          const totalWins  = (h["1_win"]||0)+(h["2_win"]||0)+(h["3_win"]||0)+(h["4_win"]||0)+(h["5_win"]||0)+(h["6_win"]||0)+(h["7_win"]||0)+(h["8_win"]||0);
+          const winrate = totalGames > 0 ? totalWins / totalGames : 0;
+          const pickrate = totalGames / 1000000;
 
-    // 3. Контрпики
-    let BestCounters = [];
-    let commonCounters = [];
-    try {
-      const matchupRes = await fetch(`https://api.opendota.com/api/heroes/${h.id}/matchups`);
-      const matchups = await matchupRes.json();
-      // сортуємо за winrate героя проти інших
-      const sorted = matchups.map(m => ({
-        id: m.hero_id,
-        winrate: m.wins / m.games_played
-      })).sort((a,b) => b.winrate - a.winrate);
+          return {
+            id: h.id,
+            name: h.localized_name,
+            roles: h.roles,
+            winrate,
+            pickrate,
+            BestCounters: [],
+            commonCounters: []
+          };
+        });
 
-      // топ-10 кращих і гірших
-      BestCounters = sorted.slice(0,10).map(m => {
-        const hero = stats.find(x => x.id === m.id);
-        return hero ? hero.localized_name : m.id;
-      });
-      commonCounters = sorted.slice(-10).map(m => {
-        const hero = stats.find(x => x.id === m.id);
-        return hero ? hero.localized_name : m.id;
-      });
-    } catch(e) {
-      console.error("Matchups error", e);
+        // заповнюємо селект
+        const select = document.getElementById("heroSelect");
+        heroes.forEach(h => {
+          const opt = document.createElement("option");
+          opt.value = h.id;
+          opt.textContent = h.name;
+          select.appendChild(opt);
+        });
+
+        select.addEventListener("change", () => showHero(select.value));
+      } catch (err) {
+        console.error("Помилка завантаження героїв:", err);
+      }
     }
 
-    return {
-      name: h.localized_name,
-      roles: h.roles,
-      winrate,
-      pickrate,
-      BestCounters,
-      commonCounters
-    };
-  }));
+    async function showHero(heroId) {
+      const hero = heroes.find(h => h.id == heroId);
+      if (!hero) return;
 
-  console.log("Heroes loaded", heroes);
-  // тепер heroes можна використовувати далі у твоїй логіці
-}
+      // якщо контрпіки ще не завантажені — тягнемо
+      if (hero.BestCounters.length === 0) {
+        try {
+          const res = await fetch(`https://api.opendota.com/api/heroes/${heroId}/matchups`);
+          if (res.ok) {
+            const matchups = await res.json();
+            const sorted = matchups.map(m => ({
+              id: m.hero_id,
+              winrate: m.wins / m.games_played
+            })).sort((a,b) => b.winrate - a.winrate);
 
-loadHeroes();
-</script>
+            hero.BestCounters = sorted.slice(0,10).map(m => {
+              const h = heroStats.find(x => x.id === m.id);
+              return h ? h.localized_name : m.id;
+            });
+            hero.commonCounters = sorted.slice(-10).map(m => {
+              const h = heroStats.find(x => x.id === m.id);
+              return h ? h.localized_name : m.id;
+            });
+          }
+        } catch(e) {
+          console.error("Matchups error", e);
+        }
+      }
+
+      // показуємо інформацію
+      const div = document.getElementById("heroInfo");
+      div.innerHTML = `
+        <div class="hero-card">
+          <h2>${hero.name}</h2>
+          <div class="roles">Ролі: ${hero.roles.join(", ")}</div>
+          <p>Winrate: ${(hero.winrate*100).toFixed(1)}%</p>
+          <p>Pickrate: ${(hero.pickrate*100).toFixed(2)}%</p>
+          <p><strong>Best Counters:</strong> ${hero.BestCounters.join(", ")}</p>
+          <p><strong>Common Counters:</strong> ${hero.commonCounters.join(", ")}</p>
+        </div>
+      `;
+    }
+
 
   heroes.forEach(h => {
   h.score = (h.winrate * 0.7 + h.pickrate * 0.3);
