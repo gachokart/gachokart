@@ -272,217 +272,162 @@ let stage = 1;
 let allMyHeroes = [];
 let allEnemyHeroes = [];
 
+const stageLimits = [ { my:2, enemy:2 }, { my:2, enemy:2 }, { my:1, enemy:1 } ];
 const roleCategories = {
-    carry: { roles: ["Carry", "Pusher", "Nuker"], weight: 3 },
-    support: { roles: ["Support", "Disabler"], weight: 2 },
-    universal: { roles: ["Durable", "Initiator", "Escape", "Nuker"], weight: 1 }
+  carry: { roles:["Carry","Pusher","Nuker"], weight:3 },
+  support: { roles:["Support","Disabler"], weight:2 },
+  universal: { roles:["Durable","Initiator","Escape","Nuker"], weight:1 }
 };
-const stageLimits = [ { my: 2, enemy: 2 }, { my: 2, enemy: 2 }, { my: 1, enemy: 1 } ];
 const roleWeights = { Carry:1, Disabler:0.9, Durable:0.8, Initiator:0.9, Escape:0.6, Nuker:0.7, Pusher:0.8, Support:0.9, Ranged:0.5, Melee:0.5 };
 
-async function fetchHeroesFromOpenDota() {
-    try {
-        const res = await fetch('https://api.opendota.com/api/heroStats');
-        const data = await res.json();
-        heroes = data.map(h => ({
-            id: h.id,
-            name: h.localized_name,
-            roles: h.roles,
-            winrate: h.win / (h.pick || 1),
-            pickrate: h.pick / 10000,
-            BestCounters: [],
-            commonCounters: []
-        }));
-        createSelectors();
-        calculateBestPicks();
-    } catch(e){
-        console.error('Помилка завантаження героїв:', e);
-    }
+async function fetchHeroesFromOpenDota(){
+  try{
+    const res = await fetch('https://api.opendota.com/api/heroStats');
+    const data = await res.json();
+    heroes = data.map(h=>({
+      id:h.id,
+      name:h.localized_name,
+      roles:h.roles,
+      winrate:h.win/(h.pick||1),
+      pickrate:h.pick/10000
+    }));
+    createSelectors();
+    calculateBestPicks();
+  } catch(e){ console.error(e); }
 }
 
-// ====================== СЕЛЕКТОРИ ======================
-function createSelectors() {
-    const myTeamDiv = document.getElementById('myTeam');
-    const enemyTeamDiv = document.getElementById('enemyTeam');
-    myTeamDiv.innerHTML = "<h2>Моя команда</h2>";
-    enemyTeamDiv.innerHTML = "<h2>Суперник</h2>";
+function createSelectors(){
+  const myTeamDiv = document.getElementById('myTeam');
+  const enemyTeamDiv = document.getElementById('enemyTeam');
+  myTeamDiv.innerHTML = "<h2>Моя команда</h2>";
+  enemyTeamDiv.innerHTML = "<h2>Суперник</h2>";
 
-    const limits = stageLimits[stage-1];
-    createTeamSelectors(myTeamDiv, limits.my);
-    createTeamSelectors(enemyTeamDiv, limits.enemy);
+  const limits = stageLimits[stage-1];
+  createTeamSelectors(myTeamDiv, limits.my);
+  createTeamSelectors(enemyTeamDiv, limits.enemy);
 
-    document.getElementById('nextBtn').onclick = nextStage;
+  document.getElementById('nextBtn').onclick = nextStage;
 }
 
-function createTeamSelectors(container, count) {
-    const heroOptions = ['<option value="">Вибери героя</option>']
-        .concat(heroes.map(h=>`<option value="${h.name}">${h.name}</option>`))
-        .join('');
-    for (let i=0;i<count;i++){
-        const wrapper = document.createElement('div');
-        const input = document.createElement('input');
-        const select = document.createElement('select');
-        select.innerHTML = heroOptions;
+function createTeamSelectors(container, count){
+  const heroOptions = ['<option value="">Вибери героя</option>'].concat(heroes.map(h=>`<option value="${h.name}">${h.name}</option>`)).join('');
+  for(let i=0;i<count;i++){
+    const wrapper = document.createElement('div');
+    const input = document.createElement('input');
+    const select = document.createElement('select');
+    select.innerHTML = heroOptions;
 
-        input.placeholder = 'Пиши героя...';
-        input.addEventListener('input', ()=> {
-            const val = input.value.trim().toLowerCase();
-            const opt = Array.from(select.options).find(o=>o.text.toLowerCase().startsWith(val));
-            if(opt) select.value = opt.value;
-            calculateBestPicks();
-        });
+    input.placeholder = 'Пиши героя...';
+    input.addEventListener('input', ()=> {
+      const val = input.value.trim().toLowerCase();
+      const opt = Array.from(select.options).find(o=>o.text.toLowerCase().startsWith(val));
+      if(opt) select.value = opt.value;
+      calculateBestPicks();
+    });
 
-        select.addEventListener('change', ()=> {
-            input.value = select.value;
-            calculateBestPicks();
-        });
+    select.addEventListener('change', ()=> {
+      input.value = select.value;
+      calculateBestPicks();
+    });
 
-        wrapper.appendChild(input);
-        wrapper.appendChild(select);
-        container.appendChild(wrapper);
-    }
+    wrapper.appendChild(input);
+    wrapper.appendChild(select);
+    container.appendChild(wrapper);
+  }
 }
 
-// ====================== ВИБРАНІ ГЕРОЇ ======================
 function getSelectedHeroes(selector){
-    return Array.from(document.querySelectorAll(selector+' select'))
-        .map(s=>s.value).filter(v=>v!=='');
+  return Array.from(document.querySelectorAll(selector+' select')).map(s=>s.value).filter(v=>v!=='');
 }
 
-// ====================== КАТЕГОРІЯ ======================
 function getHeroMainCategory(hero){
-    const w = {carry:0,support:0,universal:0};
-    hero.roles.forEach(r=>{
-        for(const [cat,data] of Object.entries(roleCategories)){
-            if(data.roles.includes(r)) w[cat]+=data.weight;
-        }
-    });
-    const max = Math.max(w.carry,w.support,w.universal);
-    if(max===w.carry) return 'carry';
-    if(max===w.support) return 'support';
-    return 'universal';
+  const w={carry:0,support:0,universal:0};
+  hero.roles.forEach(r=>{
+    for(const [cat,data] of Object.entries(roleCategories)){
+      if(data.roles.includes(r)) w[cat]+=data.weight;
+    }
+  });
+  const max=Math.max(w.carry,w.support,w.universal);
+  if(max===w.carry) return 'carry';
+  if(max===w.support) return 'support';
+  return 'universal';
 }
 
-// ====================== РЕКОМЕНДАЦІЇ ======================
 function calculateBestPicks(){
-    const myHeroes = [...allMyHeroes, ...getSelectedHeroes('#myTeam')];
-    const enemyHeroes = [...allEnemyHeroes, ...getSelectedHeroes('#enemyTeam')];
+  const myHeroes = [...allMyHeroes,...getSelectedHeroes('#myTeam')];
+  const enemyHeroes = [...allEnemyHeroes,...getSelectedHeroes('#enemyTeam')];
 
-    const scores = heroes.filter(h=>!myHeroes.includes(h.name) && !enemyHeroes.includes(h.name))
-        .map(hero=>{
-            let counterScore=0;
-            enemyHeroes.forEach(e=>{
-                if(hero.BestCounters?.includes(e)) counterScore+=2.5;
-                else if(hero.commonCounters?.includes(e)) counterScore+=1.5;
-            });
-
-            let roleCount={};
-            myHeroes.forEach(name=>{
-                const h=heroes.find(x=>x.name===name);
-                if(h) h.roles.forEach(r=>roleCount[r]=(roleCount[r]||0)+1);
-            });
-            let synergy=0;
-            hero.roles.forEach(r=>{ if(roleCount[r]) synergy+=(roleWeights[r]||1)*roleCount[r]; });
-
-            const score = counterScore*0.5 + hero.winrate*0.3 + hero.pickrate*0.2 + synergy*0.1;
-            return {hero:hero.name, score:Number(score.toFixed(3)), roles:hero.roles};
-        });
-
-    scores.sort((a,b)=>b.score-a.score);
-
-    const categorized = scores.map(t=>({...t, category:getHeroMainCategory(heroes.find(h=>h.name===t.hero))}));
-
-    const carryHeroes = categorized.filter(h=>h.category==='carry').slice(0,5);
-    const supportHeroes = categorized.filter(h=>h.category==='support').slice(0,5);
-    const universalHeroes = categorized.filter(h=>h.category==='universal').slice(0,5);
-
-    const resultDiv=document.getElementById('results');
-    resultDiv.innerHTML=`
-        <h2>Рекомендовані герої</h2>
-        <div style="display:flex; justify-content:space-around;">
-            <div class="resultColumn">
-                <h3>⚔ Carry</h3>
-                ${carryHeroes.map(t=>`<div class="hero">${t.hero} - ${t.score}</div>`).join('')}
-            </div>
-            <div class="resultColumn">
-                <h3>🛡 Support</h3>
-                ${supportHeroes.map(t=>`<div class="hero">${t.hero} - ${t.score}</div>`).join('')}
-            </div>
-            <div class="resultColumn">
-                <h3>🔄 Universal</h3>
-                ${universalHeroes.map(t=>`<div class="hero">${t.hero} - ${t.score}</div>`).join('')}
-            </div>
-        </div>
-    `;
-}
-
-// ====================== ЕТАП ======================
-function nextStage(){
-    const mySelected = getSelectedHeroes('#myTeam');
-    const enemySelected = getSelectedHeroes('#enemyTeam');
-    const limits = stageLimits[stage-1];
-    const stageTitle = document.getElementById('stageTitle');
-
-    if(mySelected.length < limits.my || enemySelected.length < limits.enemy){
-        alert(`⚠️ Обери ${limits.my} героїв у свою команду та ${limits.enemy} у суперника!`);
-        return;
-    }
-
-    allMyHeroes.push(...mySelected);
-    allEnemyHeroes.push(...enemySelected);
-
-    if(stage < 3){
-        stage++;
-        stageTitle.textContent = `Stage ${stage}`;
-        createSelectors(); 
-        calculateBestPicks();
-    } else {
-        showFinalChance();
-    }
-}
-
-// ====================== ФІНАЛ ======================
-function showFinalChance(){
-    const myTeam = allMyHeroes;
-    const enemyTeam = allEnemyHeroes;
-
-    let myScore = 0, enemyScore = 0;
-
-    heroes.forEach(h=>{
-        if(myTeam.includes(h.name)){
-            enemyTeam.forEach(e=>{
-                if(h.BestCounters?.includes(e)) myScore+=2;
-                if(h.commonCounters?.includes(e)) myScore+=1;
-            });
-            myScore += h.winrate;
-        }
-        if(enemyTeam.includes(h.name)){
-            myTeam.forEach(m=>{
-                if(h.BestCounters?.includes(m)) enemyScore+=2;
-                if(h.commonCounters?.includes(m)) enemyScore+=1;
-            });
-            enemyScore += h.winrate;
-        }
+  const scores = heroes.filter(h=>!myHeroes.includes(h.name) && !enemyHeroes.includes(h.name))
+    .map(hero=>{
+      let roleCount={};
+      myHeroes.forEach(name=>{
+        const h = heroes.find(x=>x.name===name);
+        if(h) h.roles.forEach(r=>roleCount[r]=(roleCount[r]||0)+1);
+      });
+      let synergy=0;
+      hero.roles.forEach(r=>{ if(roleCount[r]) synergy+=(roleWeights[r]||1)*roleCount[r]; });
+      const score = hero.winrate*0.5 + hero.pickrate*0.3 + synergy*0.2;
+      return {hero:hero.name, score:score.toFixed(3), roles:hero.roles};
     });
 
-    let myChance = (myScore + enemyScore > 0) ? (myScore/(myScore+enemyScore))*100 : 50;
+  scores.sort((a,b)=>b.score-a.score);
+  const categorized = scores.map(t=>({...t, category:getHeroMainCategory(heroes.find(h=>h.name===t.hero))}));
+  const carry = categorized.filter(h=>h.category==='carry').slice(0,5);
+  const support = categorized.filter(h=>h.category==='support').slice(0,5);
+  const universal = categorized.filter(h=>h.category==='universal').slice(0,5);
 
-    document.getElementById('summaryMyTeam').innerHTML = myTeam.map(h=>`<li>🟩 ${h}</li>`).join('');
-    document.getElementById('summaryEnemyTeam').innerHTML = enemyTeam.map(h=>`<li>🟥 ${h}</li>`).join('');
-    document.getElementById('summaryChance').textContent = `Шанс на перемогу: ${myChance.toFixed(0)}%`;
-    document.getElementById('summaryBar').style.width = `${myChance}%`;
-
-    document.getElementById('draftSummary').style.display = 'block';
-    document.getElementById('selectorsContainer').style.display = 'none';
-    document.getElementById('stageTitle').style.display = 'none';
-    document.getElementById('results').style.display = 'none';
-    document.getElementById('teamsDisplay').style.display = 'none';
-    document.getElementById('controls').style.display = 'none';
+  const resultDiv=document.getElementById('results');
+  resultDiv.innerHTML=`
+    <h2>Рекомендовані герої</h2>
+    <div style="display:flex; justify-content:space-around;">
+      <div class="resultColumn"><h3>⚔ Carry</h3>${carry.map(h=>`<div class="hero">${h.hero} - ${h.score}</div>`).join('')}</div>
+      <div class="resultColumn"><h3>🛡 Support</h3>${support.map(h=>`<div class="hero">${h.hero} - ${h.score}</div>`).join('')}</div>
+      <div class="resultColumn"><h3>🔄 Universal</h3>${universal.map(h=>`<div class="hero">${h.hero} - ${h.score}</div>`).join('')}</div>
+    </div>
+  `;
 }
 
-// ====================== ЗАПУСК ======================
-document.addEventListener('DOMContentLoaded', ()=>{ fetchHeroesFromOpenDota(); });
+function nextStage(){
+  const mySelected = getSelectedHeroes('#myTeam');
+  const enemySelected = getSelectedHeroes('#enemyTeam');
+  const limits = stageLimits[stage-1];
+  if(mySelected.length<limits.my || enemySelected.length<limits.enemy){
+    alert(`Оберіть ${limits.my} і ${limits.enemy} героїв`);
+    return;
+  }
+  allMyHeroes.push(...mySelected);
+  allEnemyHeroes.push(...enemySelected);
+  if(stage<3){
+    stage++;
+    document.getElementById('stageTitle').textContent=`Stage ${stage}`;
+    createSelectors();
+    calculateBestPicks();
+  } else showFinalChance();
+}
 
+function showFinalChance(){
+  const myTeam = allMyHeroes;
+  const enemyTeam = allEnemyHeroes;
+  let myScore=0, enemyScore=0;
+  heroes.forEach(h=>{
+    if(myTeam.includes(h.name)) myScore+=h.winrate;
+    if(enemyTeam.includes(h.name)) enemyScore+=h.winrate;
+  });
+  let myChance = (myScore+enemyScore>0)? (myScore/(myScore+enemyScore))*100 : 50;
+  document.getElementById('summaryMyTeam').innerHTML=myTeam.map(h=>`<li>🟩 ${h}</li>`).join('');
+  document.getElementById('summaryEnemyTeam').innerHTML=enemyTeam.map(h=>`<li>🟥 ${h}</li>`).join('');
+  const bar=document.getElementById('summaryBar');
+  bar.style.width=`${myChance}%`;
+  document.getElementById('summaryChance').textContent=`Шанс на перемогу: ${myChance.toFixed(0)}%`;
+  document.getElementById('draftSummary').style.display='block';
+  document.getElementById('selectorsContainer').style.display='none';
+  document.getElementById('stageTitle').style.display='none';
+  document.getElementById('results').style.display='none';
+  document.getElementById('teamsDisplay').style.display='none';
+  document.getElementById('controls').style.display='none';
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{ fetchHeroesFromOpenDota(); });
 </script>
 </body>
 </html>
