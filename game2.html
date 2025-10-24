@@ -267,15 +267,19 @@ button:hover {
 // =========================
 // 🔥 ВШИТИЙ heroes.json
 // =========================
+// ====================== ЗМІННІ ======================
+let stage = 1;
+let allMyHeroes = [];
+let allEnemyHeroes = [];
+
+// ====================== ЕТАПИ ======================
 const stageLimits = [
   { my: 2, enemy: 2 },
   { my: 2, enemy: 2 },
   { my: 1, enemy: 1 }
 ];
-// ====================== ГЛОБАЛЬНІ ЗМІННІ ======================
-let stage = 1;
-let allMyHeroes = [];
-let allEnemyHeroes = [];
+
+// ====================== ГЕРОЇ ======================
 let heroes = [];
 let heroStats = [];
 
@@ -290,74 +294,35 @@ async function fetchHeroes() {
       id: h.id,
       name: h.localized_name,
       roles: h.roles,
-      winrate: h.win ? Number((h.win / (h.pick || 1)).toFixed(4)) : 0,
-      pickrate: h.pick ? Number((h.pick / 10000).toFixed(4)) : 0,
+      winrate: h.win / (h.pick || 1),
+      pickrate: (h.pick || 0) / 10000,
       BestCounters: [],
-      commonCounters: [],
-      score: 0
+      commonCounters: []
     }));
+
+    createSelectors();
+    updateTeamDisplays();
+    updateStageTitle();
+    calculateBestPicks();
+    showBehaviorInfo();
+
   } catch (err) {
     console.error("Помилка завантаження героїв:", err);
   }
 }
 
-// ====================== ІНІЦІАЛІЗАЦІЯ ======================
-document.addEventListener('DOMContentLoaded', async () => {
-  await fetchHeroes();             // спочатку завантажуємо героїв
-  updateStageTitle();              // показуємо першу стадію
-  createSelectors();               // створюємо селектори для Stage 1
-  updateTeamDisplays();            // оновлюємо списки команд
-  document.getElementById('nextBtn').onclick = nextStage; // кнопка Go
-});
-
-// ====================== ОНОВЛЕННЯ СТАДІЇ ======================
-function updateStageTitle() {
-  document.getElementById('stageTitle').textContent = `Stage ${stage}`;
-}
-
-
-
-// ====================== ОНОВЛЕННЯ СПИСКІВ КОМАНД ======================
-function updateStageTitle() {
-  document.getElementById('stageTitle').textContent = `Stage ${stage}`;
-}
-
-function updateTeamDisplays(currentOnly = true) {
-  const myTeamList = document.getElementById('myTeamList');
-  const enemyTeamList = document.getElementById('enemyTeamList');
-
-  const myHeroes = currentOnly ? getSelectedHeroes('#myTeam') : allMyHeroes;
-  const enemyHeroes = currentOnly ? getSelectedHeroes('#enemyTeam') : allEnemyHeroes;
-
-  myTeamList.innerHTML = myHeroes.length
-      ? myHeroes.map(h => `<li style="margin:4px 0;">🟩 ${h}</li>`).join('')
-      : '<li style="opacity:0.6;">(поки не вибрано)</li>';
-
-  enemyTeamList.innerHTML = enemyHeroes.length
-      ? enemyHeroes.map(h => `<li style="margin:4px 0;">🟥 ${h}</li>`).join('')
-      : '<li style="opacity:0.6;">(поки не вибрано)</li>';
-}
-// ====================== ОТРИМАННЯ ВИБРАНИХ ГЕРОЇВ ======================
-function getSelectedHeroes(selector) {
-  return Array.from(document.querySelectorAll(selector + ' select'))
-    .map(s => s.value)
-    .filter(v => v !== '');
-}
-
-
- 
-
-// ====================== СЕЛЕКТОРИ ======================
+// ====================== СТВОРЕННЯ СЕЛЕКТОРІВ ======================
 function createSelectors(savedMy = [], savedEnemy = []) {
   const myTeamDiv = document.getElementById('myTeam');
   const enemyTeamDiv = document.getElementById('enemyTeam');
+
   myTeamDiv.innerHTML = "<h2>Моя команда</h2>";
   enemyTeamDiv.innerHTML = "<h2>Суперник</h2>";
-  const limits = stageLimits[stage - 1];
 
+  const limits = stageLimits[stage - 1];
   createTeamSelectors(myTeamDiv, limits.my, savedMy);
   createTeamSelectors(enemyTeamDiv, limits.enemy, savedEnemy);
-  updateSelects();
+
   document.getElementById('nextBtn').onclick = nextStage;
 }
 
@@ -365,6 +330,7 @@ function createTeamSelectors(container, count, saved = []) {
   const heroOptions = ['<option value="">Вибери героя</option>']
     .concat(heroes.map(h => `<option value="${h.name}">${h.name}</option>`))
     .join('');
+
   for (let i = 0; i < count; i++) {
     const wrapper = document.createElement('div');
     const input = document.createElement('input');
@@ -373,7 +339,6 @@ function createTeamSelectors(container, count, saved = []) {
 
     if (saved[i]) select.value = saved[i];
 
-    // 🔍 автопідсвічування при введенні
     input.placeholder = 'Пиши героя...';
     input.addEventListener('input', () => {
       const val = input.value.trim().toLowerCase();
@@ -407,21 +372,15 @@ function updateSelects() {
     ...getSelectedHeroes('#enemyTeam')
   ];
 
-  // Заблоковані герої з попередніх стадій
   const lockedHeroes = new Set([...allMyHeroes, ...allEnemyHeroes]);
 
   selects.forEach(select => {
     const current = select.value;
-
-    // Будуємо список опцій: доступні лише ті, що не locked і не вибрані іншими селекторами поточної стадії
     const optionsHtml = ['<option value="">Вибери героя</option>'].concat(
       heroes
         .filter(h => {
-          // залишаємо поточне значення, навіть якщо воно у списку selectedCurrentStage (щоб не скидати)
           if (current && h.name === current) return true;
-          // блокуємо героїв з попередніх стадій (locked)
           if (lockedHeroes.has(h.name)) return false;
-          // блокуємо героїв, уже вибраних іншими селекторами поточної стадії
           if (selectedCurrentStage.includes(h.name)) return false;
           return true;
         })
@@ -429,18 +388,8 @@ function updateSelects() {
     ).join('');
 
     select.innerHTML = optionsHtml;
-
-    // Відновити значення якщо воно ще доступне
     if (current) select.value = current;
   });
-}
-// ====================== ВАГИ СТАДІЙ ======================
-function getWeightsByStage(stage) {
-  switch (stage) {
-    case 1: return { synergy: 0.4, counters: 0.25, winrate: 0.15, pickrate: 0.1, roles: 0.1 };
-    case 2: return { synergy: 0.3, counters: 0.3, winrate: 0.2, pickrate: 0.1, roles: 0.1 };
-    default: return { synergy: 0.2, counters: 0.45, winrate: 0.15, pickrate: 0.05, roles: 0.15 };
-  }
 }
 
 // ====================== ДОПОМІЖНІ ======================
@@ -448,24 +397,27 @@ function getSelectedHeroes(selector) {
   return Array.from(document.querySelectorAll(selector + ' select'))
     .map(s => s.value).filter(v => v !== '');
 }
-  function updateTeamDisplays(currentOnly = true) {
-    const myTeamList = document.getElementById('myTeamList');
-    const enemyTeamList = document.getElementById('enemyTeamList');
 
-    const myHeroes = currentOnly ? getSelectedHeroes('#myTeam') : allMyHeroes;
-    const enemyHeroes = currentOnly ? getSelectedHeroes('#enemyTeam') : allEnemyHeroes;
-
-    myTeamList.innerHTML = myHeroes.length
-        ? myHeroes.map(h => `<li style="margin:4px 0;">🟩 ${h}</li>`).join('')
-        : '<li style="opacity:0.6;">(поки не вибрано)</li>';
-
-    enemyTeamList.innerHTML = enemyHeroes.length
-        ? enemyHeroes.map(h => `<li style="margin:4px 0;">🟥 ${h}</li>`).join('')
-        : '<li style="opacity:0.6;">(поки не вибрано)</li>';
+function updateStageTitle() {
+  const stageTitle = document.getElementById('stageTitle');
+  stageTitle.textContent = `Stage ${stage}`;
 }
 
+function updateTeamDisplays(currentOnly = true) {
+  const myTeamList = document.getElementById('myTeamList');
+  const enemyTeamList = document.getElementById('enemyTeamList');
 
+  const myHeroes = currentOnly ? getSelectedHeroes('#myTeam') : allMyHeroes;
+  const enemyHeroes = currentOnly ? getSelectedHeroes('#enemyTeam') : allEnemyHeroes;
 
+  myTeamList.innerHTML = myHeroes.length
+    ? myHeroes.map(h => `<li>🟩 ${h}</li>`).join('')
+    : '<li style="opacity:0.6;">(поки не вибрано)</li>';
+
+  enemyTeamList.innerHTML = enemyHeroes.length
+    ? enemyHeroes.map(h => `<li>🟥 ${h}</li>`).join('')
+    : '<li style="opacity:0.6;">(поки не вибрано)</li>';
+}
 
 // ====================== ПОВЕДІНКОВІ ФАКТОРИ ======================
 function getTeamHarmony(myHeroes) {
@@ -484,326 +436,23 @@ function getToxicityRisk(hero) {
   return toxicHeroes.includes(hero.name) ? 0.9 : 1.0;
 }
 
-function getPlayerStability() {
-  return Math.random() * 0.4 + 0.6; // 0.6–1.0
-}
-
+function getPlayerStability() { return Math.random() * 0.4 + 0.6; }
 function getRandomPlayerInfluence() {
-  const profiles = [
-    { type: "booster", influence: +0.2 },
-    { type: "smurf", influence: +0.1 },
-    { type: "ruiner", influence: -0.3 },
-    { type: "tilter", influence: -0.15 },
-    { type: "calm", influence: +0.05 },
-  ];
-  const avgInfluence = Array.from({length:5},()=>profiles[Math.floor(Math.random()*profiles.length)].influence)
-    .reduce((a,b)=>a+b,0)/5;
-  return avgInfluence;
+  const profiles = [{ type: "booster", influence: +0.2 }, { type: "smurf", influence: +0.1 }, { type: "ruiner", influence: -0.3 }, { type: "tilter", influence: -0.15 }, { type: "calm", influence: +0.05 }];
+  return Array.from({ length: 5 }, () => profiles[Math.floor(Math.random() * profiles.length)].influence)
+    .reduce((a, b) => a + b, 0) / 5;
 }
 
 // ====================== РОЗРАХУНОК ======================
-function calculateBestPicks() {
-  const myHeroes = [...allMyHeroes, ...getSelectedHeroes('#myTeam')];
-  const enemyHeroes = [...allEnemyHeroes, ...getSelectedHeroes('#enemyTeam')];
-  const stageNow = Math.min(stage, 3);
-  const weights = getWeightsByStage(stageNow);
-  const keyRoles = ['Carry', 'Support', 'Disabler', 'Initiator'];
-  const stageRoleMultiplier = stageNow === 1 ? 1.2 : stageNow === 2 ? 1.1 : 1.0;
-
-  const roleCount = {};
-  myHeroes.forEach(my => {
-    const h = heroes.find(x => x.name === my);
-    if (h) h.roles.forEach(r => roleCount[r] = (roleCount[r] || 0) + 1);
-  });
-
-  function getSynergyScore(hero) {
-    let score = 0;
-    myHeroes.forEach(my => {
-      const ally = heroes.find(h => h.name === my);
-      if (ally) ally.roles.forEach(r => { if (hero.roles.includes(r)) { let m = keyRoles.includes(r)?stageRoleMultiplier:1; score += (roleWeights[r]||1)*m; }});
-    });
-    return score;
-  }
-
-  function getDuplicatePenalty(hero) {
-    let penalty = 0;
-    hero.roles.forEach(r => { if (roleCount[r] && roleCount[r]>1) penalty += (roleWeights[r]||1)*(roleCount[r]-1); });
-    return penalty;
-  }
-
-  function getMissingRoleBonus(hero) {
-    let bonus = 0;
-    Object.keys(roleWeights).forEach(r => {
-      if (!roleCount[r] && hero.roles.includes(r)) { let m = keyRoles.includes(r)?stageRoleMultiplier:1; bonus += roleWeights[r]*m; }
-    });
-    return bonus;
-  }
-
-  function getAdaptiveCounterScore(hero) {
-    if (!enemyHeroes.length) return 0;
-    let score = 0;
-    enemyHeroes.forEach(enemy => {
-      const enemyHero = heroes.find(h=>h.name===enemy);
-      if(!enemyHero) return;
-      if(hero.BestCounters?.includes(enemy)) score += 2.0;
-      if(hero.commonCounters?.includes(enemy)) score += 1.0;
-    });
-    if(hero.roles.some(r=>keyRoles.includes(r))) score *= stageRoleMultiplier;
-    return score;
-  }
-
-  const behaviorMode = document.getElementById('behaviorMode').checked;
-  const stability = behaviorMode ? getPlayerStability() : 1.0;
-  const influence = behaviorMode ? getRandomPlayerInfluence() : 0.0;
-  const harmony = behaviorMode ? getTeamHarmony(myHeroes) : 1.0;
-
-  let scores = [];
-  heroes.forEach(hero => {
-    if (myHeroes.includes(hero.name) || enemyHeroes.includes(hero.name)) return;
-    let score = 0;
-    const winNorm = (hero.winrate-0.5)/0.5;
-    const pickNorm = Math.log(1+hero.pickrate*100)/Math.log(101);
-    score += weights.winrate*winNorm + weights.pickrate*pickNorm;
-    score += getAdaptiveCounterScore(hero)*weights.counters;
-    score += getSynergyScore(hero)*weights.synergy;
-    score -= getDuplicatePenalty(hero);
-    score += getMissingRoleBonus(hero)*weights.roles;
-
-    // застосовуємо поведінкові фактори
-    if (behaviorMode) {
-      score *= getToxicityRisk(hero);
-      score *= harmony;
-      score *= stability;
-      score *= (1 + influence);
-    }
-
-    scores.push({hero: hero.name, score: Number(score.toFixed(4))});
-  });
-
-  scores.sort((a,b)=>b.score-a.score);
-  displayTop(scores);
-}
-  function showBehaviorInfo() {
-  const behaviorMode = document.getElementById('behaviorMode').checked;
-  const behaviorDiv = document.getElementById('behaviorInfo');
-
-  if (!behaviorMode) {
-    behaviorDiv.style.display = 'none';
-    return;
-  }
-
-  // Генеруємо фактори
-  const stability = getPlayerStability();
-  const influence = getRandomPlayerInfluence();
-  const harmony = getTeamHarmony([...allMyHeroes, ...getSelectedHeroes('#myTeam')]);
-
-  behaviorDiv.innerHTML = `
-    <h3>Поведінкові фактори</h3>
-    <ul>
-      <li>Ризик токсичних героїв: ${ (getToxicityRisk({name:'Invoker'})*100).toFixed(0) }% (приклад)</li>
-      <li>Гармонія команди: ${(harmony*100).toFixed(0)}%</li>
-      <li>Стабільність гравця: ${(stability*100).toFixed(0)}%</li>
-      <li>Вплив випадкового профілю: ${(influence*100).toFixed(0)}%</li>
-    </ul>
-  `;
-  behaviorDiv.style.display = 'block';
-}
-
-// ====================== ВІДОБРАЖЕННЯ ======================
-// Категорії з вагами
-// Категорії з вагами
-// Категорії з вагами
-const roleCategories = {
-  carry: { roles: ["Carry", "Pusher", "Nuker"], weight: 3 },
-  support: { roles: ["Support", "Disabler"], weight: 2 },
-  universal: { roles: ["Melee", "Ranged", "Durable", "Initiator", "Escape"], weight: 1 }
-};
-
-function getCategory(role) {
-  for (const [cat, data] of Object.entries(roleCategories)) {
-    if (data.roles.includes(role)) return cat;
-  }
-  return null;
-}
-
-function calculateHeroWeight(hero) {
-  const result = { carry: 0, support: 0, universal: 0, total: 0 };
-  hero.roles.forEach(role => {
-    const cat = getCategory(role);
-    if (cat) {
-      const w = roleCategories[cat].weight;
-      result[cat] += w;
-      result.total += w;
-    }
-  });
-  return result;
-}
-
-// Автоматичне визначення категорії героя
-function getHeroMainCategory(hero) {
-  const w = calculateHeroWeight(hero);
-  const max = Math.max(w.carry, w.support, w.universal);
-  if (max === 0) return 'universal'; // якщо ролей немає
-
-  // Пріоритет при однакових значеннях
-  if (w.carry === max) return 'carry';
-  if (w.support === max) return 'support';
-  return 'universal';
-}
-
-function displayTop(scores) {
-  const resultDiv = document.getElementById('results');
-  const topHeroes = scores.slice(0, 30); // запас
-
-  // Визначаємо категорію кожного героя
-  const categorized = topHeroes.map(t => {
-    const hero = heroes.find(h => h.name === t.hero);
-    const category = hero ? getHeroMainCategory(hero) : 'universal';
-    return { ...t, category };
-  });
-
-  // Розподіляємо по категоріях
-  const carryHeroes = categorized.filter(h => h.category === 'carry').slice(0, 5);
-  const supportHeroes = categorized.filter(h => h.category === 'support').slice(0, 5);
-  const universalHeroes = categorized.filter(h => h.category === 'universal').slice(0, 5);
-
-  // HTML-відображення
-  resultDiv.innerHTML = `
-  <h2 style="text-align:center; margin-bottom:15px;">Топ герої для наступного піку</h2>
-  <div id="resultsGrid">
-    <!-- Carry -->
-    <div class="resultColumn">
-      <h3 style="color:#ffcc00;">⚔ Carry</h3>
-      ${
-        carryHeroes.length
-          ? carryHeroes.map(t => {
-              const hero = heroes.find(h => h.name === t.hero);
-              const w = calculateHeroWeight(hero);
-              return `<div class="hero">
-                        <strong>${t.hero}</strong><br>
-                        <small>Бали: ${t.score.toFixed(3)} | Carry: ${w.carry}</small>
-                      </div>`;
-            }).join('')
-          : '<p style="opacity:0.6;">(немає Carry серед топів)</p>'
-      }
-    </div>
-
-    <!-- Support -->
-    <div class="resultColumn">
-      <h3 style="color:#66ff99;">🛡 Support</h3>
-      ${
-        supportHeroes.length
-          ? supportHeroes.map(t => {
-              const hero = heroes.find(h => h.name === t.hero);
-              const w = calculateHeroWeight(hero);
-              return `<div class="hero">
-                        <strong>${t.hero}</strong><br>
-                        <small>Бали: ${t.score.toFixed(3)} | Support: ${w.support}</small>
-                      </div>`;
-            }).join('')
-          : '<p style="opacity:0.6;">(немає Support серед топів)</p>'
-      }
-    </div>
-
-    <!-- Universal -->
-    <div class="resultColumn">
-      <h3 style="color:#66ccff;">🔄 Універсальні</h3>
-      ${
-        universalHeroes.length
-          ? universalHeroes.map(t => {
-              const hero = heroes.find(h => h.name === t.hero);
-              const w = calculateHeroWeight(hero);
-              return `<div class="hero" style="box-shadow:0 0 10px #66ccff;">
-                        <strong>${t.hero}</strong><br>
-                        <small>Бали: ${t.score.toFixed(3)} | Carry: ${w.carry}, Support: ${w.support}, Univ: ${w.universal}</small>
-                      </div>`;
-            }).join('')
-          : '<p style="opacity:0.6;">(немає універсальних серед топів)</p>'
-      }
-    </div>
-  </div>
-  `;
-}
-
-  async function loadCountersForSelected(selectedHeroes) {
-  for (const heroName of selectedHeroes) {
-    const hero = heroes.find(h => h.name === heroName);
-    if (!hero || hero.BestCounters.length) continue; // пропускаємо якщо вже є
-
-    try {
-      const res = await fetch(`https://api.opendota.com/api/heroes/${hero.id}/matchups`);
-      if (res.ok) {
-        const matchups = await res.json();
-        const sorted = matchups.map(m => ({
-          id: m.hero_id,
-          winrate: m.wins / m.games_played
-        })).sort((a,b) => b.winrate - a.winrate);
-
-        hero.BestCounters = sorted.slice(0,10).map(m => {
-          const h = heroStats.find(x => x.id === m.id);
-          return h ? h.localized_name : m.id;
-        });
-        hero.commonCounters = sorted.slice(-10).map(m => {
-          const h = heroStats.find(x => x.id === m.id);
-          return h ? h.localized_name : m.id;
-        });
-      }
-    } catch(e) {
-      console.error("Matchups error", e);
-    }
+function getWeightsByStage(stage) {
+  switch (stage) {
+    case 1: return { synergy: 0.4, counters: 0.25, winrate: 0.15, pickrate: 0.1, roles: 0.1 };
+    case 2: return { synergy: 0.3, counters: 0.3, winrate: 0.2, pickrate: 0.1, roles: 0.1 };
+    default: return { synergy: 0.2, counters: 0.45, winrate: 0.15, pickrate: 0.05, roles: 0.15 };
   }
 }
-  
 
-
-  function calculateCounters(enemyHeroes) {
-  const keyRoles = ['Carry', 'Support', 'Disabler', 'Initiator'];
-  const stageNow = Math.min(stage, 3);
-  const weights = getWeightsByStage(stageNow);
-  const stageRoleMultiplier = stageNow === 1 ? 1.2 : stageNow === 2 ? 1.1 : 1.0;
-
-  let counterScores = [];
-
-  heroes.forEach(hero => {
-    if (allMyHeroes.includes(hero.name) || allEnemyHeroes.includes(hero.name)) return;
-
-    let score = 0;
-    enemyHeroes.forEach(enemy => {
-      const eHero = heroes.find(h => h.name === enemy);
-      if (!eHero) return;
-
-      if (hero.BestCounters?.includes(enemy)) score += 2.0;
-      if (hero.commonCounters?.includes(enemy)) score += 1.0;
-    });
-
-    // Більший вплив на ключові ролі
-    if (hero.roles.some(r=>keyRoles.includes(r))) score *= stageRoleMultiplier;
-
-    counterScores.push({ hero: hero.name, score: Number(score.toFixed(4)) });
-  });
-
-  // сортуємо за балами
-  counterScores.sort((a,b)=>b.score - a.score);
-
-  // категоризуємо по ролях
-  const categorized = counterScores.map(t => {
-    const hero = heroes.find(h => h.name === t.hero);
-    const category = hero ? getHeroMainCategory(hero) : 'universal';
-    return { ...t, category };
-  });
-
-  return {
-    carry: categorized.filter(h => h.category === 'carry').slice(0,5),
-    support: categorized.filter(h => h.category === 'support').slice(0,5),
-    universal: categorized.filter(h => h.category === 'universal').slice(0,5)
-  };
-}
-function getSelectedHeroes(selector) {
-  return Array.from(document.querySelectorAll(selector + ' select'))
-    .map(s => s.value)
-    .filter(v => v !== '');
-}
-// ====================== ЕТАПИ ======================
+// ====================== КОНТРОЛЬ СТАДІЇ ======================
 async function nextStage() {
   const mySelected = getSelectedHeroes('#myTeam');
   const enemySelected = getSelectedHeroes('#enemyTeam');
@@ -823,7 +472,7 @@ async function nextStage() {
     stage++;
     updateStageTitle();
     updateTeamDisplays(false);
-    createSelectors([], []);
+    createSelectors();
     calculateBestPicks();
     showBehaviorInfo();
   } else {
@@ -831,100 +480,35 @@ async function nextStage() {
   }
 }
 
+// ====================== ЗАВАНТАЖЕННЯ КОНТРПІКІВ ======================
+async function loadCountersForSelected(selectedHeroes) {
+  for (const heroName of selectedHeroes) {
+    const hero = heroes.find(h => h.name === heroName);
+    if (!hero || hero.BestCounters.length) continue;
 
+    try {
+      const res = await fetch(`https://api.opendota.com/api/heroes/${hero.id}/matchups`);
+      if (res.ok) {
+        const matchups = await res.json();
+        const sorted = matchups.map(m => ({ id: m.hero_id, winrate: m.wins / m.games_played })).sort((a,b)=>b.winrate-a.winrate);
 
-
-// ====================== ФІНАЛ ======================
-// ====================== ФІНАЛ ======================
-function showFinalChance() {
-    const myTeam = allMyHeroes;
-    const enemyTeam = allEnemyHeroes;
-
-    let myScore = 0, enemyScore = 0;
-
-    heroes.forEach(h => {
-        if (myTeam.includes(h.name)) {
-            enemyTeam.forEach(e => {
-                if (h.BestCounters?.includes(e)) myScore += 2;
-                if (h.commonCounters?.includes(e)) myScore += 1;
-            });
-            myScore += h.winrate; // додаємо winrate
-        }
-        if (enemyTeam.includes(h.name)) {
-            myTeam.forEach(m => {
-                if (h.BestCounters?.includes(m)) enemyScore += 2;
-                if (h.commonCounters?.includes(m)) enemyScore += 1;
-            });
-            enemyScore += h.winrate;
-        }
-    });
-
-    // синергія команд
-    myScore *= getTeamHarmony(myTeam);
-    enemyScore *= getTeamHarmony(enemyTeam);
-
-    let myChance = (myScore + enemyScore > 0) ? (myScore / (myScore + enemyScore)) * 100 : 50;
-
-    // поведінкові фактори
-    if (document.getElementById('behaviorMode').checked){
-        const stability = getPlayerStability();
-        const influence = getRandomPlayerInfluence();
-        myChance *= stability * (1 + influence);
-        myChance = Math.max(5, Math.min(95, myChance));
-    }
-
-    // відображення
-    document.getElementById('summaryMyTeam').innerHTML = myTeam.map(h=>`<li>🟩 ${h}</li>`).join('');
-    document.getElementById('summaryEnemyTeam').innerHTML = enemyTeam.map(h=>`<li>🟥 ${h}</li>`).join('');
-    document.getElementById('summaryChance').textContent = `Шанс на перемогу: ${myChance.toFixed(0)}%`;
-    document.getElementById('summaryBar').style.width = `${myChance}%`;
-    document.getElementById('draftSummary').style.display = 'block';
-    document.getElementById('results').style.display = 'none';
-  // показуємо фінальний результат
-document.getElementById('draftSummary').style.display = 'block';
-
-// ховаємо селектори та заголовок стадії
-document.getElementById('selectorsContainer').style.display = 'none';
-document.getElementById('stageTitle').style.display = 'none';
-document.getElementById('results').style.display = 'none';
-document.getElementById('teamsDisplay').style.display = 'none';
-document.getElementById('controls').style.display = 'none';
-  // текст
-document.getElementById('summaryChance').textContent = `Шанс на перемогу: ${myChance.toFixed(0)}%`;
-
-// шкала
-const bar = document.getElementById("summaryBar");
-bar.style.width = `${myChance}%`;
-
-if (myChance <= 45) {
-  bar.style.background = "#f44336"; // червоний
-} else if (myChance < 55) {
-  bar.style.background = "#ffeb3b"; // жовтий
-} else {
-  bar.style.background = "#4caf50"; // зелений
+        hero.BestCounters = sorted.slice(0,10).map(m => {
+          const h = heroStats.find(x => x.id === m.id);
+          return h ? h.localized_name : m.id;
+        });
+        hero.commonCounters = sorted.slice(-10).map(m => {
+          const h = heroStats.find(x => x.id === m.id);
+          return h ? h.localized_name : m.id;
+        });
+      }
+    } catch(e) { console.error("Matchups error", e); }
+  }
 }
 
-// показуємо блок
-document.getElementById('draftSummary').style.display = 'block';
-document.getElementById('results').style.display = 'none';
- 
-
-
-
-
-
-
-    updateTeamDisplays(false); // залишаємо останні вибрані герої в списках
-}
- document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('nextBtn').onclick = nextStage;
-  createSelectors();
-  updateTeamDisplays();
-  updateStageTitle(); // відразу показуємо заголовок
+// ====================== DOMContentLoaded ======================
+document.addEventListener('DOMContentLoaded', () => {
+  fetchHeroes();
 });
-
-
-
 
 </script>
 </body>
