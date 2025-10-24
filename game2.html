@@ -268,48 +268,67 @@ button:hover {
 // 🔥 ВШИТИЙ heroes.json
 // =========================
 let stage = 1;
-let heroes = [];
 let allMyHeroes = [];
 let allEnemyHeroes = [];
 const stageLimits = [ { my: 2, enemy: 2 }, { my: 2, enemy: 2 }, { my: 1, enemy: 1 } ];
 const roleWeights = { Carry: 1.0, Disabler: 0.9, Durable: 0.8, Initiator: 0.9, Escape: 0.6, Nuker: 0.7, Pusher: 0.8, Support: 0.9, Ranged: 0.5, Melee: 0.5 };
+let heroes = []; // тут будуть об’єкти з name, roles, BestCounters, commonCounters
 
-
-// ====================== Завантаження героїв з OpenDota ======================
-async function fetchHeroesFromOpenDota(accountId) {
+// Статистика OpenDota
+async function fetchOpenDotaStats(accountId) {
   try {
     const res = await fetch(`https://api.opendota.com/api/players/${accountId}/heroes`);
-    const data = await res.json();
+    const data = await res.json(); // масив об'єктів {hero_id, last_played, games, win, ...}
 
-    heroes = data.map(h => ({
-      id: h.hero_id,
-      name: h.localized_name || h.name || `Hero ${h.hero_id}`,
-      winrate: h.win ? h.win / (h.win + h.lose) : 0.5,
-      pickrate: (h.games || 0)/100,
-      roles: h.roles || [], 
-      BestCounters: h.BestCounters || [],
-      commonCounters: h.commonCounters || []
-    }));
+    // Поєднуємо з локальною базою
+    heroes.forEach(hero => {
+      const stat = data.find(d => d.hero_id === hero.id); // припускаємо, що у heroes.json є "id": number
+      if (stat) {
+        hero.games = stat.games;
+        hero.winrate = stat.win / stat.games || 0;
+        hero.pickrate = stat.games / 100 || 0; // нормалізуємо відносно 100 ігор
+      } else {
+        hero.games = 0;
+        hero.winrate = 0.5;
+        hero.pickrate = 0;
+      }
+      hero.score = (hero.winrate * 0.7 + hero.pickrate * 0.3);
+    });
 
-    heroes.forEach(h => h.score = h.winrate*0.7 + h.pickrate*0.3);
-
-    // Після завантаження ініціалізація
-    createSelectors([], []);
-    updateTeamDisplays();
-    calculateBestPicks();
-    showBehaviorInfo();
-  } catch(err) {
-    console.error("Помилка завантаження героїв з OpenDota:", err);
-    alert("Не вдалося завантажити героїв з OpenDota.");
+  } catch (err) {
+    console.error("Помилка завантаження статистики OpenDota:", err);
   }
 }
 
-// ====================== DOMContentLoaded ======================
+// ====================== ІНІЦІАЛІЗАЦІЯ ======================
+async function initDraft(accountId) {
+  // 1️⃣ Завантажуємо локальних героїв
+  try {
+    const res = await fetch('heroes.json');
+    heroes = await res.json();
+  } catch(e) {
+    console.error("Помилка завантаження heroes.json:", e);
+    return;
+  }
+
+  // 2️⃣ Завантажуємо статистику OpenDota
+  await fetchOpenDotaStats(accountId);
+
+  // 3️⃣ Ініціалізуємо селектори та відображення
+  stage = 1;
+  allMyHeroes = [];
+  allEnemyHeroes = [];
+  createSelectors();
+  updateTeamDisplays();
+  calculateBestPicks();
+  showBehaviorInfo();
+}
+
+// ====================== ПРИКЛАД ЗАПУСКУ ======================
 document.addEventListener('DOMContentLoaded', () => {
   const accountId = 863386335; // твій OpenDota accountId
-  fetchHeroesFromOpenDota(accountId);
+  initDraft(accountId);
 });
-
 
 
 
