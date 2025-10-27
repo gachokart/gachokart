@@ -269,6 +269,7 @@ function analyzePatterns(matches, summary, heroesConst, cfg = PATTERN_CONFIG) {
   const seqPatterns = analyzeSequences(summary.seq, cfg.maxSeq);
   const { shortWinrate, longWinrate } = analyzeDurations(matches, cfg.shortGameMax, cfg.longGameMin);
   const top3 = analyzeTopHeroes(summary, heroesConst, cfg.minHeroGames);
+  const phases = analyzePhases(matches);
 
   return {
     dayRates: days,
@@ -276,6 +277,7 @@ function analyzePatterns(matches, summary, heroesConst, cfg = PATTERN_CONFIG) {
     seqPatterns,
     shortWinrate,
     longWinrate,
+    phases,
     top3,
     meta: {
       totalMatches: matches.length,
@@ -346,6 +348,29 @@ function analyzeDurations(matches, shortMax, longMin) {
     longWinrate: winrate(longGames.filter(playerWon).length, longGames.length)
   };
 }
+    function analyzePhases(matches) {
+  const phases = [
+    { name: 'Фаза 1 (<27 хв)', min: 0, max: 1620, games: 0, wins: 0 },
+    { name: 'Фаза 2 (27–37 хв)', min: 1620, max: 2220, games: 0, wins: 0 },
+    { name: 'Фаза 3 (37–47 хв)', min: 2220, max: 2820, games: 0, wins: 0 },
+    { name: 'Фаза 4 (47–60 хв)', min: 2820, max: 3600, games: 0, wins: 0 },
+    { name: 'Фаза 5 (60+ хв)', min: 3600, max: Infinity, games: 0, wins: 0 }
+  ];
+
+  for (const m of matches) {
+    const dur = m.duration || 0;
+    const won = playerWon(m);
+    const phase = phases.find(p => dur >= p.min && dur < p.max);
+    if (phase) {
+      phase.games++;
+      if (won) phase.wins++;
+    }
+  }
+
+  // додаємо winrate %
+  phases.forEach(p => p.winrate = winrate(p.wins, p.games));
+  return phases;
+}
 
 // ---- 4. Топ герої ----
 function analyzeTopHeroes(summary, heroesConst, minGames) {
@@ -398,6 +423,15 @@ function analyzeTopHeroes(summary, heroesConst, minGames) {
       durRoot.appendChild(Object.assign(document.createElement('div'),{className:'reason',textContent:`Короткі ігри (<25хв) winrate: ${patterns.shortWinrate?patterns.shortWinrate.toFixed(1):0}%` }));
       durRoot.appendChild(Object.assign(document.createElement('div'),{className:'reason',textContent:`Довгі ігри (>45хв) winrate: ${patterns.longWinrate?patterns.longWinrate.toFixed(1):0}%` }));
       pt.appendChild(durRoot);
+      const phaseRoot=document.createElement('div');
+      phaseRoot.innerHTML='<strong>Фази закінчення ігор</strong>';
+      patterns.phases.forEach(p=>{
+        const div=document.createElement('div');
+        div.className='reason';
+        div.textContent = `${p.name}: ${p.games} ігор · Winrate: ${p.winrate ? p.winrate.toFixed(1) : 0}%`;
+        phaseRoot.appendChild(div);
+      });
+      pt.appendChild(phaseRoot);                                  
       // top heroes
       const topRoot=document.getElementById('topHeroes'); topRoot.innerHTML=''; if(patterns.top3.length===0){ topRoot.innerHTML='<div class="small">Недостатньо ігор на героях (min 2)</div>'; } else { patterns.top3.forEach(h=>{ const el=document.createElement('div'); el.className='hero-item'; const img=document.createElement('img'); img.src = h.img || ''; img.alt=h.name; const info=document.createElement('div'); info.innerHTML=`<div style="font-weight:600">${h.name}</div><div class="small">Winrate: ${h.winrate.toFixed(1)}% · Ігор: ${h.games}</div>`; el.appendChild(img); el.appendChild(info); topRoot.appendChild(el); }); }
     }
