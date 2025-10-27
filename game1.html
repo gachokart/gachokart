@@ -541,6 +541,42 @@ function renderPatternsUI(patterns, heroesConst){
     // ---- Події кнопок
     let lastMatches=null, lastSummary=null, lastHeroesConst=null;
     document.getElementById('demoBtn').addEventListener('click', ()=>{ document.getElementById('idInput').value='863386335'; });
+// ---- Рендер прогнозу
+function renderPredictionUI(summary, result){
+  const p = document.getElementById('predictionArea');
+  p.className = 'prediction ' + (result.winProb > 60 ? 'pred-good' : result.winProb < 40 ? 'pred-bad' : 'pred-neutral');
+  p.innerHTML = `<strong>Ймовірність перемоги: ${result.winProb}%</strong>
+                 <div class="small">Прогнозована довжина: ${Math.round(result.predictedLength/60)} хв</div>`;
+
+  const det = document.getElementById('predictionDetails');
+  det.innerHTML = `<div class="reason">
+                     <strong>Шанси</strong>
+                     <div class="small">
+                       Бустер (мої): ${result.boosterMy}% · Руінер (мої): ${result.ruinerMy}%<br>
+                       Бустер (ворог): ${result.boosterEnemy}% · Руінер (ворог): ${result.ruinerEnemy}%
+                     </div>
+                   </div>`;
+}
+
+// ---- Побудова графіків Chart.js
+let chartDays = null, chartHours = null;
+function buildCharts(dayRates, hourRates){
+  const ctxD = document.getElementById('chartDays').getContext('2d');
+  if(chartDays) chartDays.destroy();
+  chartDays = new Chart(ctxD, {
+    type:'bar',
+    data:{ labels: dayRates.map(d=>['Нд','Пн','Вт','Ср','Чт','Пт','Сб'][d.day]), datasets:[{label:'Winrate %', data:dayRates.map(d=>+d.winrate.toFixed(1))}] },
+    options:{ scales:{ y:{ beginAtZero:true, max:100 } } }
+  });
+
+  const ctxH = document.getElementById('chartHours').getContext('2d');
+  if(chartHours) chartHours.destroy();
+  chartHours = new Chart(ctxH, {
+    type:'line',
+    data:{ labels: hourRates.map(h=>h.hour), datasets:[{label:'Winrate %', data:hourRates.map(h=>+h.winrate.toFixed(1)), fill:true, tension:0.3}] },
+    options:{ scales:{ y:{ beginAtZero:true, max:100 } } }
+  });
+}
 
   document.getElementById('fetchBtn').addEventListener('click', async ()=> {
   const raw = document.getElementById('idInput').value.trim();
@@ -560,8 +596,8 @@ function renderPatternsUI(patterns, heroesConst){
     const heroesList = await fetchHeroesWithCache();
 
     // 🔹 Формуємо об’єкт для зручного доступу по id
-    const heroesConst = {};
-    heroesList.forEach(h => heroesConst[h.id] = h);
+   const heroName = heroesConst[hid] ? heroesConst[hid].name : `Hero ${hid}`;
+
 
     lastMatches = matches;
     lastSummary = analyzeMatches(matches);
