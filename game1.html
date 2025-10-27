@@ -105,6 +105,33 @@
     async function fetchOpenDotaMatches(id,limit){ const url=`https://api.opendota.com/api/players/${id}/matches?limit=${limit}`; const res=await fetch(url); if(!res.ok) throw new Error('OpenDota matches fetch failed: '+res.status); return res.json(); }
     async function fetchHeroesConstants(){ const url='https://api.opendota.com/api/constants/heroes'; const res=await fetch(url); if(!res.ok) throw new Error('OpenDota heroes fetch failed'); return res.json(); }
 
+    const HERO_CACHE_KEY = 'heroesCache';
+const CACHE_EXPIRY_MS = 24*60*60*1000; // 1 день
+
+async function fetchHeroesWithCache() {
+  const cached = localStorage.getItem(HERO_CACHE_KEY);
+  if(cached) {
+    const parsed = JSON.parse(cached);
+    if(Date.now() - parsed.timestamp < CACHE_EXPIRY_MS) {
+      console.log('Використовується кеш героїв');
+      return parsed.data;
+    }
+  }
+
+  console.log('Підтягуємо героїв з OpenDota');
+  const heroesConstRaw = await fetchHeroesConstants();
+  const heroList = Object.values(heroesConstRaw).map(h=>({
+    id: h.id,
+    name: h.localized_name,
+    roles: [h.attack_type, ...h.roles],
+    img: h.img ? 'https://api.opendota.com' + h.img : null,
+    winrate: h.pro_win || 0,       // стандартні статистики OpenDota
+    pickrate: h.pro_pick || 0
+  }));
+
+  localStorage.setItem(HERO_CACHE_KEY, JSON.stringify({timestamp:Date.now(), data:heroList}));
+  return heroList;
+}
     // ---- Аналіз
     function analyzeMatches(matches){
       const out={games:matches.length,wins:0,k:0,d:0,a:0,dur:0,shortWins:0,shortLosses:0,longWins:0,longLosses:0,leaves:0,byHero:{},seq:[]};
@@ -265,7 +292,8 @@ const winrate = (wins, games) => games ? wins / games * 100 : 0;
 
     // ---- Аналіз найкращих героїв ----
 function analyzeTopHeroes(summary, heroesConst, minGames = 3) {
-  const heroStats = [];
+  const hero = heroesConst.find(h => h.id == id); // hero.img буде доступне для відображення
+
 
   for (const id in summary.heroes) {
     const data = summary.heroes[id];
@@ -420,7 +448,15 @@ function analyzeDurations(matches, shortMax, longMin) {
 
 
     // ---- Рендер UI
-    function renderMatches(matches, heroesConst){ const tbody=document.querySelector('#matchesTable tbody'); tbody.innerHTML=''; matches.forEach(m=>{ const tr=document.createElement('tr'); const d=new Date((m.start_time||0)*1000); const hid=m.hero_id||0; const heroName = heroesConst && heroesConst[hid] ? heroesConst[hid].localized_name : hid; tr.innerHTML=`<td>${d.toLocaleString()}</td><td>${heroName}</td><td>${m.kills||0}/${m.deaths||0}/${m.assists||0}</td><td>${playerWon(m)?'W':'L'}</td><td>${secsToMinSecs(m.duration||0)}</td>`; tbody.appendChild(tr); }); }
+    function renderMatches(matches, heroesConst){
+      const heroesList = await fetchHeroesWithCache();
+      const tbody=document.querySelector('#matchesTable tbody'); 
+      tbody.innerHTML=''; matches.forEach(m=>{ const tr=document.createElement('tr'); 
+      const d=new Date((m.start_time||0)*1000); 
+      const hid=m.hero_id||0; 
+      const heroName = heroesConst && heroesConst[hid] ? heroesConst[hid].localized_name : hid; 
+                                                                                         tr.innerHTML=`<td>${d.toLocaleString()}</td><td>${heroName}</td><td>${m.kills||0}/${m.deaths||0}/${m.assists||0}</td><td>${playerWon(m)?'W':'L'}</td><td>${secsToMinSecs(m.duration||0)}</td>`;
+                                                                                         tbody.appendChild(tr); }); }
 
     function renderPredictionUI(summary, result){ document.getElementById('statsSummary').innerText = `Ігор: ${summary.games} · Winrate: ${summary.winrate.toFixed(1)}% · Avg K/D/A: ${summary.avgK.toFixed(2)}/${summary.avgD.toFixed(2)}/${summary.avgA.toFixed(2)} · Avg KDA: ${summary.avgKDA.toFixed(2)} · Avg тривалість: ${Math.round(summary.avgDuration/60)} хв`;
       const p=document.getElementById('predictionArea'); p.className='prediction '+(result.winProb>60?'pred-good':result.winProb<40?'pred-bad':'pred-neutral'); p.innerHTML=`<strong>Ймовірність перемоги: ${result.winProb}%</strong><div class="small">Прогнозована довжина: ${Math.round(result.predictedLength/60)} хв</div>`;
@@ -479,7 +515,19 @@ patterns.phases.forEach(p => {
 pt.appendChild(phaseRoot);
                                  
       // top heroes
-      const topRoot=document.getElementById('topHeroes'); topRoot.innerHTML=''; if(patterns.top3.length===0){ topRoot.innerHTML='<div class="small">Недостатньо ігор на героях (min 2)</div>'; } else { patterns.top3.forEach(h=>{ const el=document.createElement('div'); el.className='hero-item'; const img=document.createElement('img'); img.src = h.img || ''; img.alt=h.name; const info=document.createElement('div'); info.innerHTML=`<div style="font-weight:600">${h.name}</div><div class="small">Winrate: ${h.winrate.toFixed(1)}% · Ігор: ${h.games}</div>`; el.appendChild(img); el.appendChild(info); topRoot.appendChild(el); }); }
+      const topRoot=document.getElementById('topHeroes');
+                                        topRoot.innerHTML='';
+                                        if(patterns.top3.length===0){ 
+                                          topRoot.innerHTML='<div class="small">Недостатньо ігор на героях (min 2)</div>'; } 
+                                        else { patterns.top3.forEach(h=>{ 
+                                          const heroData = heroesList.find(x=>x.id==h.id);
+                                          const el=document.createElement('div');
+                                                                         el.className='hero-item';
+                                                                         const img=document.createElement('img'); img.src = h.img || '';
+                                                                         img.alt=h.name;
+                                                                         const info=document.createElement('div');
+                                                                         info.innerHTML=`<div style="font-weight:600">${h.name}</div><div class="small">Winrate: ${h.winrate.toFixed(1)}% · Ігор: ${h.games}</div>`;
+                                                                         el.appendChild(img); el.appendChild(info); topRoot.appendChild(el); }); }
     }
 
     // ---- Пошук закономірностей за днями/годинами та рендер
