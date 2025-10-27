@@ -446,80 +446,93 @@ function analyzeDurations(matches, shortMax, longMin) {
 
 
     // ---- Рендер UI
-    function renderMatches(matches, heroesConst){
-  const tbody = document.querySelector('#matchesTable tbody'); 
-  tbody.innerHTML = '';
-
-  matches.forEach(m => { 
-    const tr = document.createElement('tr'); 
-    const d = new Date((m.start_time||0)*1000); 
-    const hid = m.hero_id||0; 
-    const heroName = heroesConst && heroesConst[hid] ? heroesConst[hid].name : `Hero ${hid}`; 
-
-    tr.innerHTML = `
+   // ---- Рендер матчів
+async function renderMatches(matches, heroesConst){
+  const tbody=document.querySelector('#matchesTable tbody'); 
+  tbody.innerHTML='';
+  matches.forEach(m=>{
+    const tr=document.createElement('tr'); 
+    const d=new Date((m.start_time||0)*1000); 
+    const hid=m.hero_id||0; 
+    const heroName = heroesConst[hid] ? heroesConst[hid].localized_name : `Hero ${hid}`; 
+    const heroImg = heroesConst[hid] && heroesConst[hid].img ? heroesConst[hid].img : '';
+    tr.innerHTML=`
       <td>${d.toLocaleString()}</td>
-      <td>${heroName}</td>
+      <td><img src="${heroImg}" alt="${heroName}" style="width:28px;height:16px;object-fit:cover;border-radius:3px;margin-right:4px;vertical-align:middle">${heroName}</td>
       <td>${m.kills||0}/${m.deaths||0}/${m.assists||0}</td>
       <td>${playerWon(m)?'W':'L'}</td>
       <td>${secsToMinSecs(m.duration||0)}</td>
     `;
-    tbody.appendChild(tr); 
-  }); 
+    tbody.appendChild(tr);
+  });
 }
 
-
-    function renderPredictionUI(summary, result){ document.getElementById('statsSummary').innerText = `Ігор: ${summary.games} · Winrate: ${summary.winrate.toFixed(1)}% · Avg K/D/A: ${summary.avgK.toFixed(2)}/${summary.avgD.toFixed(2)}/${summary.avgA.toFixed(2)} · Avg KDA: ${summary.avgKDA.toFixed(2)} · Avg тривалість: ${Math.round(summary.avgDuration/60)} хв`;
-      const p=document.getElementById('predictionArea'); p.className='prediction '+(result.winProb>60?'pred-good':result.winProb<40?'pred-bad':'pred-neutral'); p.innerHTML=`<strong>Ймовірність перемоги: ${result.winProb}%</strong><div class="small">Прогнозована довжина: ${Math.round(result.predictedLength/60)} хв</div>`;
-      const det=document.getElementById('predictionDetails'); det.innerHTML=`<div class="reason"><strong>Шанси</strong><div class="small">Бустер (мої): ${result.boosterMy}% · Руінер (мої): ${result.ruinerMy}%<br>Бустер (ворог): ${result.boosterEnemy}% · Руінер (ворог): ${result.ruinerEnemy}%</div></div>`;
-      if (patterns.bestPhase) {
-  const bp = patterns.bestPhase;
-  resultMessage += `\n\n🕒 Найкраща фаза для завершення гри: ${bp.name}.
-  У ній комбінований індекс успішності — ${bp.score.toFixed(1)}.
-  (Winrate: ${bp.winrate.toFixed(1)}%, динаміка останніх ігор: ${(bp.recentScore*5).toFixed(1)}%)`;
-}
-                                           
-    }
-
-    // ---- Побудова графіків через Chart.js
-    let chartDays=null, chartHours=null;
-    function buildCharts(dayRates, hourRates){ const daysLabels=['Нд','Пн','Вт','Ср','Чт','Пт','Сб']; const dayData = dayRates.map(d=>+d.winrate.toFixed(1)); const hourLabels = hourRates.map(h=>h.hour); const hourData = hourRates.map(h=>+h.winrate.toFixed(1));
-      const ctxD = document.getElementById('chartDays').getContext('2d'); if(chartDays) chartDays.destroy(); chartDays = new Chart(ctxD,{type:'bar',data:{labels:daysLabels, datasets:[{label:'Winrate %', data:dayData}]}, options:{scales:{y:{beginAtZero:true, max:100}}}});
-      const ctxH = document.getElementById('chartHours').getContext('2d'); if(chartHours) chartHours.destroy(); chartHours = new Chart(ctxH,{type:'line',data:{labels:hourLabels, datasets:[{label:'Winrate %', data:hourData, fill:true, tension:0.3}]}, options:{scales:{y:{beginAtZero:true, max:100}}}});
-    }
-
-   function renderPatternsUI(patterns, heroesConst){
-  document.getElementById('patterns').style.display='block';
-  const pt=document.getElementById('patternText'); pt.innerHTML='';
+// ---- Рендер патернів і топ-героїв
+function renderPatternsUI(patterns, heroesConst){
+  document.getElementById('patterns').style.display='block'; 
+  const pt=document.getElementById('patternText'); 
+  pt.innerHTML='';
 
   // sequence patterns
-  const seqRoot=document.createElement('div'); seqRoot.innerHTML='<strong>Послідовності W/L</strong>';
+  const seqRoot=document.createElement('div'); 
+  seqRoot.innerHTML='<strong>Послідовності W/L</strong>';
   patterns.seqPatterns.forEach(p=>{
-    const div=document.createElement('div'); div.className='reason';
-    div.textContent = `Після ${p.n} поразок поспіль (${p.total} випадків) наступна гра була перемогою у ${p.prob}% випадків.`;
-    seqRoot.appendChild(div);
+    const div=document.createElement('div'); 
+    div.className='reason'; 
+    div.textContent = `Після ${p.n} поразок поспіль (${p.total} випадків) наступна гра була перемогою у ${p.prob}% випадків.`; 
+    seqRoot.appendChild(div); 
   });
   pt.appendChild(seqRoot);
 
-  // top heroes
+  // фази
+  const phaseRoot = document.createElement('div');
+  phaseRoot.innerHTML = '<strong>Фази закінчення ігор</strong>';
+  const bestScore = Math.max(...patterns.phases.map(p => p.score || 0));
+  patterns.phases.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'reason';
+    const trendPercent = (p.recentScore * 5).toFixed(1);
+    div.innerHTML = `
+      <span>${p.name}</span><br>
+      <small>
+        ${p.games} ігор · Winrate: ${p.winrate ? p.winrate.toFixed(1) : 0}% · 
+        Динаміка: ${trendPercent}% · 
+        Індекс: ${p.score ? p.score.toFixed(1) : 0}
+      </small>
+    `;
+    if (p.score === bestScore) {
+      div.style.background = 'rgba(0, 255, 0, 0.15)';
+      div.style.border = '1px solid rgba(0, 255, 0, 0.4)';
+      div.style.borderRadius = '6px';
+    } else {
+      div.style.opacity = 0.8;
+    }
+    phaseRoot.appendChild(div);
+  });
+  pt.appendChild(phaseRoot);
+
+  // топ-3 герої
   const topRoot=document.getElementById('topHeroes');
   topRoot.innerHTML='';
   if(patterns.top3.length===0){ 
     topRoot.innerHTML='<div class="small">Недостатньо ігор на героях (min 2)</div>'; 
   } else { 
     patterns.top3.forEach(h=>{ 
-      const heroData = heroesConst[h.id]; // <-- тепер беремо з об'єкта
+      const heroData = heroesConst[h.id] || {}; // якщо героя нема — пустий об'єкт
       const el=document.createElement('div');
       el.className='hero-item';
       const img=document.createElement('img'); 
-      img.src = heroData?.img || '';
+      img.src = heroData.img || '';
       img.alt = h.name;
       const info=document.createElement('div');
       info.innerHTML=`<div style="font-weight:600">${h.name}</div><div class="small">Winrate: ${h.winrate.toFixed(1)}% · Ігор: ${h.games}</div>`;
-      el.appendChild(img); el.appendChild(info); 
+      el.appendChild(img); 
+      el.appendChild(info); 
       topRoot.appendChild(el); 
     });
   }
 }
+
 
 
     // ---- Пошук закономірностей за днями/годинами та рендер
