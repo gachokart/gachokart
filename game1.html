@@ -536,7 +536,12 @@ function renderPatternsUI(patterns, heroesConst){
 
 
     // ---- Пошук закономірностей за днями/годинами та рендер
-    async function showPatterns(matches, summary, heroesConst){ const analysis = analyzePatterns(matches, summary, heroesConst); buildCharts(analysis.dayRates, analysis.hourRates); renderPatternsUI(analysis); }
+    async function showPatterns(matches, summary, heroesConst){
+  const analysis = analyzePatterns(matches, summary, heroesConst);
+  buildCharts(analysis.dayRates, analysis.hourRates);
+  renderPatternsUI(analysis, heroesConst); // тепер heroesConst визначений
+}
+
 
     // ---- Події кнопок
     let lastMatches=null, lastSummary=null, lastHeroesConst=null;
