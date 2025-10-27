@@ -449,14 +449,26 @@ function analyzeDurations(matches, shortMax, longMin) {
 
     // ---- Рендер UI
     function renderMatches(matches, heroesConst){
-      const heroesList = await fetchHeroesWithCache();
-      const tbody=document.querySelector('#matchesTable tbody'); 
-      tbody.innerHTML=''; matches.forEach(m=>{ const tr=document.createElement('tr'); 
-      const d=new Date((m.start_time||0)*1000); 
-      const hid=m.hero_id||0; 
-      const heroName = heroesConst && heroesConst[hid] ? heroesConst[hid].localized_name : hid; 
-                                                                                         tr.innerHTML=`<td>${d.toLocaleString()}</td><td>${heroName}</td><td>${m.kills||0}/${m.deaths||0}/${m.assists||0}</td><td>${playerWon(m)?'W':'L'}</td><td>${secsToMinSecs(m.duration||0)}</td>`;
-                                                                                         tbody.appendChild(tr); }); }
+  const tbody = document.querySelector('#matchesTable tbody'); 
+  tbody.innerHTML = '';
+
+  matches.forEach(m => { 
+    const tr = document.createElement('tr'); 
+    const d = new Date((m.start_time||0)*1000); 
+    const hid = m.hero_id||0; 
+    const heroName = heroesConst && heroesConst[hid] ? heroesConst[hid].name : `Hero ${hid}`; 
+
+    tr.innerHTML = `
+      <td>${d.toLocaleString()}</td>
+      <td>${heroName}</td>
+      <td>${m.kills||0}/${m.deaths||0}/${m.assists||0}</td>
+      <td>${playerWon(m)?'W':'L'}</td>
+      <td>${secsToMinSecs(m.duration||0)}</td>
+    `;
+    tbody.appendChild(tr); 
+  }); 
+}
+
 
     function renderPredictionUI(summary, result){ document.getElementById('statsSummary').innerText = `Ігор: ${summary.games} · Winrate: ${summary.winrate.toFixed(1)}% · Avg K/D/A: ${summary.avgK.toFixed(2)}/${summary.avgD.toFixed(2)}/${summary.avgA.toFixed(2)} · Avg KDA: ${summary.avgKDA.toFixed(2)} · Avg тривалість: ${Math.round(summary.avgDuration/60)} хв`;
       const p=document.getElementById('predictionArea'); p.className='prediction '+(result.winProb>60?'pred-good':result.winProb<40?'pred-bad':'pred-neutral'); p.innerHTML=`<strong>Ймовірність перемоги: ${result.winProb}%</strong><div class="small">Прогнозована довжина: ${Math.round(result.predictedLength/60)} хв</div>`;
