@@ -155,6 +155,28 @@
     return out;
   }
 
+  function analyzePhases(matches){
+  const phases = [
+    {name:'0-27 хв', min:0, max:1620, games:0, wins:0, recentScore:0},
+    {name:'27-37 хв', min:1620, max:2220, games:0, wins:0, recentScore:0},
+    {name:'37-60 хв', min:2220, max:3600, games:0, wins:0, recentScore:0}
+  ];
+  for(let i=0;i<matches.length;i++){
+    const m = matches[i];
+    const dur = m.duration||0;
+    const won = playerWon(m);
+    const phase = phases.find(p=>dur>=p.min && dur< p.max);
+    if(phase){
+      phase.games++;
+      if(won) phase.wins++;
+      // Додатково: динаміка останніх матчів
+      phase.recentScore += won?1:-1;
+    }
+  }
+  phases.forEach(p=>p.winrate=p.games?p.wins/p.games*100:0);
+  return phases;
+}
+
   // ==== Прогноз (спрощений)
   const defaultWeights = { winrate:0.9, kda:6, shortGamePenalty:-3, shortLossPenalty:-4, leaveRatePenalty:v=>-Math.min(10,Math.round(v)) };
   function computeDetailedProbabilities(summary,w=defaultWeights){
@@ -256,7 +278,7 @@ function renderPhaseStats(summary, predictedLength){
     <tbody></tbody>
   `;
   const tbody = table.querySelector('tbody');
-  const phases = analyzePhases(lastMatches); // актуальні матчі
+  const phases = analyzePhases(lastMatches); 
   phases.forEach(p => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -268,6 +290,15 @@ function renderPhaseStats(summary, predictedLength){
     tbody.appendChild(tr);
   });
   container.appendChild(table);
+
+  const predDiv = document.createElement('div');
+  predDiv.style.marginTop='8px';
+  predDiv.innerHTML = `<strong>Прогнозована тривалість наступної гри:</strong> ${secsToMinSecs(predictedLength)}`;
+  container.appendChild(predDiv);
+
+  document.getElementById('predictionDetails').appendChild(container);
+}
+
 
   // Прогноз тривалості гри
   const predDiv = document.createElement('div');
@@ -304,13 +335,10 @@ document.getElementById('fetchBtn').addEventListener('click', async ()=> {
 
     // ---- Ось сюди вставляємо блок ----
     const pred = computeDetailedProbabilities(lastSummary);
-    renderMatches(matches, heroesConst);
-    renderPredictionUI(lastSummary, pred);
-
-    // Очищаємо попередню статистику
-    document.getElementById('predictionDetails').innerHTML='';
-    // Вставляємо фазову статистику і прогноз часу гри
-    renderPhaseStats(lastSummary, pred.predictedLength);
+renderMatches(lastMatches,lastHeroesConst);
+renderPredictionUI(lastSummary,pred);
+document.getElementById('predictionDetails').innerHTML='';
+renderPhaseStats(lastSummary,predictedLength=lastSummary.avgDuration);
 
     // ховаємо патерни поки не натиснули кнопку
     document.getElementById('patterns').style.display = 'none';
