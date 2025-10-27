@@ -270,6 +270,10 @@ function analyzePatterns(matches, summary, heroesConst, cfg = PATTERN_CONFIG) {
   const { shortWinrate, longWinrate } = analyzeDurations(matches, cfg.shortGameMax, cfg.longGameMin);
   const top3 = analyzeTopHeroes(summary, heroesConst, cfg.minHeroGames);
   const phases = analyzePhases(matches);
+    const bestPhase = phases
+    .filter(p => p.games >= 5)
+    .sort((a, b) => (b.score || 0) - (a.score || 0))[0] || null;
+
 
   return {
     dayRates: days,
@@ -278,6 +282,7 @@ function analyzePatterns(matches, summary, heroesConst, cfg = PATTERN_CONFIG) {
     shortWinrate,
     longWinrate,
     phases,
+    bestPhase,
     top3,
     meta: {
       totalMatches: matches.length,
@@ -350,13 +355,14 @@ function analyzeDurations(matches, shortMax, longMin) {
 }
     function analyzePhases(matches) {
   const phases = [
-    { name: 'Фаза 1 (<27 хв)', min: 0, max: 1620, games: 0, wins: 0 },
-    { name: 'Фаза 2 (27–37 хв)', min: 1620, max: 2220, games: 0, wins: 0 },
-    { name: 'Фаза 3 (37–47 хв)', min: 2220, max: 2820, games: 0, wins: 0 },
-    { name: 'Фаза 4 (47–60 хв)', min: 2820, max: 3600, games: 0, wins: 0 },
-    { name: 'Фаза 5 (60+ хв)', min: 3600, max: Infinity, games: 0, wins: 0 }
+    { name: 'Фаза 1 (<27 хв)', min: 0, max: 1620, games: 0, wins: 0, recentScore: 0 },
+    { name: 'Фаза 2 (27–37 хв)', min: 1620, max: 2220, games: 0, wins: 0, recentScore: 0 },
+    { name: 'Фаза 3 (37–47 хв)', min: 2220, max: 2820, games: 0, wins: 0, recentScore: 0 },
+    { name: 'Фаза 4 (47–60 хв)', min: 2820, max: 3600, games: 0, wins: 0, recentScore: 0 },
+    { name: 'Фаза 5 (60+ хв)', min: 3600, max: Infinity, games: 0, wins: 0, recentScore: 0 }
   ];
 
+  // 1️⃣ Рахуємо основну статистику
   for (const m of matches) {
     const dur = m.duration || 0;
     const won = playerWon(m);
@@ -367,36 +373,26 @@ function analyzeDurations(matches, shortMax, longMin) {
     }
   }
 
-  // додаємо winrate %
-  phases.forEach(p => p.winrate = winrate(p.wins, p.games));
+  // 2️⃣ Додаємо динаміку (останні 20 ігор з вагами)
+  const recentMatches = matches.slice(0, 20).reverse(); // найновіші знизу
+  recentMatches.forEach((m, i) => {
+    const dur = m.duration || 0;
+    const won = playerWon(m);
+    const weight = (i + 1) / 20; // 0.05...1.0
+    const phase = phases.find(p => dur >= p.min && dur < p.max);
+    if (phase) phase.recentScore += (won ? 1 : -1) * weight;
+  });
+
+  // 3️⃣ Обчислюємо зважений індекс
+  phases.forEach(p => {
+    p.winrate = winrate(p.wins, p.games);
+    const trend = (p.recentScore / 10) * 100; // перетворюємо в %
+    p.score = (p.winrate * 0.6) + (trend * 0.4); // комбінований індекс
+  });
+
   return phases;
 }
 
-// ---- 4. Топ герої ----
-function analyzeTopHeroes(summary, heroesConst, minGames) {
-  const heroes = Object.entries(summary.byHero).map(([hid, st]) => ({
-    hero_id: Number(hid),
-    games: st.games,
-    wins: st.wins,
-    winrate: winrate(st.wins, st.games)
-  }));
-
-  heroes.sort((a, b) =>
-    (b.winrate - a.winrate) || (b.games - a.games)
-  );
-
-  return heroes
-    .filter(h => h.games >= minGames)
-    .slice(0, 3)
-    .map(h => {
-      const c = heroesConst[h.hero_id];
-      return {
-        ...h,
-        name: c?.localized_name || `hero_${h.hero_id}`,
-        img: c?.img ? 'https://api.opendota.com' + c.img : null
-      };
-    });
-}
 
     // ---- Рендер UI
     function renderMatches(matches, heroesConst){ const tbody=document.querySelector('#matchesTable tbody'); tbody.innerHTML=''; matches.forEach(m=>{ const tr=document.createElement('tr'); const d=new Date((m.start_time||0)*1000); const hid=m.hero_id||0; const heroName = heroesConst && heroesConst[hid] ? heroesConst[hid].localized_name : hid; tr.innerHTML=`<td>${d.toLocaleString()}</td><td>${heroName}</td><td>${m.kills||0}/${m.deaths||0}/${m.assists||0}</td><td>${playerWon(m)?'W':'L'}</td><td>${secsToMinSecs(m.duration||0)}</td>`; tbody.appendChild(tr); }); }
@@ -404,6 +400,13 @@ function analyzeTopHeroes(summary, heroesConst, minGames) {
     function renderPredictionUI(summary, result){ document.getElementById('statsSummary').innerText = `Ігор: ${summary.games} · Winrate: ${summary.winrate.toFixed(1)}% · Avg K/D/A: ${summary.avgK.toFixed(2)}/${summary.avgD.toFixed(2)}/${summary.avgA.toFixed(2)} · Avg KDA: ${summary.avgKDA.toFixed(2)} · Avg тривалість: ${Math.round(summary.avgDuration/60)} хв`;
       const p=document.getElementById('predictionArea'); p.className='prediction '+(result.winProb>60?'pred-good':result.winProb<40?'pred-bad':'pred-neutral'); p.innerHTML=`<strong>Ймовірність перемоги: ${result.winProb}%</strong><div class="small">Прогнозована довжина: ${Math.round(result.predictedLength/60)} хв</div>`;
       const det=document.getElementById('predictionDetails'); det.innerHTML=`<div class="reason"><strong>Шанси</strong><div class="small">Бустер (мої): ${result.boosterMy}% · Руінер (мої): ${result.ruinerMy}%<br>Бустер (ворог): ${result.boosterEnemy}% · Руінер (ворог): ${result.ruinerEnemy}%</div></div>`;
+      if (patterns.bestPhase) {
+  const bp = patterns.bestPhase;
+  resultMessage += `\n\n🕒 Найкраща фаза для завершення гри: ${bp.name}.
+  У ній комбінований індекс успішності — ${bp.score.toFixed(1)}.
+  (Winrate: ${bp.winrate.toFixed(1)}%, динаміка останніх ігор: ${(bp.recentScore*5).toFixed(1)}%)`;
+}
+                                           
     }
 
     // ---- Побудова графіків через Chart.js
@@ -419,19 +422,37 @@ function analyzeTopHeroes(summary, heroesConst, minGames) {
       patterns.seqPatterns.forEach(p=>{ const div=document.createElement('div'); div.className='reason'; div.textContent = `Після ${p.n} поразок поспіль (${p.total} випадків) наступна гра була перемогою у ${p.prob}% випадків.`; seqRoot.appendChild(div); });
       pt.appendChild(seqRoot);
       // short/long
-      const durRoot=document.createElement('div'); durRoot.innerHTML='<strong>Тривалість і winrate</strong>';
-      durRoot.appendChild(Object.assign(document.createElement('div'),{className:'reason',textContent:`Короткі ігри (<25хв) winrate: ${patterns.shortWinrate?patterns.shortWinrate.toFixed(1):0}%` }));
-      durRoot.appendChild(Object.assign(document.createElement('div'),{className:'reason',textContent:`Довгі ігри (>45хв) winrate: ${patterns.longWinrate?patterns.longWinrate.toFixed(1):0}%` }));
-      pt.appendChild(durRoot);
-      const phaseRoot=document.createElement('div');
-      phaseRoot.innerHTML='<strong>Фази закінчення ігор</strong>';
-      patterns.phases.forEach(p=>{
-        const div=document.createElement('div');
-        div.className='reason';
-        div.textContent = `${p.name}: ${p.games} ігор · Winrate: ${p.winrate ? p.winrate.toFixed(1) : 0}%`;
-        phaseRoot.appendChild(div);
-      });
-      pt.appendChild(phaseRoot);                                  
+     // phases
+const phaseRoot = document.createElement('div');
+phaseRoot.innerHTML = '<strong>Фази закінчення ігор</strong>';
+const bestScore = Math.max(...patterns.phases.map(p => p.score || 0));
+
+patterns.phases.forEach(p => {
+  const div = document.createElement('div');
+  div.className = 'reason';
+  const trendPercent = (p.recentScore * 5).toFixed(1); // динаміка в %
+  div.innerHTML = `
+    <span>${p.name}</span><br>
+    <small>
+      ${p.games} ігор · Winrate: ${p.winrate ? p.winrate.toFixed(1) : 0}% · 
+      Динаміка: ${trendPercent}% · 
+      Індекс: ${p.score ? p.score.toFixed(1) : 0}
+    </small>
+  `;
+  
+  // 🔥 підсвічуємо найкращу фазу
+  if (p.score === bestScore) {
+    div.style.background = 'rgba(0, 255, 0, 0.15)';
+    div.style.border = '1px solid rgba(0, 255, 0, 0.4)';
+    div.style.borderRadius = '6px';
+  } else {
+    div.style.opacity = 0.8;
+  }
+
+  phaseRoot.appendChild(div);
+});
+pt.appendChild(phaseRoot);
+                                 
       // top heroes
       const topRoot=document.getElementById('topHeroes'); topRoot.innerHTML=''; if(patterns.top3.length===0){ topRoot.innerHTML='<div class="small">Недостатньо ігор на героях (min 2)</div>'; } else { patterns.top3.forEach(h=>{ const el=document.createElement('div'); el.className='hero-item'; const img=document.createElement('img'); img.src = h.img || ''; img.alt=h.name; const info=document.createElement('div'); info.innerHTML=`<div style="font-weight:600">${h.name}</div><div class="small">Winrate: ${h.winrate.toFixed(1)}% · Ігор: ${h.games}</div>`; el.appendChild(img); el.appendChild(info); topRoot.appendChild(el); }); }
     }
