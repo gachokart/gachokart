@@ -263,6 +263,31 @@ const PATTERN_CONFIG = {
 // ---- Хелпер для winrate ----
 const winrate = (wins, games) => games ? wins / games * 100 : 0;
 
+    // ---- Аналіз найкращих героїв ----
+function analyzeTopHeroes(summary, heroesConst, minGames = 3) {
+  const heroStats = [];
+
+  for (const id in summary.heroes) {
+    const data = summary.heroes[id];
+    if (data.games >= minGames) {
+      const hero = heroesConst.find(h => h.id == id);
+      heroStats.push({
+        id,
+        name: hero ? hero.localized_name : `Hero ${id}`,
+        games: data.games,
+        wins: data.wins,
+        winrate: winrate(data.wins, data.games)
+      });
+    }
+  }
+
+  // сортуємо за winrate
+  heroStats.sort((a, b) => b.winrate - a.winrate);
+
+  return heroStats.slice(0, 3); // топ-3
+}
+
+
 // ---- ГОЛОВНА ФУНКЦІЯ ----
 function analyzePatterns(matches, summary, heroesConst, cfg = PATTERN_CONFIG) {
   const { days, hours } = analyzeDayHourRates(matches);
