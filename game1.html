@@ -244,6 +244,49 @@
       });
     }
     // Тут можна додати chart.js графіки (дні/години)
+    function renderPatternsUI(patterns, heroesConst){
+  document.getElementById('patterns').style.display='block';
+  
+  // ---- Топ-3 герої
+  const topRoot=document.getElementById('topHeroes'); topRoot.innerHTML='';
+  if(patterns.top3.length===0){
+    topRoot.innerHTML='<div class="small">Недостатньо ігор на героях (min 2)</div>';
+  } else {
+    patterns.top3.forEach(h=>{
+      const heroData = heroesConst[h.id]||{};
+      const el=document.createElement('div'); el.className='hero-item';
+      const img=document.createElement('img'); img.src=heroData.img||''; img.alt=h.name;
+      const info=document.createElement('div'); info.innerHTML=`<div style="font-weight:600">${h.name}</div><div class="small">Winrate: ${h.winrate.toFixed(1)}% · Ігор: ${h.games}</div>`;
+      el.appendChild(img); el.appendChild(info); topRoot.appendChild(el);
+    });
+  }
+
+  // ---- Chart.js: Winrate по днях тижня (bar)
+  const daysLabels=['Нд','Пн','Вт','Ср','Чт','Пт','Сб'];
+  const daysData = patterns.dayRates.map(d => d.games ? (d.wins/d.games*100).toFixed(1) : 0);
+  const ctxDays = document.getElementById('chartDays').getContext('2d');
+  if(window.chartDays) window.chartDays.destroy();
+  window.chartDays = new Chart(ctxDays, {
+    type:'bar',
+    data:{labels:daysLabels,datasets:[{label:'Winrate %',data:daysData,backgroundColor:'#1f8feb'}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:100}}}
+  });
+
+  // ---- Chart.js: Winrate по годинам доби (pie)
+  const hoursLabels=Array.from({length:24},(_,i)=>i+'h');
+  const hoursData = patterns.hourRates.map(h => h.games ? (h.wins/h.games*100).toFixed(1) : 0);
+  const ctxHours = document.getElementById('chartHours').getContext('2d');
+  if(window.chartHours) window.chartHours.destroy();
+  window.chartHours = new Chart(ctxHours,{
+    type:'pie',
+    data:{
+      labels:hoursLabels,
+      datasets:[{label:'Winrate по годинам %',data:hoursData,backgroundColor:hoursLabels.map((_,i)=>`hsl(${i*15},70%,50%)`)}]
+    },
+    options:{responsive:true,plugins:{legend:{position:'right'}}}
+  });
+}
+
   }
 
   // ==== Події кнопок
