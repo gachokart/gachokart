@@ -292,16 +292,15 @@ const winrate = (wins, games) => games ? wins / games * 100 : 0;
 
     // ---- Аналіз найкращих героїв ----
 function analyzeTopHeroes(summary, heroesConst, minGames = 3) {
-  const hero = heroesConst.find(h => h.id == id); // hero.img буде доступне для відображення
+  const heroStats = [];
 
-
-  for (const id in summary.heroes) {
-    const data = summary.heroes[id];
+  for (const id in summary.byHero) {
+    const data = summary.byHero[id];
     if (data.games >= minGames) {
-      const hero = heroesConst.find(h => h.id == id);
+      const hero = heroesConst[id];
       heroStats.push({
         id,
-        name: hero ? hero.localized_name : `Hero ${id}`,
+        name: hero ? hero.name : `Hero ${id}`,
         games: data.games,
         wins: data.wins,
         winrate: winrate(data.wins, data.games)
@@ -314,7 +313,6 @@ function analyzeTopHeroes(summary, heroesConst, minGames = 3) {
 
   return heroStats.slice(0, 3); // топ-3
 }
-
 
 // ---- ГОЛОВНА ФУНКЦІЯ ----
 function analyzePatterns(matches, summary, heroesConst, cfg = PATTERN_CONFIG) {
