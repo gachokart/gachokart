@@ -3,177 +3,176 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Ваги — інтерактивні межі та коригування</title>
+  <title>Ваги — інтерактивні колонки</title>
   <style>
     :root {
       --bg: #0f172a;
       --panel: #111827;
       --text: #e5e7eb;
       --sub: #9ca3af;
-      --accent: #22c55e;
-      --warn: #f59e0b;
-      --danger: #ef4444;
-      --muted: #1f2937;
       --border: #374151;
-      --link: #60a5fa;
+      --accent: #58a6ff;
     }
     * { box-sizing: border-box; }
-    body {
-      margin: 0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
-      background: radial-gradient(1200px 800px at 20% 10%, #111827 30%, #0b1222 60%, #070e1a 100%), var(--bg);
-      color: var(--text);
-    }
-    header {
-      padding: 24px 16px; border-bottom: 1px solid var(--muted);
-      backdrop-filter: saturate(140%) blur(4px);
-      position: sticky; top: 0; z-index: 10; background: rgba(15, 23, 42, 0.75);
-    }
-    header h1 { margin: 0 0 4px; font-size: 20px; font-weight: 600; }
-    header p { margin: 0; color: var(--sub); font-size: 13px; }
-    main { max-width: 980px; margin: 24px auto; padding: 0 16px; }
+    body { margin:0; background: var(--bg); color: var(--text); font-family: Inter, system-ui, Segoe UI, Roboto, Arial, sans-serif; }
+    header { padding: 16px; border-bottom: 1px solid var(--border); position: sticky; top:0; background:#0f172ae6; backdrop-filter: blur(4px); z-index: 5; }
+    header h1 { margin:0 0 6px; font-size: 18px; }
+    header p { margin:0; color: var(--sub); font-size: 13px; }
+    main { max-width: 980px; margin: 16px auto; padding: 0 16px; }
     .card {
       background: linear-gradient(180deg, rgba(31,41,55,0.7), rgba(17,24,39,0.8));
       border: 1px solid var(--border);
-      border-radius: 14px; padding: 16px; margin-bottom: 16px;
+      border-radius: 12px; padding: 12px; margin-bottom: 12px;
     }
-    .row { display: grid; grid-template-columns: repeat(12, 1fr); gap: 12px; }
+    .row { display:grid; grid-template-columns: repeat(12, 1fr); gap: 10px; }
     .row > .col-3 { grid-column: span 3; }
     .row > .col-4 { grid-column: span 4; }
     .row > .col-6 { grid-column: span 6; }
     .row > .col-12 { grid-column: span 12; }
-
-    label { display: block; font-size: 12px; color: var(--sub); margin-bottom: 6px; }
+    label { display:block; font-size:12px; color:var(--sub); margin-bottom:6px; }
     input[type="number"], input[type="text"] {
-      width: 100%; padding: 10px 12px; background: #0b1020; border: 1px solid var(--border);
-      color: var(--text); border-radius: 10px; font-size: 14px; outline: none;
+      width:100%; padding:10px 12px; background:#0b1020; border:1px solid var(--border);
+      color:var(--text); border-radius:10px; font-size:14px; outline:none;
     }
-    input[type="number"]:focus { border-color: var(--link); }
+    input[type="number"]:focus, input[type="text"]:focus { border-color: var(--accent); }
     .btn {
-      appearance: none; border: 1px solid var(--border); background: #0d1427; color: var(--text);
-      padding: 10px 12px; font-size: 14px; border-radius: 10px; cursor: pointer;
+      appearance:none; border:1px solid var(--border); background:#0d1427; color:var(--text);
+      padding:10px 12px; font-size:14px; border-radius:10px; cursor:pointer;
     }
-    .btn:hover { border-color: var(--link); }
-    .btn.primary { background: #123260; border-color: #1f4c8f; }
-    .btn.primary:hover { background: #154070; }
+    .btn:hover { border-color: var(--accent); }
+    .btn.primary { background:#123260; border-color:#1f4c8f; }
+    .btn.primary:hover { background:#154070; }
+    .actions { display:flex; gap:8px; flex-wrap: wrap; align-items: center; }
+    .chip { display:inline-block; padding:2px 8px; border-radius:999px; border:1px dashed var(--border); color:var(--sub); font-size:12px; }
 
-    .weights-grid { display: grid; grid-template-columns: repeat(2, minmax(260px, 1fr)); gap: 12px; }
-    .weight-item {
-      border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: rgba(12, 18, 34, 0.7);
+    /* Bars */
+    #barsWrap { padding: 10px; }
+    #bars {
+      display:flex; align-items:flex-end; height:340px; gap:12px; padding: 8px;
+      background:#0b1020; border:1px solid var(--border); border-radius:12px;
+      position: relative;
     }
-    .weight-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-    .weight-title { font-weight: 600; font-size: 14px; }
-    .value-chip {
-      padding: 4px 8px; border-radius: 8px; font-size: 12px; background: #0b1020; border: 1px solid var(--border);
+    .bar {
+      flex:1; display:flex; flex-direction:column; justify-content:flex-end;
+      background:#1f2937; border-radius:8px; position:relative; overflow:hidden; cursor: ns-resize;
+      outline: 1px solid #263246;
     }
-    .range-row { display: grid; grid-template-columns: 1fr 140px; gap: 10px; align-items: center; }
-    input[type="range"] {
-      width: 100%; height: 28px; -webkit-appearance: none; background: transparent;
+    .bar-fill { width:100%; transition:height 0.08s; }
+    .bar-header {
+      position:absolute; top:6px; left:6px; right:6px; display:flex; justify-content:space-between; align-items:center;
+      font-size:12px; color:#d1d5db;
     }
-    input[type="range"]::-webkit-slider-runnable-track {
-      height: 6px; background: linear-gradient(90deg, #1f2937, #22314c);
-      border-radius: 8px; border: 1px solid #2b364d;
+    .bar-footer {
+      position:absolute; bottom:6px; left:6px; right:6px; display:flex; justify-content:space-between; align-items:center;
+      font-size:12px; color:#d1d5db;
     }
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
-      background: #58a6ff; border: 2px solid #1f4c8f; margin-top: -6px;
+    .bar-input {
+      width:70px; padding:6px 8px; border-radius:8px; border:1px solid #2b364d; background:#0b1020; color:#e5e7eb;
     }
-    .minmax {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;
+    .color-swatch {
+      width:12px; height:12px; border-radius:3px; outline:1px solid #2b364d; margin-right:6px;
     }
     .sum-row {
-      display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px;
-      background: rgba(16, 24, 40, 0.7); border: 1px solid var(--border);
+      display:flex; align-items:center; gap: 12px; padding:10px 12px; border-radius:10px;
+      background: rgba(16,24,40,0.7); border:1px solid var(--border);
     }
-    .badge { padding: 4px 8px; border-radius: 8px; font-size: 12px; border: 1px solid var(--border); }
-    .badge.ok { color: var(--accent); border-color: #235e3a; background: rgba(34,197,94,0.1); }
-    .badge.warn { color: var(--warn); border-color: #72511a; background: rgba(245,158,11,0.1); }
-    .badge.danger { color: var(--danger); border-color: #7a2322; background: rgba(239,68,68,0.1); }
-    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
-    .note { font-size: 12px; color: var(--sub); }
-    .footer { font-size: 12px; color: var(--sub); text-align: center; padding: 18px 0 30px; }
-    .name-input { width: 100%; }
-    .chip { display: inline-block; padding: 2px 8px; border-radius: 999px; border: 1px dashed var(--border); color: var(--sub); font-size: 12px; }
-    .link { color: var(--link); text-decoration: none; }
-    @media (max-width: 720px) {
-      .weights-grid { grid-template-columns: 1fr; }
+    .badge { padding:4px 8px; border-radius:8px; font-size:12px; border:1px solid var(--border); }
+    .badge.ok { color:#22c55e; border-color:#235e3a; background:rgba(34,197,94,0.1); }
+    .badge.warn { color:#f59e0b; border-color:#72511a; background:rgba(245,158,11,0.1); }
+    .badge.danger { color:#ef4444; border-color:#7a2322; background:rgba(239,68,68,0.1); }
+    .mini-note { font-size:11px; color:var(--sub); }
+
+    @media (max-width:720px) {
       .row { grid-template-columns: 1fr; }
       .row > [class^="col-"] { grid-column: span 1; }
+      #bars { height: 300px; }
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>Ваги — візуальне коригування</h1>
-    <p>Введи кількість змінних та межі ваг, потім коригуй повзунками. При потребі нормалізуй суму до 1.</p>
+    <h1>Ваги — інтерактивні колонки</h1>
+    <p>Перетягуй колонки мишкою або вводь значення. Сума завжди = 1. Можна фіксувати першу змінну та задавати межі.</p>
   </header>
 
   <main>
     <section class="card">
       <div class="row">
         <div class="col-3">
-          <label for="varCount">Кількість змінних</label>
-          <input id="varCount" type="number" min="1" max="50" value="5" />
+          <label for="count">Кількість змінних</label>
+          <input id="count" type="number" min="2" max="20" value="5" />
         </div>
         <div class="col-4">
-          <label for="minBound">Мінімальна межа ваги (напр. 0.04)</label>
+          <label for="minBound">Мінімальна межа ваги</label>
           <input id="minBound" type="number" step="0.001" min="0" max="1" value="0.04" />
         </div>
         <div class="col-4">
-          <label for="maxBound">Максимальна межа ваги (напр. 0.96)</label>
+          <label for="maxBound">Максимальна межа ваги</label>
           <input id="maxBound" type="number" step="0.001" min="0" max="1" value="0.96" />
         </div>
         <div class="col-12 actions">
-          <button id="generateBtn" class="btn primary">Згенерувати змінні</button>
+          <button id="generateBtn" class="btn primary">Згенерувати</button>
           <button id="equalBtn" class="btn">Розкласти порівну</button>
-          <button id="normalizeBtn" class="btn">Нормалізувати суму до 1</button>
-          <button id="resetBtn" class="btn">Скинути значення</button>
-          <span class="chip">Tip: спочатку задай межі, потім тисни “Згенерувати”.</span>
+          <button id="normalizeBtn" class="btn">Нормалізувати до 1</button>
+          <label class="mini-note"><input type="checkbox" id="lockFirst"> Зафіксувати першу змінну</label>
+          <span class="chip">Tip: перетягуй бари або вводь точні значення внизу кожного.</span>
         </div>
       </div>
     </section>
 
     <section class="card">
-      <div class="sum-row" id="sumRow">
-        <span><strong>Сума ваг:</strong> <span id="sumVal">0.00</span></span>
-        <span class="badge ok" id="sumBadge">OK: близько 1.00</span>
-        <span class="note">Сума контролюється окремо від меж. Нормалізація приведе суму точно до 1.</span>
+      <div class="sum-row">
+        <span><strong>Сума ваг:</strong> <span id="sumVal">0.0000</span></span>
+        <span class="badge ok" id="sumBadge">OK: сума = 1.0000</span>
+        <span class="mini-note">Межі застосовуються до кожної змінної. Нормалізація акуратно приводить суму до 1.</span>
       </div>
     </section>
 
     <section class="card">
-      <div class="row">
-        <div class="col-12">
-          <label>Імена змінних (опціонально)</label>
-          <div id="namesRow" class="row"></div>
-        </div>
+      <label>Назви змінних (опціонально)</label>
+      <div id="namesRow" class="row"></div>
+    </section>
+
+    <section class="card" id="barsWrap">
+      <div id="bars"></div>
+    </section>
+
+    <div class="card">
+      <div class="mini-note">
+        Зберігай сторінку як game3.html і розміщуй на GitHub Pages. Дані не передаються на сервер — усе працює локально у браузері.
       </div>
-    </section>
-
-    <section class="card">
-      <div class="weights-grid" id="weightsGrid"></div>
-    </section>
-
-    <div class="footer">
-      Зроблено для гнучкого підбору ваг. Підходить для GitHub Pages як самостійний файл <strong>game3.html</strong>.
     </div>
   </main>
 
   <script>
-    const varCountEl = document.getElementById('varCount');
+    // State
+    let weights = []; // { id, name, value, color }
+    let draggingIndex = null;
+
+    const countEl = document.getElementById('count');
     const minBoundEl = document.getElementById('minBound');
     const maxBoundEl = document.getElementById('maxBound');
+    const lockFirstEl = document.getElementById('lockFirst');
+
     const generateBtn = document.getElementById('generateBtn');
     const equalBtn = document.getElementById('equalBtn');
     const normalizeBtn = document.getElementById('normalizeBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    const weightsGrid = document.getElementById('weightsGrid');
-    const sumValEl = document.getElementById('sumVal');
-    const sumBadgeEl = document.getElementById('sumBadge');
+
+    const barsEl = document.getElementById('bars');
     const namesRow = document.getElementById('namesRow');
 
-    let weights = []; // { id, name, value }
+    const sumValEl = document.getElementById('sumVal');
+    const sumBadgeEl = document.getElementById('sumBadge');
+
     const clamp = (x, a, b) => Math.min(Math.max(x, a), b);
     const fmt = (x) => Number(x).toFixed(4);
+
+    const palette = [
+      '#60a5fa','#22c55e','#f59e0b','#ef4444','#a78bfa',
+      '#14b8a6','#f472b6','#eab308','#93c5fd','#34d399',
+      '#fb7185','#7dd3fc','#c084fc','#f97316','#10b981',
+      '#f43f5e','#38bdf8','#84cc16','#6366f1','#06b6d4'
+    ];
 
     function buildNamesInputs(n) {
       namesRow.innerHTML = '';
@@ -184,13 +183,12 @@
         label.textContent = `Змінна ${i + 1}`;
         const input = document.createElement('input');
         input.type = 'text';
-        input.className = 'name-input';
-        input.placeholder = `назва (опц.)`;
+        input.placeholder = 'назва (опц.)';
         input.value = weights[i]?.name ?? '';
         input.addEventListener('input', () => {
           weights[i].name = input.value;
-          const titleEl = document.querySelector(`#wtitle-${i}`);
-          if (titleEl) titleEl.textContent = input.value || `Змінна ${i + 1}`;
+          const headerTitle = document.querySelector(`#bar-title-${i}`);
+          if (headerTitle) headerTitle.textContent = input.value || `Змінна ${i + 1}`;
         });
         div.appendChild(label);
         div.appendChild(input);
@@ -198,79 +196,7 @@
       }
     }
 
-    function renderWeights() {
-      const minB = Number(minBoundEl.value);
-      const maxB = Number(maxBoundEl.value);
-      weightsGrid.innerHTML = '';
-
-      weights.forEach((w, i) => {
-        const item = document.createElement('div');
-        item.className = 'weight-item';
-
-        const header = document.createElement('div');
-        header.className = 'weight-header';
-
-        const title = document.createElement('div');
-        title.className = 'weight-title';
-        title.id = `wtitle-${i}`;
-        title.textContent = w.name || `Змінна ${i + 1}`;
-
-        const chip = document.createElement('div');
-        chip.className = 'value-chip';
-        chip.id = `chip-${i}`;
-        chip.textContent = fmt(w.value);
-
-        header.appendChild(title);
-        header.appendChild(chip);
-
-        const rangeRow = document.createElement('div');
-        rangeRow.className = 'range-row';
-
-        const slider = document.createElement('input');
-        slider.type = 'range';
-        slider.min = minB;
-        slider.max = maxB;
-        slider.step = 0.001;
-        slider.value = clamp(w.value, minB, maxB);
-
-        const numberBox = document.createElement('input');
-        numberBox.type = 'number';
-        numberBox.step = 0.001;
-        numberBox.min = minB;
-        numberBox.max = maxB;
-        numberBox.value = clamp(w.value, minB, maxB);
-
-        function setWeight(val) {
-          const v = clamp(Number(val), minB, maxB);
-          w.value = v;
-          slider.value = v;
-          numberBox.value = v;
-          chip.textContent = fmt(v);
-          updateSum();
-        }
-
-        slider.addEventListener('input', () => setWeight(slider.value));
-        numberBox.addEventListener('input', () => setWeight(numberBox.value));
-
-        rangeRow.appendChild(slider);
-        rangeRow.appendChild(numberBox);
-
-        const minmax = document.createElement('div');
-        minmax.className = 'minmax';
-        const minLabel = document.createElement('div');
-        minLabel.innerHTML = `<span class="note">Межі для цієї змінної успадковані від глобальних: <strong>${minB}</strong> … <strong>${maxB}</strong></span>`;
-        minmax.appendChild(minLabel);
-
-        item.appendChild(header);
-        item.appendChild(rangeRow);
-        item.appendChild(minmax);
-        weightsGrid.appendChild(item);
-      });
-
-      updateSum();
-    }
-
-    function updateSum() {
+    function updateSumBadge() {
       const sum = weights.reduce((s, w) => s + Number(w.value), 0);
       sumValEl.textContent = fmt(sum);
       const diff = Math.abs(sum - 1);
@@ -286,76 +212,188 @@
       }
     }
 
+    function renderBars() {
+      const minB = Number(minBoundEl.value);
+      const maxB = Number(maxBoundEl.value);
+      barsEl.innerHTML = '';
+
+      weights.forEach((w, i) => {
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        bar.dataset.index = i;
+
+        const fill = document.createElement('div');
+        fill.className = 'bar-fill';
+        fill.style.height = (w.value * 100) + '%';
+        fill.style.background = w.color;
+
+        const header = document.createElement('div');
+        header.className = 'bar-header';
+        const left = document.createElement('div');
+        left.style.display = 'flex';
+        left.style.alignItems = 'center';
+        const sw = document.createElement('span');
+        sw.className = 'color-swatch';
+        sw.style.background = w.color;
+        const title = document.createElement('span');
+        title.id = `bar-title-${i}`;
+        title.textContent = w.name || `Змінна ${i + 1}`;
+        left.appendChild(sw);
+        left.appendChild(title);
+
+        const right = document.createElement('div');
+        right.textContent = (w.value * 100).toFixed(1) + '%';
+
+        header.appendChild(left);
+        header.appendChild(right);
+
+        const footer = document.createElement('div');
+        footer.className = 'bar-footer';
+
+        const boundsText = document.createElement('span');
+        boundsText.textContent = `межі: ${minB} … ${maxB}`;
+
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.className = 'bar-input';
+        input.step = 0.001;
+        input.min = minB;
+        input.max = maxB;
+        input.value = clamp(w.value, minB, maxB);
+        input.addEventListener('input', () => {
+          let v = clamp(Number(input.value), minB, maxB);
+          adjustProportional(i, v);
+        });
+
+        footer.appendChild(boundsText);
+        footer.appendChild(input);
+
+        bar.appendChild(fill);
+        bar.appendChild(header);
+        bar.appendChild(footer);
+
+        barsEl.appendChild(bar);
+      });
+
+      updateSumBadge();
+    }
+
+    function setAllWithinBounds() {
+      const minB = Number(minBoundEl.value);
+      const maxB = Number(maxBoundEl.value);
+      weights = weights.map(w => ({ ...w, value: clamp(w.value, minB, maxB) }));
+    }
+
+    // Adjust keeping sum=1
+    function adjustProportional(index, newVal) {
+      const minB = Number(minBoundEl.value);
+      const maxB = Number(maxBoundEl.value);
+      newVal = clamp(newVal, minB, maxB);
+
+      const lockFirst = lockFirstEl.checked;
+
+      if (lockFirst && index === 0) {
+        const rest = 1 - newVal;
+        const others = weights.length - 1;
+        weights = weights.map((w, i) => i === 0 ? { ...w, value: newVal } : { ...w, value: clamp(rest / others, minB, maxB) });
+      } else {
+        const rest = 1 - newVal;
+        const sumOthers = weights.reduce((s, w, i) => i !== index ? s + w.value : s, 0);
+        // Якщо сумарні інші майже нуль — рівномірно розкласти решту
+        if (sumOthers < 1e-12) {
+          const others = weights.length - 1;
+          weights = weights.map((w, i) => i === index ? { ...w, value: newVal } : { ...w, value: clamp(rest / others, minB, maxB) });
+        } else {
+          weights = weights.map((w, i) => {
+            if (i === index) return { ...w, value: newVal };
+            const v = (w.value / sumOthers) * rest;
+            return { ...w, value: clamp(v, minB, maxB) };
+          });
+        }
+      }
+      renderBars();
+    }
+
     function generate() {
-      const n = clamp(Number(varCountEl.value), 1, 50);
+      const n = clamp(Number(countEl.value), 2, 20);
       const minB = Number(minBoundEl.value);
       const maxB = Number(maxBoundEl.value);
       if (!(maxB > minB)) {
         alert('Максимальна межа має бути більшою за мінімальну.');
         return;
       }
-      // Ініціалізація рівномірно в межах
       weights = Array.from({ length: n }, (_, i) => ({
         id: i,
         name: '',
-        value: clamp(+(minB + (maxB - minB) * 0.5), minB, maxB)
+        value: 1 / n,
+        color: palette[i % palette.length]
       }));
       buildNamesInputs(n);
-      renderWeights();
+      setAllWithinBounds();
+      renderBars();
     }
 
     function equalize() {
       const n = weights.length;
       if (!n) return;
-      let v = +(1 / n);
       const minB = Number(minBoundEl.value);
       const maxB = Number(maxBoundEl.value);
-      // Якщо рівномірне значення виходить за межі — обрізаємо
-      v = clamp(v, minB, maxB);
-      weights.forEach(w => w.value = v);
-      renderWeights();
+      let v = clamp(1 / n, minB, maxB);
+      weights = weights.map(w => ({ ...w, value: v }));
+      renderBars();
     }
 
     function normalize() {
-      const sum = weights.reduce((s, w) => s + Number(w.value), 0);
+      const minB = Number(minBoundEl.value);
+      const maxB = Number(maxBoundEl.value);
+      let sum = weights.reduce((s, w) => s + Number(w.value), 0);
       if (sum === 0) {
         alert('Сума дорівнює 0. Немає що нормалізувати.');
         return;
       }
-      const minB = Number(minBoundEl.value);
-      const maxB = Number(maxBoundEl.value);
-      // Нормалізація до 1 з повторним клампом у межах
-      weights = weights.map(w => {
-        const v = w.value / sum;
-        return { ...w, value: clamp(v, minB, maxB) };
-      });
-      renderWeights();
+      weights = weights.map(w => ({ ...w, value: clamp(w.value / sum, minB, maxB) }));
+      renderBars();
     }
 
-    function resetValues() {
-      weights.forEach(w => w.value = 0);
-      renderWeights();
-    }
+    // Drag logic
+    document.addEventListener('mousedown', e => {
+      const bar = e.target.closest('.bar');
+      if (!bar) return;
+      draggingIndex = parseInt(bar.dataset.index);
+      e.preventDefault();
+    });
 
-    // Події
-    generateBtn.addEventListener('click', generate);
-    equalBtn.addEventListener('click', equalize);
-    normalizeBtn.addEventListener('click', normalize);
-    resetBtn.addEventListener('click', resetValues);
+    document.addEventListener('mouseup', () => {
+      draggingIndex = null;
+    });
 
-    // Якщо змінюються межі — оновити рендер і переклампити
+    document.addEventListener('mousemove', e => {
+      if (draggingIndex === null) return;
+      const rect = barsEl.getBoundingClientRect();
+      // обчислення відносної висоти (0..1) від низу контейнера
+      let relY = (rect.bottom - e.clientY) / rect.height;
+      relY = clamp(relY, 0, 1);
+      adjustProportional(draggingIndex, relY);
+    });
+
+    // Bounds change
     [minBoundEl, maxBoundEl].forEach(el => {
       el.addEventListener('input', () => {
         const minB = Number(minBoundEl.value);
         const maxB = Number(maxBoundEl.value);
         if (maxB > minB) {
-          weights = weights.map(w => ({ ...w, value: clamp(w.value, minB, maxB) }));
-          renderWeights();
+          setAllWithinBounds();
+          normalize(); // делікатно підтягнемо суму до 1 після зміни меж
         }
       });
     });
 
-    // Стартова ініціалізація
+    // Buttons
+    generateBtn.addEventListener('click', generate);
+    equalBtn.addEventListener('click', equalize);
+    normalizeBtn.addEventListener('click', normalize);
+
+    // Init
     generate();
   </script>
 </body>
