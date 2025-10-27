@@ -112,74 +112,291 @@
       out.winrate=out.games? out.wins/out.games*100:0; out.avgK=out.games? out.k/out.games:0; out.avgD=out.games? out.d/out.games:0; out.avgA=out.games? out.a/out.games:0; out.avgKDA=out.avgD? (out.avgK+out.avgA)/out.avgD: (out.avgK+out.avgA); out.avgDuration=out.games? out.dur/out.games:0; out.pctShortWins=out.games? out.shortWins/out.games*100:0; out.pctShortLosses=out.games? out.shortLosses/out.games*100:0; out.pctLongWins=out.games? out.longWins/out.games*100:0; out.pctLongLosses=out.games? out.longLosses/out.games*100:0; out.leaveRate=out.games? out.leaves/out.games*100:0; return out; }
 
     // ---- Прогноз (як раніше, трохи вдосконалено)
-    function computeDetailedProbabilities(summary){
-      let winProb=50; const reasons=[];
-      winProb += (summary.winrate-50)*0.9; reasons.push(`Winrate ${summary.winrate.toFixed(1)}% → ${( (summary.winrate-50)*0.9).toFixed(1)}%`);
-      winProb += (summary.avgKDA-2)*6; reasons.push(`Avg KDA ${summary.avgKDA.toFixed(2)} → ${( (summary.avgKDA-2)*6).toFixed(1)}%`);
-      if(summary.avgDuration<1200){ winProb -= 3; reasons.push(`Короткі ігри (avg ${Math.round(summary.avgDuration/60)} хв) → -3%`); }
-      if(summary.pctShortLosses>20){ winProb -= 4; reasons.push(`Короткі поразки ${summary.pctShortLosses.toFixed(1)}% → -4%`); }
-      if(summary.leaveRate>5){ const v=Math.min(10,Math.round(summary.leaveRate)); winProb -= v; reasons.push(`Leave rate ${summary.leaveRate.toFixed(1)}% → -${v}%`); }
-      winProb = Math.max(3, Math.min(97, Math.round(winProb)));
-      const predictedLength = Math.round(summary.avgDuration * (0.95 + Math.max(-0.1, Math.min(0.1, (summary.pctShortWins - summary.pctShortLosses)/100))));
-      // boosters/ruiners heuristics
-      function clamp(v){ return Math.max(1, Math.min(95, Math.round(v))); }
-      let boosterMy=5, ruinerMy=5, boosterEnemy=5, ruinerEnemy=5;
-      if(summary.avgKDA>3.5){ const add=Math.round((summary.avgKDA-3.5)*8); boosterMy += add; }
-      if(summary.pctShortWins>20){ boosterMy += Math.round((summary.pctShortWins-20)/2); }
-      if(summary.winrate>60){ boosterMy += Math.round((summary.winrate-60)/1.5); }
-      if(summary.avgD>7){ ruinerMy += Math.round((summary.avgD-7)*4); }
-      if(summary.pctShortLosses>15){ ruinerMy += Math.round((summary.pctShortLosses-15)/1.5); }
-      if(summary.leaveRate>3){ ruinerMy += Math.round(summary.leaveRate); }
-      if(summary.pctShortLosses>20){ boosterEnemy += Math.round((summary.pctShortLosses-20)/1.2); }
-      if(summary.pctLongWins>15){ ruinerEnemy += Math.round((summary.pctLongWins-15)/1.2); }
-      if(summary.pctLongLosses>12){ ruinerEnemy += Math.round((summary.pctLongLosses-12)/1.1); }
-      if(summary.leaveRate>6){ boosterEnemy+=3; ruinerEnemy+=3; }
-      boosterMy=clamp(boosterMy); ruinerMy=clamp(ruinerMy); boosterEnemy=clamp(boosterEnemy); ruinerEnemy=clamp(ruinerEnemy);
-      // prepare reasons list (short)
-      // We'll include full reasons in detailed patterns
-      return {winProb,predictedLength,boosterMy,ruinerMy,boosterEnemy,ruinerEnemy,reasons};
-    }
+  function computeDetailedProbabilities(summary, weights = defaultWeights) {
+  const reasons = [];
 
+  // 1. Базова ймовірність перемоги
+  let winProb = baseWinProb(summary, weights, reasons);
+
+  // 2. Прогноз довжини гри
+  const predictedLength = predictGameLength(summary);
+
+  // 3. Boosters / Ruiners евристики
+  const { boosterMy, ruinerMy, boosterEnemy, ruinerEnemy, brReasons } = estimateBoostersRuiners(summary);
+  reasons.push(...brReasons);
+
+  // 4. Кінцеве обмеження
+  winProb = Math.max(3, Math.min(97, Math.round(winProb)));
+
+  return { winProb, predictedLength, boosterMy, ruinerMy, boosterEnemy, ruinerEnemy, reasons };
+}
+
+// -------------------- HELPERS --------------------
+
+const defaultWeights = {
+  winrate: 0.9,
+  kda: 6,
+  shortGamePenalty: -3,
+  shortLossPenalty: -4,
+  leaveRatePenalty: v => -Math.min(10, Math.round(v))
+};
+
+function baseWinProb(summary, w, reasons) {
+  let winProb = 50;
+
+  const deltaWinrate = (summary.winrate - 50) * w.winrate;
+  winProb += deltaWinrate;
+  reasons.push({ factor: "Winrate", value: summary.winrate, delta: deltaWinrate });
+
+  const deltaKDA = (summary.avgKDA - 2) * w.kda;
+  winProb += deltaKDA;
+  reasons.push({ factor: "KDA", value: summary.avgKDA, delta: deltaKDA });
+
+  if (summary.avgDuration < 1200) {
+    winProb += w.shortGamePenalty;
+    reasons.push({ factor: "Short games", value: summary.avgDuration, delta: w.shortGamePenalty });
+  }
+
+  if (summary.pctShortLosses > 20) {
+    winProb += w.shortLossPenalty;
+    reasons.push({ factor: "Short losses", value: summary.pctShortLosses, delta: w.shortLossPenalty });
+  }
+
+  if (summary.leaveRate > 5) {
+    const v = w.leaveRatePenalty(summary.leaveRate);
+    winProb += v;
+    reasons.push({ factor: "Leave rate", value: summary.leaveRate, delta: v });
+  }
+
+  return winProb;
+}
+
+function predictGameLength(summary) {
+  return Math.round(
+    summary.avgDuration *
+    (0.95 + Math.max(-0.1, Math.min(0.1, (summary.pctShortWins - summary.pctShortLosses) / 100)))
+  );
+}
+
+function estimateBoostersRuiners(summary) {
+  function clamp(v) { return Math.max(1, Math.min(95, Math.round(v))); }
+
+  let boosterMy = 5, ruinerMy = 5, boosterEnemy = 5, ruinerEnemy = 5;
+  const reasons = [];
+
+  if (summary.avgKDA > 3.5) {
+    const add = Math.round((summary.avgKDA - 3.5) * 8);
+    boosterMy += add;
+    reasons.push({ factor: "High KDA", value: summary.avgKDA, delta: add, target: "boosterMy" });
+  }
+
+  if (summary.pctShortWins > 20) {
+    const add = Math.round((summary.pctShortWins - 20) / 2);
+    boosterMy += add;
+    reasons.push({ factor: "Short wins", value: summary.pctShortWins, delta: add, target: "boosterMy" });
+  }
+
+  if (summary.winrate > 60) {
+    const add = Math.round((summary.winrate - 60) / 1.5);
+    boosterMy += add;
+    reasons.push({ factor: "High winrate", value: summary.winrate, delta: add, target: "boosterMy" });
+  }
+
+  if (summary.avgD > 7) {
+    const add = Math.round((summary.avgD - 7) * 4);
+    ruinerMy += add;
+    reasons.push({ factor: "High deaths", value: summary.avgD, delta: add, target: "ruinerMy" });
+  }
+
+  if (summary.pctShortLosses > 15) {
+    const add = Math.round((summary.pctShortLosses - 15) / 1.5);
+    ruinerMy += add;
+    reasons.push({ factor: "Short losses", value: summary.pctShortLosses, delta: add, target: "ruinerMy" });
+  }
+
+  if (summary.leaveRate > 3) {
+    const add = Math.round(summary.leaveRate);
+    ruinerMy += add;
+    reasons.push({ factor: "Leave rate", value: summary.leaveRate, delta: add, target: "ruinerMy" });
+  }
+
+  if (summary.pctShortLosses > 20) {
+    const add = Math.round((summary.pctShortLosses - 20) / 1.2);
+    boosterEnemy += add;
+    reasons.push({ factor: "Enemy boosted by your short losses", value: summary.pctShortLosses, delta: add, target: "boosterEnemy" });
+  }
+
+  if (summary.pctLongWins > 15) {
+    const add = Math.round((summary.pctLongWins - 15) / 1.2);
+    ruinerEnemy += add;
+    reasons.push({ factor: "Enemy ruined by your long wins", value: summary.pctLongWins, delta: add, target: "ruinerEnemy" });
+  }
+
+  if (summary.pctLongLosses > 12) {
+    const add = Math.round((summary.pctLongLosses - 12) / 1.1);
+    ruinerEnemy += add;
+    reasons.push({ factor: "Enemy ruined by your long losses", value: summary.pctLongLosses, delta: add, target: "ruinerEnemy" });
+  }
+
+  if (summary.leaveRate > 6) {
+    boosterEnemy += 3; ruinerEnemy += 3;
+    reasons.push({ factor: "High leave rate (both sides)", value: summary.leaveRate, delta: "+3 each", target: "both" });
+  }
+
+  return {
+    boosterMy: clamp(boosterMy),
+    ruinerMy: clamp(ruinerMy),
+    boosterEnemy: clamp(boosterEnemy),
+    ruinerEnemy: clamp(ruinerEnemy),
+    brReasons: reasons
+  };
+}
     // ---- Патерни: дні/години/послідовності
-    function analyzePatterns(matches, summary, heroesConst){
-      // days and hours winrate
-      const days = Array(7).fill(0).map(()=>({games:0,wins:0}));
-      const hours = Array(24).fill(0).map(()=>({games:0,wins:0}));
-      for(const m of matches){ const d = new Date((m.start_time||0)*1000); const dow = d.getDay(); const h = d.getHours(); const won=playerWon(m); days[dow].games++; if(won) days[dow].wins++; hours[h].games++; if(won) hours[h].wins++; }
-      const dayRates = days.map((x,i)=>({day:i,winrate: x.games? x.wins/x.games*100:0,games:x.games}));
-      const hourRates = hours.map((x,h)=>({hour:h,winrate: x.games? x.wins/x.games*100:0,games:x.games}));
+   // ---- Конфіг для порогів ----
+const PATTERN_CONFIG = {
+  shortGameMax: 1500,   // <25 хв
+  longGameMin: 2700,    // >45 хв
+  maxSeq: 5,            // макс довжина серії для аналізу
+  minHeroGames: 2       // мінімум ігор на герої для топу
+};
 
-      // sequences patterns: check n losses followed by win frequency
-      const seq = summary.seq; const seqPatterns = [];
-      for(let n=1;n<=5;n++){
-        let total=0,afterWin=0;
-        for(let i=0;i+ n < seq.length;i++){
-          let ok=true; for(let j=0;j<n;j++){ if(seq[i+j] !== 'L'){ ok=false; break; } }
-          if(ok){ total++; if(seq[i+n] === 'W') afterWin++; }
-        }
-        if(total>0) seqPatterns.push({n, total, afterWin, prob: Math.round(afterWin/total*100)});
-      }
+// ---- Хелпер для winrate ----
+const winrate = (wins, games) => games ? wins / games * 100 : 0;
 
-      // short/long duration pattern
-      const shortGames = matches.filter(m=> (m.duration||0) < 1500);
-      const longGames = matches.filter(m=> (m.duration||0) > 2700);
-      const shortWinrate = shortGames.length? shortGames.filter(playerWon).length/shortGames.length*100:0;
-      const longWinrate = longGames.length? longGames.filter(playerWon).length/longGames.length*100:0;
+// ---- ГОЛОВНА ФУНКЦІЯ ----
+function analyzePatterns(matches, summary, heroesConst, cfg = PATTERN_CONFIG) {
+  const { days, hours } = analyzeDayHourRates(matches);
+  const seqPatterns = analyzeSequences(summary.seq, cfg.maxSeq);
+  const { shortWinrate, longWinrate } = analyzeDurations(matches, cfg.shortGameMax, cfg.longGameMin);
+  const top3 = analyzeTopHeroes(summary, heroesConst, cfg.minHeroGames);
+  const phases = analyzePhases(matches);
 
-      // top 3 heroes by winrate (require min games threshold 2)
-      const heroes = Object.entries(summary.byHero).map(([hid,st])=>({hero_id: Number(hid), games:st.games, wins:st.wins, winrate: st.games? st.wins/st.games*100:0}));
-      heroes.sort((a,b)=>{ if(b.winrate!==a.winrate) return b.winrate-a.winrate; return b.games-a.games; });
-      const top3 = heroes.filter(h=>h.games>=2).slice(0,3);
-      // map hero data via heroesConst
-      const top3Mapped = top3.map(h=>{
-        const c = heroesConst[h.hero_id]; // note: constants use hero_id as keys (string)
-        const img = c && c.img? 'https://api.opendota.com'+c.img : null;
-        const name = c && c.localized_name? c.localized_name : `hero_${h.hero_id}`;
-        return {...h, name, img};
-      });
-
-      return {dayRates, hourRates, seqPatterns, shortWinrate, longWinrate, top3: top3Mapped};
+  return {
+    dayRates: days,
+    hourRates: hours,
+    seqPatterns,
+    shortWinrate,
+    longWinrate,
+    phases,
+    top3,
+    meta: {
+      totalMatches: matches.length,
+      analyzedHeroes: Object.keys(summary.byHero).length
     }
+  };
+}
+
+// ---- 1. Аналіз по днях і годинах ----
+function analyzeDayHourRates(matches) {
+  const days = Array(7).fill(0).map(() => ({ games: 0, wins: 0 }));
+  const hours = Array(24).fill(0).map(() => ({ games: 0, wins: 0 }));
+
+  for (const m of matches) {
+    const d = new Date((m.start_time || 0) * 1000);
+    const dow = d.getDay();
+    const h = d.getHours();
+    const won = playerWon(m);
+
+    days[dow].games++; if (won) days[dow].wins++;
+    hours[h].games++; if (won) hours[h].wins++;
+  }
+
+  return {
+    days: days.map((x, i) => ({
+      day: i,
+      winrate: winrate(x.wins, x.games),
+      games: x.games
+    })),
+    hours: hours.map((x, h) => ({
+      hour: h,
+      winrate: winrate(x.wins, x.games),
+      games: x.games
+    }))
+  };
+}
+
+// ---- 2. Аналіз послідовностей ----
+function analyzeSequences(seq, maxN) {
+  const patterns = [];
+  for (let n = 1; n <= maxN; n++) {
+    let total = 0, afterWin = 0;
+    for (let i = 0; i + n < seq.length; i++) {
+      if (seq.slice(i, i + n).every(ch => ch === 'L')) {
+        total++;
+        if (seq[i + n] === 'W') afterWin++;
+      }
+    }
+    if (total > 0) {
+      patterns.push({
+        n,
+        total,
+        afterWin,
+        prob: Math.round(afterWin / total * 100)
+      });
+    }
+  }
+  return patterns;
+}
+
+// ---- 3. Аналіз коротких/довгих ігор ----
+function analyzeDurations(matches, shortMax, longMin) {
+  const shortGames = matches.filter(m => (m.duration || 0) < shortMax);
+  const longGames = matches.filter(m => (m.duration || 0) > longMin);
+
+  return {
+    shortWinrate: winrate(shortGames.filter(playerWon).length, shortGames.length),
+    longWinrate: winrate(longGames.filter(playerWon).length, longGames.length)
+  };
+}
+    function analyzePhases(matches) {
+  const phases = [
+    { name: 'Фаза 1 (<27 хв)', min: 0, max: 1620, games: 0, wins: 0 },
+    { name: 'Фаза 2 (27–37 хв)', min: 1620, max: 2220, games: 0, wins: 0 },
+    { name: 'Фаза 3 (37–47 хв)', min: 2220, max: 2820, games: 0, wins: 0 },
+    { name: 'Фаза 4 (47–60 хв)', min: 2820, max: 3600, games: 0, wins: 0 },
+    { name: 'Фаза 5 (60+ хв)', min: 3600, max: Infinity, games: 0, wins: 0 }
+  ];
+
+  for (const m of matches) {
+    const dur = m.duration || 0;
+    const won = playerWon(m);
+    const phase = phases.find(p => dur >= p.min && dur < p.max);
+    if (phase) {
+      phase.games++;
+      if (won) phase.wins++;
+    }
+  }
+
+  // додаємо winrate %
+  phases.forEach(p => p.winrate = winrate(p.wins, p.games));
+  return phases;
+}
+
+// ---- 4. Топ герої ----
+function analyzeTopHeroes(summary, heroesConst, minGames) {
+  const heroes = Object.entries(summary.byHero).map(([hid, st]) => ({
+    hero_id: Number(hid),
+    games: st.games,
+    wins: st.wins,
+    winrate: winrate(st.wins, st.games)
+  }));
+
+  heroes.sort((a, b) =>
+    (b.winrate - a.winrate) || (b.games - a.games)
+  );
+
+  return heroes
+    .filter(h => h.games >= minGames)
+    .slice(0, 3)
+    .map(h => {
+      const c = heroesConst[h.hero_id];
+      return {
+        ...h,
+        name: c?.localized_name || `hero_${h.hero_id}`,
+        img: c?.img ? 'https://api.opendota.com' + c.img : null
+      };
+    });
+}
 
     // ---- Рендер UI
     function renderMatches(matches, heroesConst){ const tbody=document.querySelector('#matchesTable tbody'); tbody.innerHTML=''; matches.forEach(m=>{ const tr=document.createElement('tr'); const d=new Date((m.start_time||0)*1000); const hid=m.hero_id||0; const heroName = heroesConst && heroesConst[hid] ? heroesConst[hid].localized_name : hid; tr.innerHTML=`<td>${d.toLocaleString()}</td><td>${heroName}</td><td>${m.kills||0}/${m.deaths||0}/${m.assists||0}</td><td>${playerWon(m)?'W':'L'}</td><td>${secsToMinSecs(m.duration||0)}</td>`; tbody.appendChild(tr); }); }
@@ -206,6 +423,15 @@
       durRoot.appendChild(Object.assign(document.createElement('div'),{className:'reason',textContent:`Короткі ігри (<25хв) winrate: ${patterns.shortWinrate?patterns.shortWinrate.toFixed(1):0}%` }));
       durRoot.appendChild(Object.assign(document.createElement('div'),{className:'reason',textContent:`Довгі ігри (>45хв) winrate: ${patterns.longWinrate?patterns.longWinrate.toFixed(1):0}%` }));
       pt.appendChild(durRoot);
+      const phaseRoot=document.createElement('div');
+      phaseRoot.innerHTML='<strong>Фази закінчення ігор</strong>';
+      patterns.phases.forEach(p=>{
+        const div=document.createElement('div');
+        div.className='reason';
+        div.textContent = `${p.name}: ${p.games} ігор · Winrate: ${p.winrate ? p.winrate.toFixed(1) : 0}%`;
+        phaseRoot.appendChild(div);
+      });
+      pt.appendChild(phaseRoot);                                  
       // top heroes
       const topRoot=document.getElementById('topHeroes'); topRoot.innerHTML=''; if(patterns.top3.length===0){ topRoot.innerHTML='<div class="small">Недостатньо ігор на героях (min 2)</div>'; } else { patterns.top3.forEach(h=>{ const el=document.createElement('div'); el.className='hero-item'; const img=document.createElement('img'); img.src = h.img || ''; img.alt=h.name; const info=document.createElement('div'); info.innerHTML=`<div style="font-weight:600">${h.name}</div><div class="small">Winrate: ${h.winrate.toFixed(1)}% · Ігор: ${h.games}</div>`; el.appendChild(img); el.appendChild(info); topRoot.appendChild(el); }); }
     }
@@ -242,6 +468,7 @@
   </script>
 </body>
 </html>
+
 
 
 
