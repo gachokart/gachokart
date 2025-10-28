@@ -188,12 +188,39 @@
 
     async function fetchOpenDotaMatches(id,limit){ const url=`https://api.opendota.com/api/players/${id}/matches?limit=${limit}`; const res=await fetch(url); if(!res.ok) throw new Error('OpenDota matches fetch failed: '+res.status); return res.json(); }
     async function fetchHeroesConstants(){ const url='https://api.opendota.com/api/constants/heroes'; const res=await fetch(url); if(!res.ok) throw new Error('OpenDota heroes fetch failed'); return res.json(); }
+// Нові дані
+async function fetchPlayerData(id){
+    const url = `https://api.opendota.com/api/players/${id}`;
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('OpenDota player fetch failed: '+res.status);
+    return res.json();
+}
+
+// Можемо також отримати деталізовані матчі для аналізу товариств
+async function fetchMatchDetails(matchId){
+    const url = `https://api.opendota.com/api/matches/${matchId}`;
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('OpenDota match fetch failed: '+res.status);
+    return res.json();
+}
 
     // ---- Аналіз (залишив твої функції, дрібні доповнення)
     function analyzeMatches(matches){
       const out={games:matches.length,wins:0,k:0,d:0,a:0,dur:0,shortWins:0,shortLosses:0,longWins:0,longLosses:0,leaves:0,byHero:{},seq:[]};
       for(const m of matches){ const won=playerWon(m); out.seq.push(won?'W':'L'); if(won) out.wins++; const kills=m.kills||0,deaths=m.deaths||0,assists=m.assists||0,duration=m.duration||0; out.k+=kills; out.d+=deaths; out.a+=assists; out.dur+=duration; if(duration<1500 && won) out.shortWins++; if(duration<1500 && !won) out.shortLosses++; if(duration>2700 && won) out.longWins++; if(duration>2700 && !won) out.longLosses++; if(m.leaver_status && m.leaver_status!==0) out.leaves++; const hid=m.hero_id||0; if(!out.byHero[hid]) out.byHero[hid]={games:0,wins:0}; out.byHero[hid].games++; if(won) out.byHero[hid].wins++; }
       out.winrate=out.games? out.wins/out.games*100:0; out.avgK=out.games? out.k/out.games:0; out.avgD=out.games? out.d/out.games:0; out.avgA=out.games? out.a/out.games:0; out.avgKDA=out.avgD? (out.avgK+out.avgA)/out.avgD: (out.avgK+out.avgA); out.avgDuration=out.games? out.dur/out.games:0; out.pctShortWins=out.games? out.shortWins/out.games*100:0; out.pctShortLosses=out.games? out.shortLosses/out.games*100:0; out.pctLongWins=out.games? out.longWins/out.games*100:0; out.pctLongLosses=out.games? out.longLosses/out.games*100:0; out.leaveRate=out.games? out.leaves/out.games*100:0; return out; }
+function computeAdvancedMetrics(matches){
+    const perf = [];
+    for(const m of matches){
+        const teamKills = m.radiant_score + m.dire_score || 1;
+        const kp = (m.kills + m.assists)/teamKills*100;
+        const dmgPerGold = m.hero_damage / Math.max(1, m.net_worth);
+        const supportEff = (m.wards_placed||0) + (m.wards_destroyed||0) + (m.hero_healing||0);
+        perf.push({kp, dmgPerGold, supportEff, kda:(m.kills+m.assists)/Math.max(1,m.deaths)});
+    }
+    const consistency = 1 / (1 + Math.sqrt(perf.reduce((sum,p)=>sum+Math.pow(p.kda - (perf.reduce((s,x)=>s+x.kda,0)/perf.length),2),0)/perf.length));
+    return {perf, consistency};
+}
 
     // ---- Прогноз (твої функції, з невеликим розширенням — повертаємо також reasons)
   function computeDetailedProbabilities(summary, role = 3, weights = defaultWeights) {
@@ -224,6 +251,23 @@
   const toPct = v => Math.max(1, Math.min(95, Math.round(v)));
   return { winProb, predictedLength, boosterMy: toPct(boosterMy), ruinerMy: toPct(ruinerMy), boosterEnemy: toPct(boosterEnemy), ruinerEnemy: toPct(ruinerEnemy), reasons };
 }
+// Hero meta strength (Winrate у поточному патчі)
+const heroMetaStrength = 50; // тут можна підставляти реальні дані через OpenDota constants/patch
+winProb += (heroMetaStrength-50)*0.5; // невелика корекція
+
+// Synergy score (з іншими героями у вашій команді)
+const synergyScore = 3; // placeholder
+winProb += synergyScore;
+reasons.push({factor:"Hero meta + synergy", delta: synergyScore});
+// Fatigue factor: якщо граєш >5 матчів поспіль за день
+const fatigueFactor = lastSummary.games>5 ? -3 : 0;
+winProb += fatigueFactor;
+reasons.push({factor:"Fatigue factor", delta:fatigueFactor});
+
+// Party factor (якщо граєш у пати)
+const partyFactor = 2; // placeholder, можна розрахувати за teammates
+winProb += partyFactor;
+reasons.push({factor:"Party factor", delta:partyFactor});
 
 const defaultWeights = {
   winrate: 0.9,
@@ -232,7 +276,14 @@ const defaultWeights = {
   shortLossPenalty: -4,
   leaveRatePenalty: v => -Math.min(10, Math.round(v))
 };
-
+function inferRole(match){
+    // Lane_role + item_build
+    let role = match.lane_role || 3;
+    const items = [match.item_0, match.item_1, match.item_2, match.item_3, match.item_4, match.item_5];
+    // Якщо саппорт купує core items → можлива корекція
+    if(role >=4 && items.includes(50) && items.includes(40)) role = 2; // приклад корекції
+    return role;
+}
 function baseWinProb(summary, w, reasons) {
   let winProb = 50;
 
