@@ -130,7 +130,7 @@
     <div class="controls">
       <div>
         <label for="accountId">Steam32 account ID</label>
-        <input id="accountId" type="text" placeholder="Напр.: 123456789" />
+        <input id="accountId" type="text" value="863386335" />
       </div>
       <div>
         <label for="matchLimit">Аналіз останніх матчів</label>
@@ -247,21 +247,18 @@
     // ========== CONFIG ==========
     const API = {
       base: 'https://api.opendota.com/api',
-      // Якщо маєш ключ, можна додати в headers:
       headers: {}
       // headers: { 'Authorization': 'Bearer YOUR_KEY' }
     };
 
-    // Рольні мапи (спрощено). Можеш доповнити під себе.
     const ROLE_MAP = {
-      1: 'Саппорт 1', // pos5
-      2: 'Саппорт 2', // pos4
-      3: 'Офлейн',    // pos3
-      4: 'Мід',       // pos2
-      5: 'Керрі'      // pos1
+      1: 'Саппорт 1',
+      2: 'Саппорт 2',
+      3: 'Офлейн',
+      4: 'Мід',
+      5: 'Керрі'
     };
 
-    // Лейни від OpenDota player.lane_role (optional heuristic)
     const LANE_MAP = {
       1: 'Сейф-лейн',
       2: 'Мід',
@@ -269,16 +266,13 @@
       4: 'Джангл/Роум'
     };
 
-    // Кеш для сесії
     const cache = new Map();
 
-    // ========== UTIL ==========
     const fmtPct = v => (isNaN(v) ? '-' : (v * 100).toFixed(1) + '%');
     const fmtNum = v => (v == null ? '-' : v.toLocaleString('uk-UA'));
     const fmtDate = ts => {
-      try {
-        return new Date(ts * 1000).toLocaleString('uk-UA', { hour12: false });
-      } catch { return '-'; }
+      try { return new Date(ts * 1000).toLocaleString('uk-UA', { hour12: false }); }
+      catch { return '-'; }
     };
     const kda = (k, d, a) => {
       const denom = Math.max(1, d || 0);
@@ -286,28 +280,24 @@
     };
     const by = key => (a, b) => (a[key] < b[key] ? 1 : -1);
 
-    // Агрегатор середніх
-    function aggAvg(list, key) {
-      const vals = list.map(x => x[key]).filter(x => typeof x === 'number');
+    function aggAvg(list) {
+      const vals = list.filter(x => typeof x === 'number');
       if (vals.length === 0) return null;
       return vals.reduce((s, v) => s + v, 0) / vals.length;
     }
 
-    // Обмежений вінрейт з довірою (стійкість)
     function stableWinrate(wins, total) {
       if (total === 0) return { wr: 0, stability: 0 };
       const wr = wins / total;
-      // Wilson score lower bound (approx)
       const z = 1.96;
       const denom = 1 + z*z/total;
       const center = wr + z*z/(2*total);
       const adj = z * Math.sqrt((wr*(1-wr) + z*z/(4*total)) / total);
       const lower = (center - adj) / denom;
-      const stability = Math.max(0, Math.min(1, 1 - (wr - lower))); // чим ближче lower до wr, тим стабільніше
+      const stability = Math.max(0, Math.min(1, 1 - (wr - lower)));
       return { wr, stability };
     }
 
-    // ========== API CALLS ==========
     async function getJSON(url) {
       if (cache.has(url)) return cache.get(url);
       const res = await fetch(url, { headers: API.headers });
@@ -320,29 +310,14 @@
     async function fetchPlayer(accountId) {
       return getJSON(`${API.base}/players/${accountId}`);
     }
-
     async function fetchRecentMatches(accountId, limit = 100) {
-      // /players/{account_id}/matches?limit=...
       return getJSON(`${API.base}/players/${accountId}/matches?limit=${limit}`);
     }
-
-    async function fetchPeers(accountId) {
-      return getJSON(`${API.base}/players/${accountId}/peers?limit=100`);
-    }
-
     async function fetchHeroConstants() {
-      // герої для імен
       return getJSON(`${API.base}/heroes`);
     }
 
-    // ========== ROLE INFERENCE ==========
-    // Багато матчів не мають явної позиції. Евристика:
-    // - lane_role (якщо доступний)
-    // - gold_per_min/xp_per_min + ранні показники
-    // - mid lane частота -> pos2; highest GPM/XPM на сейф-лейні -> pos1; часті варди/асисти -> supports
     function inferRole(match) {
-      // match: OpenDota recent match item
-      // fields: player_slot, radiant_win, hero_id, kills, deaths, assists, lane, lane_role, gold_per_min, xp_per_min, version, start_time, etc.
       const laneRole = match.lane_role;
       const laneName = LANE_MAP[laneRole] || null;
       const gpm = match.gold_per_min || 0;
@@ -351,33 +326,28 @@
       const a = match.assists || 0;
       const d = match.deaths || 0;
 
-      // simple signals
       const isMid = laneRole === 2;
       const isOfflane = laneRole === 3;
       const isSafelane = laneRole === 1;
 
-      // support-like: high assists, low gpm/xpm relative
       const supportScore = a - k - (gpm + xpm) / 200;
-      // core-like: high gpm/xpm and kills
       const coreScore = (gpm + xpm) / 200 + k - d;
 
       let role;
-      if (isMid) role = 4; // pos2
+      if (isMid) role = 4;
       else if (isOfflane) role = 3;
-      else if (isSafelane && coreScore > 0.5) role = 5; // carry pos1
-      else if (supportScore > 0.5) role = (k < 6 ? 1 : 2); // pos5 або pos4
+      else if (isSafelane && coreScore > 0.5) role = 5;
+      else if (supportScore > 0.5) role = (k < 6 ? 1 : 2);
       else {
-        // fallback by gpm/xpm
         if (gpm > 520 || xpm > 600) role = 5;
         else if (gpm > 430 || xpm > 500) role = 3;
-        else role = 2; // roam/pos4 fallback
+        else role = 2;
       }
       return { role, laneName };
     }
 
-    // ========== ANALYTICS ==========
     function computeRoleMetrics(matches, heroesById) {
-      const perRole = new Map(); // role -> {wins, total, kdas:[], gpm:[], xpm:[], deaths:[], heroes:Set, lanes:Map}
+      const perRole = new Map();
       const roleSeq = [];
 
       for (const m of matches) {
@@ -402,21 +372,18 @@
         roleSeq.push(role);
       }
 
-      // стабільність ролі (перемикання)
       let switches = 0;
       for (let i=1; i<roleSeq.length; i++) if (roleSeq[i] !== roleSeq[i-1]) switches++;
       const roleStability = roleSeq.length ? 1 - (switches / roleSeq.length) : 0;
 
-      // агрегати і скоринг
       const result = [];
       for (const [role, data] of perRole.entries()) {
         const { wr, stability } = stableWinrate(data.wins, data.total);
-        const avgKDA = aggAvg(data.kdas, null);
-        const avgGPM = aggAvg(data.gpm, null);
-        const avgXPM = aggAvg(data.xpm, null);
-        const avgDeaths = aggAvg(data.deaths, null);
+        const avgKDA = aggAvg(data.kdas);
+        const avgGPM = aggAvg(data.gpm);
+        const avgXPM = aggAvg(data.xpm);
+        const avgDeaths = aggAvg(data.deaths);
 
-        // лейн найкращий
         let bestLane = null, bestLaneWr = null, bestLaneTotal = 0;
         for (const [lname, ldata] of data.lanes.entries()) {
           const w = ldata.wins / ldata.total;
@@ -425,7 +392,6 @@
           }
         }
 
-        // базовий role score: вінрейт зі стабільністю + KPI
         const roleScore =
           (wr * 0.5) +
           (stability * 0.15) +
@@ -464,10 +430,9 @@
     }
 
     function computeContext(matches) {
-      // Час доби, патч, режим гри
-      const byHour = new Map(); // hour -> {wins,total}
-      const modes = new Map();  // game_mode -> {wins,total}
-      const patches = new Map(); // patch? (OpenDota may not include) fallback by version
+      const byHour = new Map();
+      const modes = new Map();
+      const patches = new Map();
 
       for (const m of matches) {
         const hour = new Date(m.start_time * 1000).getHours();
@@ -487,7 +452,6 @@
         patches.set(ver, p);
       }
 
-      // найкращі години
       const hoursArr = Array.from(byHour.entries())
         .map(([h, v]) => ({ hour: h, wr: v.wins / v.total, total: v.total }))
         .sort((a,b) => b.wr - a.wr);
@@ -507,15 +471,14 @@
     }
 
     function computeLaneStats(matches) {
-      const lanes = new Map(); // lane_role -> {wins,total,gpm10:[], note}
+      const lanes = new Map();
       for (const m of matches) {
         const lr = m.lane_role;
         if (!lr) continue;
         const win = (m.radiant_win && m.player_slot < 128) || (!m.radiant_win && m.player_slot >= 128);
         const e = lanes.get(lr) || { wins:0, total:0, gpm10:[] };
         e.total++; if (win) e.wins++;
-        // proxy: не маємо нетворку на 10 хв, використаємо GPM як сурогат
-        if (m.gold_per_min) e.gpm10.push(m.gold_per_min / 6); // ~ наближено
+        if (m.gold_per_min) e.gpm10.push(m.gold_per_min / 6);
         lanes.set(lr, e);
       }
       const rows = [];
@@ -524,27 +487,22 @@
           lane: LANE_MAP[lr] || `Lane ${lr}`,
           wr: e.wins / e.total,
           total: e.total,
-          net10: aggAvg(e.gpm10, null),
+          net10: aggAvg(e.gpm10),
           note: e.total < 8 ? 'Мало даних' : ''
         });
       }
       return rows.sort((a,b)=>b.wr - a.wr);
     }
 
-    // ========== FORECAST ==========
     function buildRoleForecast(roleMetrics, streaks, context) {
-      // Ваги ризику/переваг: базовий score + коригування за серією і часом
       return roleMetrics.perRole.map(r => {
         let score = r.score;
-        // серія: якщо довга серія поразок і роль має низьку стабільність — невелике зниження
         if (streaks.current < -3 && r.stability < 0.4) score -= 0.05;
-        // фаворитні години: якщо bestHour існує, підсилити роль з кращим вінрейтом
         if (context.bestHour && context.bestHour.wr > 0.55) score += 0.03;
-        // лейн співпадіння: якщо є bestLane з wr>0.55 — невеликий бонус
         if (r.bestLaneWr != null && r.bestLaneWr > 0.55) score += 0.02;
 
-        const winProb = Math.max(0.05, Math.min(0.95, score)); // нормалізація до 0..1
-        const risk = 1 - (r.stability * 0.7 + (r.wr * 0.3)); // умовний ризик
+        const winProb = Math.max(0.05, Math.min(0.95, score));
+        const risk = 1 - (r.stability * 0.7 + (r.wr * 0.3));
         return {
           roleName: r.roleName,
           winrate: r.wr,
@@ -558,7 +516,6 @@
       }).sort((a,b)=>b.winProb - a.winProb);
     }
 
-    // ========== RENDER ==========
     function renderRoleForecast(list) {
       const root = document.getElementById('roleForecast');
       root.innerHTML = '';
@@ -693,7 +650,6 @@
       }
     }
 
-    // ========== MAIN ==========
     async function run() {
       const btn = document.getElementById('runBtn');
       const accountId = document.getElementById('accountId').value.trim();
@@ -714,11 +670,9 @@
           fetchHeroConstants()
         ]);
 
-        // heroesById map
         const heroesById = new Map();
         for (const h of heroes) heroesById.set(h.id, h);
 
-        // Фільтруємо валідні матчі (з героями і метриками)
         const valid = matches.filter(m => m && m.hero_id);
 
         const roleMetrics = computeRoleMetrics(valid, heroesById);
@@ -745,7 +699,6 @@
 
     document.getElementById('runBtn').addEventListener('click', run);
 
-    // Для швидкого тесту: постав account_id у URL як ?id=XXXXX
     (function initFromQuery() {
       const params = new URLSearchParams(location.search);
       const id = params.get('id');
@@ -756,12 +709,6 @@
   </script>
 </body>
 </html>
-
-
-
-
-
-
 
 
 
