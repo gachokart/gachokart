@@ -181,6 +181,10 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/heatmap.js@2.0.5/build/heatmap.min.js"></script>
+  <canvas id="radarCanvas" width="400" height="400"></canvas>
+<canvas id="trendCanvas" width="400" height="200"></canvas>
+<div id="heroHeatmap" style="width:600px;height:400px;position:relative;"></div>
   <script>
     /* ------------------------------- UI: weights columns (from earlier) ------------------------------- */
     const countInput = document.getElementById('count');
@@ -213,6 +217,123 @@
       }
       updateSum();
     }
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Heatmap.js -->
+<script src="https://cdn.jsdelivr.net/npm/heatmap.js@2.0.5/build/heatmap.min.js"></script>
+
+<canvas id="radarCanvas" width="400" height="400"></canvas>
+<canvas id="trendCanvas" width="400" height="200"></canvas>
+<div id="heroHeatmap" style="width:600px;height:400px;position:relative;"></div>
+
+<script>
+async function renderAnalytics(accountId) {
+  const [matchesRes, heroesRes] = await Promise.all([
+    fetch(`https://api.opendota.com/api/players/${accountId}/matches?limit=100`),
+    fetch(`https://api.opendota.com/api/players/${accountId}/heroes`)
+  ]);
+  const matches = await matchesRes.json();
+  const heroes = await heroesRes.json();
+
+  // === 1️⃣ Метрики ===
+  const kda = matches.reduce((sum, m) => sum + (m.kills + m.assists) / Math.max(1, m.deaths), 0) / matches.length;
+  const gpm = matches.reduce((s, m) => s + m.gold_per_min, 0) / matches.length / 600; // нормалізовано
+  const xpm = matches.reduce((s, m) => s + m.xp_per_min, 0) / matches.length / 600;
+  const winrate = matches.filter(m => m.radiant_win === (m.player_slot < 128)).length / matches.length;
+
+  // стабільність (дисперсія KDA)
+  const meanKda = kda;
+  const stddev = Math.sqrt(matches.reduce((s, m) => {
+    const val = (m.kills + m.assists) / Math.max(1, m.deaths);
+    return s + Math.pow(val - meanKda, 2);
+  }, 0) / matches.length);
+  const consistency = 1 / (1 + stddev);
+
+  // impact через damage/net_worth
+  const impact = matches.reduce((s, m) => s + (m.hero_damage / Math.max(1, m.net_worth)), 0) / matches.length;
+  
+  const data = { kda, gpm, xpm, consistency, impact };
+
+  // === 2️⃣ Радар ===
+  const ctxRadar = document.getElementById("radarCanvas").getContext("2d");
+  window.radarChart?.destroy?.();
+  window.radarChart = new Chart(ctxRadar, {
+    type: "radar",
+    data: {
+      labels: ["KDA", "GPM", "XPM", "Consistency", "Impact"],
+      datasets: [{
+        label: "Performance Profile",
+        data: [data.kda, data.gpm, data.xpm, data.consistency, data.impact],
+        backgroundColor: "rgba(75,192,192,0.2)",
+        borderColor: "rgba(75,192,192,1)",
+        borderWidth: 2
+      }]
+    },
+    options: {
+      scales: {
+        r: {
+          min: 0,
+          max: 2,
+          ticks: { stepSize: 0.5, color: "#aaa" },
+          pointLabels: { color: "#fff" },
+          grid: { color: "rgba(255,255,255,0.1)" }
+        }
+      },
+      plugins: { legend: { labels: { color: "#fff" } } }
+    }
+  });
+
+  // === 3️⃣ Тренд winrate (останні 20 ігор) ===
+  const ctxTrend = document.getElementById("trendCanvas").getContext("2d");
+  const trendData = matches.slice(-20).map((m, i) => ({
+    x: i + 1,
+    y: m.radiant_win === (m.player_slot < 128) ? 1 : 0
+  }));
+
+  window.trendChart?.destroy?.();
+  window.trendChart = new Chart(ctxTrend, {
+    type: "line",
+    data: {
+      datasets: [{
+        label: "Win/Loss Trend",
+        data: trendData,
+        borderColor: "rgba(255,99,132,1)",
+        backgroundColor: "rgba(255,99,132,0.2)",
+        tension: 0.2
+      }]
+    },
+    options: {
+      scales: {
+        x: { ticks: { color: "#ccc" } },
+        y: { min: 0, max: 1, ticks: { color: "#ccc", stepSize: 1 } }
+      },
+      plugins: { legend: { labels: { color: "#fff" } } }
+    }
+  });
+
+  // === 4️⃣ Hero Heatmap (ефективність героїв) ===
+  const heroHeatmap = h337.create({
+    container: document.getElementById('heroHeatmap'),
+    radius: 40,
+    maxOpacity: 0.6,
+    backgroundColor: "rgba(0,0,0,0.3)"
+  });
+
+  const heroData = heroes.map((h, i) => ({
+    x: (i % 10) * 60 + 30,
+    y: Math.floor(i / 10) * 40 + 30,
+    value: h.win / Math.max(1, h.games)
+  }));
+
+  heroHeatmap.setData({
+    max: 1,
+    data: heroData
+  });
+}
+
+// 🔹 Виклик функції
+renderAnalytics(863386335); // заміни своїм accountId
+
 
     function updateSum(){ const sum=values.reduce((s,x)=>s+x,0); document.getElementById('statusText').innerText = 'Поточна сума ваг: '+sum.toFixed(2); }
 
