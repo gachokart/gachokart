@@ -258,31 +258,24 @@
 
     // ========== ROLE INFERENCE ==========
     // Повертаємо роль як 0..4: 0=Hard Support, 1=Support, 2=Offlane, 3=Mid, 4=Carry
-    function inferRole(match) {
-      const lr = match.lane_role;
-      const gpm = match.gold_per_min || 0;
-      const xpm = match.xp_per_min || 0;
-      const k = match.kills || 0;
-      const a = match.assists || 0;
+    function inferRole(m) {
+  const lr = m.lane_role;
+  const gpm = m.gold_per_min || 0;
+  const xpm = m.xp_per_min || 0;
 
-      // 1) Якщо lane_role є — довіряємось йому
-      if (lr === 1) return { role: 4, laneName: LANE_MAP[1] }; // Carry
-      if (lr === 2) return { role: 3, laneName: LANE_MAP[2] }; // Mid
-      if (lr === 3) return { role: 2, laneName: LANE_MAP[3] }; // Offlane
-      if (lr === 4) return { role: 1, laneName: LANE_MAP[4] }; // Support (roam/jungle)
+  // 1. Якщо lane_role є
+  if (lr === 1) return { role: 4, laneName: "Carry" };
+  if (lr === 2) return { role: 3, laneName: "Mid" };
+  if (lr === 3) return { role: 2, laneName: "Offlane" };
+  if (lr === 4) return { role: 1, laneName: "Support" };
 
-      // 2) Якщо lane_role немає — класифікація за GPM/XPM та участю у кілах
-      const impact = (k + a); // сурогат впливу
-      // Високі економічні показники -> Carry
-      if (gpm >= 500 || xpm >= 600 || (gpm >= 470 && impact >= 20)) return { role: 4, laneName: '?' };
-      // Високий XPM -> Mid
-      if (xpm >= 520 || (xpm >= 480 && k >= 10)) return { role: 3, laneName: '?' };
-      // Середня економіка + участь -> Offlane
-      if (gpm >= 380 || xpm >= 450) return { role: 2, laneName: '?' };
-      // Низька економіка: розділяємо Support vs Hard Support по асистам
-      if (gpm < 340 && xpm < 420 && a >= k + 4) return { role: 0, laneName: '?' }; // Hard Support
-      return { role: 1, laneName: '?' }; // Support
-    }
+  // 2. Якщо lane_role немає — спочатку перевіряємо високі значення
+  if (gpm >= 550 || xpm >= 700) return { role: 4, laneName: "Carry" };
+  if (xpm >= 500) return { role: 3, laneName: "Mid" };
+  if (gpm >= 400) return { role: 2, laneName: "Offlane" };
+  if (gpm < 320 && xpm < 400) return { role: 0, laneName: "Hard Support" };
+  return { role: 1, laneName: "Support" };
+}
 
     // ========== ANALYTICS ==========
     function computeRoleMetrics(matches, heroesById) {
