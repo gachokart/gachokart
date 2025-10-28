@@ -1,641 +1,294 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8" />
-  <title>game3.html — Візуальні колонки ваги (sum=1)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>game3 — Виставлення ваг у колонках</title>
   <style>
-    :root {
-      --bg: #0f1220;
-      --panel: #151a2e;
-      --accent: #4da3ff;
-      --accent2: #7cf38e;
-      --text: #e7ecff;
-      --muted: #9aa3b2;
-      --danger: #ff6b6b;
-      --warn: #ffc857;
-      --grid: #2a3355;
-    }
-    html, body {
-      height: 100%;
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-    }
-    .wrap {
-      max-width: 1100px;
-      margin: 24px auto;
-      padding: 0 16px 48px;
-    }
-    h1 {
-      font-size: 20px;
-      font-weight: 600;
-      margin: 0 0 12px;
-    }
-    .controls {
-      display: grid;
-      grid-template-columns: repeat(6, minmax(0, 1fr));
-      gap: 12px;
-      background: var(--panel);
-      border: 1px solid #222a47;
-      border-radius: 10px;
-      padding: 12px;
-    }
-    .controls label {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 12px;
-      color: var(--muted);
-    }
-    .controls input[type="number"] {
-      background: #0c1020;
-      border: 1px solid #243055;
-      border-radius: 8px;
-      padding: 8px 10px;
-      color: var(--text);
-      font-size: 14px;
-      outline: none;
-    }
-    .controls button {
-      background: var(--accent);
-      color: #09101f;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform .05s ease, box-shadow .2s ease;
-    }
-    .controls button:hover { box-shadow: 0 6px 16px rgba(77,163,255,.25); }
-    .controls button:active { transform: translateY(1px); }
-    .hint {
-      font-size: 12px;
-      color: var(--muted);
-      margin: 10px 2px 0;
-    }
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#06b6d4;--muted:#9aa4b2;}
+    *{box-sizing:border-box;font-family:Inter, system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),#071024);color:#e6eef6;min-height:100vh;padding:28px}
+    .container{max-width:1100px;margin:0 auto}
+    header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+    h1{font-size:20px;margin:0}
+    .controls{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+    .card{background:rgba(255,255,255,0.03);padding:14px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6)}
 
-    /* Chart area */
-    .chart {
-      margin-top: 16px;
-      height: 460px;
-      background: linear-gradient(180deg, #0f1428, #0e1325);
-      border: 1px solid #222a47;
-      border-radius: 12px;
-      position: relative;
-      padding: 12px 12px 36px;
-      display: grid;
-      grid-template-columns: 60px 1fr;
-      gap: 8px;
-    }
-    /* Y-axis grid */
-    .y-axis {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      align-items: flex-end;
-      padding: 6px 8px 24px 0;
-      border-right: 1px solid #1f2744;
-    }
-    .y-tick {
-      font-size: 11px;
-      color: var(--muted);
-    }
-    /* columns container */
-    .cols {
-      position: relative;
-      display: grid;
-      grid-auto-columns: 1fr;
-      grid-auto-flow: column;
-      gap: 8px;
-      align-items: end;
-    }
-    .col-wrap {
-      position: relative;
-      height: 100%;
-      background:
-        linear-gradient(#0000,#0000) padding-box,
-        repeating-linear-gradient(
-          to top,
-          var(--grid) 0px, var(--grid) 1px,
-          transparent 1px, transparent 48px
-        ) border-box;
-      border: 1px dashed #263058;
-      border-radius: 10px;
-      padding: 4px;
-      display: flex;
-      align-items: end;
-      user-select: none;
-    }
-    .col {
-      position: relative;
-      width: 100%;
-      border-radius: 8px;
-      background: linear-gradient(180deg, rgba(77,163,255,.9), rgba(77,163,255,.55));
-      box-shadow: inset 0 -10px 20px rgba(9,16,31,.35), 0 8px 14px rgba(77,163,255,.2);
-      cursor: ns-resize;
-      transition: background .15s ease;
-    }
-    .col.dragging {
-      background: linear-gradient(180deg, rgba(124,243,142,.95), rgba(124,243,142,.6));
-    }
-    .col .label {
-      position: absolute;
-      bottom: 6px;
-      left: 6px;
-      right: 6px;
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      color: #0a1122;
-      font-weight: 700;
-      mix-blend-mode: screen;
-    }
-    .col .label .value { letter-spacing: .2px; }
-    .col .label .idx { color: #06101e; font-weight: 600; opacity: .8; }
-    .col .bounds {
-      position: absolute;
-      top: 6px;
-      left: 6px;
-      right: 6px;
-      display: flex;
-      justify-content: space-between;
-      font-size: 10px;
-      color: #071126;
-      font-weight: 700;
-      opacity: .9;
-    }
+    .small{font-size:13px;color:var(--muted)}
+    label{display:block;font-size:13px;margin-bottom:6px}
 
-    /* per-column bounds editor */
-    .bounds-editor {
-      margin-top: 10px;
-      background: var(--panel);
-      border: 1px solid #222a47;
-      border-radius: 10px;
-      padding: 8px;
-    }
-    .bounds-grid {
-      display: grid;
-      grid-template-columns: 60px repeat(2, 1fr);
-      gap: 8px;
-      align-items: center;
-    }
-    .bounds-grid .hdr {
-      font-size: 12px;
-      color: var(--muted);
-    }
-    .bounds-grid input[type="number"] {
-      background: #0c1020;
-      border: 1px solid #243055;
-      border-radius: 8px;
-      padding: 6px 8px;
-      color: var(--text);
-      font-size: 13px;
-      outline: none;
-    }
-    .error {
-      color: var(--danger);
-      font-size: 12px;
-      margin-top: 6px;
-    }
-    .footer {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      margin-top: 10px;
-      font-size: 12px;
-      color: var(--muted);
-    }
-    .pill {
-      background: #17203e;
-      border: 1px solid #243055;
-      border-radius: 999px;
-      padding: 6px 10px;
-      color: var(--text);
+    .top-row{display:flex;gap:12px}
+    .left, .right{flex:1}
+
+    .cols-area{margin-top:18px;padding:14px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:10px}
+    .cols{display:flex;gap:12px;align-items:end;height:320px;padding:12px}
+    .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px}
+    .bar{width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center}
+
+    /* vertical slider styling: rotate the range input */
+    .vrange{appearance:none;width:240px;height:18px;transform:rotate(-90deg);-webkit-transform:rotate(-90deg);}
+    .vrange::-webkit-slider-runnable-track{height:6px;background:#22303b;border-radius:6px}
+    .vrange::-webkit-slider-thumb{appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);margin-top:-6px}
+    .vrange::-moz-range-track{height:6px;background:#22303b;border-radius:6px}
+    .vrange::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--accent)}
+
+    .bar-fill{width:70%;background:linear-gradient(180deg,var(--accent),#036b8a);border-radius:6px 6px 2px 2px;display:flex;align-items:flex-end;justify-content:center}
+    .value-pill{background:rgba(255,255,255,0.04);padding:6px 8px;border-radius:999px;font-weight:600;font-size:13px}
+
+    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    button{background:var(--accent);color:#04202a;border:0;padding:10px 12px;border-radius:8px;font-weight:700;cursor:pointer}
+    button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+
+    .footer{margin-top:16px;color:var(--muted);font-size:13px}
+
+    @media (max-width:760px){
+      .cols{height:240px}
+      .vrange{width:180px}
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>Візуальні колонки ваги з сумою 1</h1>
+  <div class="container">
+    <header>
+      <h1>game3 — Виставлення ваг (0 → 1) в колонках</h1>
+      <div class="small">Виберіть кількість значень, тягніть повзунки в колонках, і поставте власні межі (наприклад 0.04–0.96).</div>
+    </header>
 
-    <div class="controls">
-      <label>
-        Кількість колонок (N)
-        <input id="nInput" type="number" min="2" max="24" step="1" value="6">
-      </label>
-      <label>
-        Мінімум (глобально)
-        <input id="minInput" type="number" min="0" max="1" step="0.001" value="0">
-      </label>
-      <label>
-        Максимум (глобально)
-        <input id="maxInput" type="number" min="0" max="1" step="0.001" value="1">
-      </label>
-      <label>
-        Крок зміни (drag step)
-        <input id="stepInput" type="number" min="0.0001" max="0.1" step="0.0001" value="0.001">
-      </label>
-      <label>
-        Ініціалізація
-        <select id="initSelect">
-          <option value="uniform">Рівномірно (1/N)</option>
-          <option value="random">Випадково (нормалізовано)</option>
-        </select>
-      </label>
-      <div style="display:flex; gap:8px; align-items:end;">
-        <button id="applyBtn">Створити</button>
-        <button id="toggleBoundsBtn" style="background: var(--warn);">Редагувати межі</button>
+    <div class="top-row">
+      <div class="card left">
+        <div class="controls" style="align-items:center;">
+          <div>
+            <label for="count">Кількість значень</label>
+            <input id="count" type="number" min="1" max="40" value="6" style="width:90px;padding:8px;border-radius:8px;border:0;background:rgba(255,255,255,0.02);color:inherit;font-weight:700">
+          </div>
+
+          <div>
+            <label for="minBound">Мінімум межі (0–1)</label>
+            <input id="minBound" type="number" step="0.01" min="0" max="1" value="0.04" style="width:110px;padding:8px;border-radius:8px;border:0;background:rgba(255,255,255,0.02);">
+          </div>
+
+          <div>
+            <label for="maxBound">Максимум межі (0–1)</label>
+            <input id="maxBound" type="number" step="0.01" min="0" max="1" value="0.96" style="width:110px;padding:8px;border-radius:8px;border:0;background:rgba(255,255,255,0.02);">
+          </div>
+
+          <div style="display:flex;flex-direction:column;justify-content:flex-end;">
+            <label class="small">Дія</label>
+            <div class="actions">
+              <button id="randomize">Випадково</button>
+              <button id="normalize">Нормалізувати (сума=1)</button>
+              <button id="rescale">Масштабувати в межі</button>
+              <button id="clamp" class="ghost">Прив'язати до меж</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:10px;color:var(--muted);font-size:13px">Порада: натисніть "Масштабувати в межі", щоб пропорційно розподілити поточні значення в обраний інтервал. "Прив'язати до меж" просто обрізає значення до меж.</div>
       </div>
-      <div class="hint" style="grid-column: 1/-1;">
-        Клік і перетягування мишкою змінює висоту колонки. Сума завжди дорівнює 1. Межі поважаються глобально або пер-колонково.
+
+      <div class="card right" style="width:320px">
+        <div style="display:flex;gap:10px;align-items:center;justify-content:space-between;">
+          <div>
+            <label class="small">Поточні значення (після нормалізації)</label>
+            <div id="sumText" style="font-weight:700;font-size:16px">Сума: 1.00</div>
+          </div>
+          <div style="text-align:right">
+            <label class="small">Крок повзунка</label>
+            <div style="font-weight:700">0.01</div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px;display:flex;gap:8px;flex-direction:column">
+          <div class="small">Режим підрахунку:</div>
+          <select id="mode" style="padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);border:0;color:inherit;font-weight:700">
+            <option value="direct">Прямі значення (0–1)</option>
+            <option value="relative">Відносні (після нормалізації сума=1)</option>
+          </select>
+        </div>
       </div>
     </div>
 
-    <div class="chart">
-      <div class="y-axis">
-        <div class="y-tick">1.00</div>
-        <div class="y-tick">0.75</div>
-        <div class="y-tick">0.50</div>
-        <div class="y-tick">0.25</div>
-        <div class="y-tick">0.00</div>
-      </div>
+    <div class="card cols-area">
       <div class="cols" id="cols"></div>
-    </div>
 
-    <div id="boundsEditor" class="bounds-editor" style="display:none;">
-      <div class="bounds-grid" id="boundsGrid"></div>
-      <div id="boundsError" class="error" style="display:none;"></div>
-      <div class="footer">
-        <span class="pill">Порада: мінімальні межі не повинні в сумі перевищувати 1; максимуми — не менші за мінімуми.</span>
-        <button id="saveBoundsBtn" style="background: var(--accent2); color:#06121f; font-weight:700;">Зберегти межі</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px">
+        <div class="small">Показано числове значення під колонкою. Тягніть круглі повзунки або змініть вручну.</div>
+        <div>
+          <button id="export">Експорт JSON</button>
+        </div>
       </div>
     </div>
+
+    <div class="footer">Збережіть або експортуйте значення, скопіювавши JSON. Максимальна кількість колонок — 40.</div>
   </div>
 
-  <script>
-    // Core state
-    let N = 6;
-    let values = [];
-    let minGlobal = 0.0;
-    let maxGlobal = 1.0;
-    // Per-column bounds (nullable -> use global)
-    let minBounds = [];
-    let maxBounds = [];
-    let dragging = { idx: null, startY: 0, startValue: 0 };
-    let step = 0.001;
+<script>
+  // Ключові елементи
+  const countInput = document.getElementById('count');
+  const colsWrap = document.getElementById('cols');
+  const sumText = document.getElementById('sumText');
+  const minBoundInput = document.getElementById('minBound');
+  const maxBoundInput = document.getElementById('maxBound');
+  const randomizeBtn = document.getElementById('randomize');
+  const normalizeBtn = document.getElementById('normalize');
+  const rescaleBtn = document.getElementById('rescale');
+  const clampBtn = document.getElementById('clamp');
+  const exportBtn = document.getElementById('export');
+  const modeSelect = document.getElementById('mode');
 
-    const els = {
-      n: document.getElementById('nInput'),
-      min: document.getElementById('minInput'),
-      max: document.getElementById('maxInput'),
-      step: document.getElementById('stepInput'),
-      init: document.getElementById('initSelect'),
-      apply: document.getElementById('applyBtn'),
-      cols: document.getElementById('cols'),
-      toggleBounds: document.getElementById('toggleBoundsBtn'),
-      boundsEditor: document.getElementById('boundsEditor'),
-      boundsGrid: document.getElementById('boundsGrid'),
-      boundsError: document.getElementById('boundsError'),
-      saveBounds: document.getElementById('saveBoundsBtn')
-    };
+  let values = []; // числові значення 0..1
 
-    // Utilities
-    const clamp = (x, lo, hi) => Math.min(hi, Math.max(lo, x));
-    const sum = arr => arr.reduce((a, b) => a + b, 0);
-    const approx = x => Math.round(x * 1000) / 1000;
+  function createCols(n){
+    colsWrap.innerHTML = '';
+    values = new Array(n).fill(0).map(()=>+(Math.random()).toFixed(2));
+    // ensure not all zero
+    if(values.every(v=>v===0)) values[0]=0.5;
+    values = values.map(v=>clamp(v,0,1));
 
-    function getMin(i) { return (minBounds[i] ?? minGlobal); }
-    function getMax(i) { return (maxBounds[i] ?? maxGlobal); }
+    for(let i=0;i<n;i++){
+      const col = document.createElement('div');
+      col.className='col';
 
-    // Initialize values
-    function initValues(mode, n) {
-      if (mode === 'uniform') {
-        return Array.from({ length: n }, () => 1 / n);
-      }
-      // random normalized within global bounds (best effort)
-      let arr = Array.from({ length: n }, () => Math.random());
-      let s = sum(arr);
-      arr = arr.map(x => x / s);
-      // clamp to bounds and renormalize robustly
-      arr = arr.map((x, i) => clamp(x, getMin(i), getMax(i)));
-      return redistribute(arr);
-    }
+      const label = document.createElement('div');
+      label.className='value-pill';
+      label.textContent = values[i].toFixed(2);
 
-    // Robust redistribution respecting per-column bounds to reach sum=1
-    // Algorithm: water-filling style
-    function redistribute(current, targetSum = 1.0) {
-      const n = current.length;
-      let v = current.slice(); // working copy
+      const barWrap = document.createElement('div');
+      barWrap.className='bar';
 
-      const minA = v.map((_, i) => getMin(i));
-      const maxA = v.map((_, i) => getMax(i));
+      const barFill = document.createElement('div');
+      barFill.className='bar-fill';
+      barFill.style.height = (values[i]*100)+'%';
+      barFill.style.width = '72%';
 
-      // First clamp to bounds
-      for (let i = 0; i < n; i++) v[i] = clamp(v[i], minA[i], maxA[i]);
+      barWrap.appendChild(barFill);
 
-      const minSum = sum(minA);
-      const maxSum = sum(maxA);
-      if (minSum > targetSum) {
-        // infeasible: push down proportionally to mins
-        const scale = targetSum / minSum;
-        for (let i = 0; i < n; i++) v[i] = minA[i] * scale;
-        return v;
-      }
-      if (maxSum < targetSum) {
-        // infeasible: extend to maxima proportionally
-        const scale = targetSum / maxSum;
-        for (let i = 0; i < n; i++) v[i] = maxA[i] * scale;
-        return v;
-      }
+      // vertical range input (rotated)
+      const input = document.createElement('input');
+      input.type = 'range';
+      input.min = 0; input.max = 1; input.step = 0.01; input.value = values[i];
+      input.className = 'vrange';
+      input.dataset.index = i;
 
-      // Calculate free capacity above mins
-      const freeCaps = maxA.map((max, i) => max - minA[i]);
-      const freeSum = sum(freeCaps);
-      let remaining = targetSum - sum(minA); // amount to distribute above mins
-
-      // Start from mins and allocate remaining proportionally to freeCaps
-      v = minA.slice();
-
-      if (freeSum <= 1e-12) {
-        // All at bounds already
-        return v;
-      }
-
-      // Iteratively allocate; when hitting max, freeze that slot
-      let active = Array.from({ length: n }, (_, i) => i);
-      while (remaining > 1e-12 && active.length > 0) {
-        const caps = active.map(i => freeCaps[i]);
-        const capSum = sum(caps);
-        if (capSum <= 1e-12) break;
-
-        // Proportional share for each active index
-        let exhausted = [];
-        for (const i of active) {
-          const share = remaining * (freeCaps[i] / capSum);
-          const add = Math.min(share, freeCaps[i]);
-          v[i] += add;
-          freeCaps[i] -= add;
-          remaining -= add;
-          if (freeCaps[i] <= 1e-9) exhausted.push(i);
-        }
-        // Remove exhausted slots
-        active = active.filter(i => !exhausted.includes(i));
-      }
-      // Numerical cleanup
-      const total = sum(v);
-      if (Math.abs(total - targetSum) > 1e-6) {
-        const diff = targetSum - total;
-        // Distribute tiny diff across non-saturated indices if possible
-        const candidates = v.map((x, i) => (x < maxA[i] - 1e-9 ? i : null)).filter(i => i !== null);
-        if (candidates.length > 0) {
-          const d = diff / candidates.length;
-          for (const i of candidates) v[i] = clamp(v[i] + d, minA[i], maxA[i]);
-        }
-      }
-      return v;
-    }
-
-    // After dragging one index to target, adjust others to keep sum=1 with bounds
-    function setValueWithConservation(idx, target) {
-      const n = values.length;
-      const minA = values.map((_, i) => getMin(i));
-      const maxA = values.map((_, i) => getMax(i));
-
-      // Clamp dragged
-      let vDragged = clamp(target, minA[idx], maxA[idx]);
-
-      const othersIdx = [];
-      for (let i = 0; i < n; i++) if (i !== idx) othersIdx.push(i);
-
-      let v = values.slice();
-      v[idx] = vDragged;
-
-      const othersSum = sum(othersIdx.map(i => v[i]));
-      const targetOthersSum = 1.0 - vDragged;
-
-      // Quick path: scale proportionally then fix bounds iteratively
-      if (othersSum > 1e-12) {
-        const scale = targetOthersSum / othersSum;
-        for (const i of othersIdx) v[i] = clamp(values[i] * scale, minA[i], maxA[i]);
-      } else {
-        // If othersSum is zero (unlikely), spread evenly within bounds
-        const feasible = othersIdx.map(i => ({ i, min: minA[i], max: maxA[i] }));
-        const minSum = feasible.reduce((a, b) => a + b.min, 0);
-        const maxSum = feasible.reduce((a, b) => a + b.max, 0);
-        if (minSum > targetOthersSum) {
-          const scale = targetOthersSum / minSum;
-          for (const f of feasible) v[f.i] = f.min * scale;
-        } else if (maxSum < targetOthersSum) {
-          const scale = targetOthersSum / maxSum;
-          for (const f of feasible) v[f.i] = f.max * scale;
-        } else {
-          // distribute above mins proportionally to capacity
-          const caps = feasible.map(f => f.max - f.min);
-          const capSum = caps.reduce((a, b) => a + b, 0);
-          for (let k = 0; k < feasible.length; k++) {
-            const share = (targetOthersSum - minSum) * (caps[k] / capSum);
-            v[feasible[k].i] = feasible[k].min + share;
-          }
-        }
-      }
-
-      // Final feasibility fix via global redistribute (keeps dragged value fixed)
-      const lock = vDragged;
-      const temp = v.slice();
-      // Put others to temp but keep idx locked
-      temp[idx] = lock;
-      // Redistribute others to sum 1 - lock
-      const others = othersIdx.map(i => temp[i]);
-      const redistributed = redistribute(others, 1.0 - lock);
-      for (let k = 0; k < othersIdx.length; k++) {
-        temp[othersIdx[k]] = redistributed[k];
-      }
-
-      values = temp.map(x => approx(x));
-      render();
-    }
-
-    // Rendering
-    function render() {
-      const cols = els.cols;
-      cols.innerHTML = '';
-      const n = values.length;
-      for (let i = 0; i < n; i++) {
-        const colWrap = document.createElement('div');
-        colWrap.className = 'col-wrap';
-
-        const col = document.createElement('div');
-        col.className = 'col';
-        col.style.height = `${values[i] * 100}%`;
-        col.dataset.idx = i;
-
-        const label = document.createElement('div');
-        label.className = 'label';
-        const valueEl = document.createElement('div');
-        valueEl.className = 'value';
-        valueEl.textContent = values[i].toFixed(3);
-        const idxEl = document.createElement('div');
-        idxEl.className = 'idx';
-        idxEl.textContent = `#${i+1}`;
-        label.appendChild(valueEl);
-        label.appendChild(idxEl);
-
-        const bounds = document.createElement('div');
-        bounds.className = 'bounds';
-        const minEl = document.createElement('div');
-        minEl.textContent = `min ${getMin(i).toFixed(3)}`;
-        const maxEl = document.createElement('div');
-        maxEl.textContent = `max ${getMax(i).toFixed(3)}`;
-        bounds.appendChild(minEl);
-        bounds.appendChild(maxEl);
-
-        col.appendChild(label);
-        col.appendChild(bounds);
-        colWrap.appendChild(col);
-        cols.appendChild(colWrap);
-
-        // Mouse / pointer interactions
-        col.addEventListener('pointerdown', (e) => {
-          dragging.idx = i;
-          dragging.startY = e.clientY;
-          dragging.startValue = values[i];
-          col.classList.add('dragging');
-          col.setPointerCapture(e.pointerId);
-        });
-        col.addEventListener('pointermove', (e) => {
-          if (dragging.idx !== i) return;
-          const wrapRect = colWrap.getBoundingClientRect();
-          const relY = e.clientY - wrapRect.top; // px from top
-          const heightPx = wrapRect.height;
-          let targetRatio = 1 - (relY / heightPx);
-          // quantize by step
-          targetRatio = Math.round(targetRatio / step) * step;
-          setValueWithConservation(i, clamp(targetRatio, 0, 1));
-        });
-        col.addEventListener('pointerup', (e) => {
-          if (dragging.idx === i) {
-            col.classList.remove('dragging');
-            dragging.idx = null;
-          }
-        });
-        col.addEventListener('pointerleave', (e) => {
-          if (dragging.idx === i) {
-            col.classList.remove('dragging');
-            dragging.idx = null;
-          }
-        });
-      }
-      // Footer pill with sum
-      const footer = document.querySelector('.footer .pill');
-      if (footer) footer.textContent = `Поточна сума: ${sum(values).toFixed(6)} (має бути 1)`;
-    }
-
-    // Bounds editor UI
-    function buildBoundsEditor() {
-      const grid = els.boundsGrid;
-      grid.innerHTML = '';
-      const hdrRow = document.createElement('div');
-      hdrRow.className = 'bounds-grid';
-      hdrRow.innerHTML = `
-        <div class="hdr">Колонка</div>
-        <div class="hdr">Мінімум</div>
-        <div class="hdr">Максимум</div>
-      `;
-      grid.appendChild(hdrRow);
-
-      for (let i = 0; i < N; i++) {
-        const row = document.createElement('div');
-        row.className = 'bounds-grid';
-        const label = document.createElement('div');
-        label.textContent = `#${i+1}`;
-        const minInp = document.createElement('input');
-        minInp.type = 'number'; minInp.step = '0.001'; minInp.min = '0'; minInp.max = '1';
-        minInp.value = (minBounds[i] ?? minGlobal).toString();
-        const maxInp = document.createElement('input');
-        maxInp.type = 'number'; maxInp.step = '0.001'; maxInp.min = '0'; maxInp.max = '1';
-        maxInp.value = (maxBounds[i] ?? maxGlobal).toString();
-
-        row.appendChild(label);
-        row.appendChild(minInp);
-        row.appendChild(maxInp);
-        grid.appendChild(row);
-
-        row.dataset.idx = i;
-      }
-    }
-
-    function saveBoundsFromEditor() {
-      const rows = els.boundsGrid.querySelectorAll('.bounds-grid');
-      const entries = [];
-      rows.forEach((row, rIdx) => {
-        if (rIdx === 0) return; // header
-        const i = parseInt(row.dataset.idx, 10);
-        const inputs = row.querySelectorAll('input');
-        const minV = parseFloat(inputs[0].value);
-        const maxV = parseFloat(inputs[1].value);
-        entries.push({ i, minV, maxV });
+      input.addEventListener('input', (e)=>{
+        const idx = +e.target.dataset.index;
+        const v = +(+e.target.value).toFixed(2);
+        values[idx] = v;
+        label.textContent = v.toFixed(2);
+        barFill.style.height = (v*100)+'%';
+        updateSum();
       });
 
-      // Validate
-      const minSum = entries.reduce((a, e) => a + e.minV, 0);
-      const badMinSum = minSum > 1 + 1e-9;
-      const badPair = entries.some(e => e.maxV < e.minV - 1e-12);
-      if (badMinSum || badPair) {
-        els.boundsError.style.display = 'block';
-        els.boundsError.textContent = badMinSum
-          ? `Сума мінімумів (${minSum.toFixed(3)}) перевищує 1 — зменшіть деякі мінімальні значення.`
-          : `Для деяких колонок максимум менший за мінімум — перевірте межі.`;
-        return false;
-      }
-      els.boundsError.style.display = 'none';
+      // double-click to zero or reset
+      input.addEventListener('dblclick', ()=>{
+        const idx = +input.dataset.index;
+        values[idx] = 0;
+        input.value = 0;
+        label.textContent = '0.00';
+        barFill.style.height = '0%';
+        updateSum();
+      });
 
-      for (const { i, minV, maxV } of entries) {
-        minBounds[i] = clamp(minV, 0, 1);
-        maxBounds[i] = clamp(maxV, 0, 1);
-        // Also clamp current values and re-normalize
-        values[i] = clamp(values[i], minBounds[i], maxBounds[i]);
-      }
-      values = redistribute(values, 1.0).map(approx);
-      render();
-      return true;
+      col.appendChild(label);
+      col.appendChild(barWrap);
+      col.appendChild(input);
+      colsWrap.appendChild(col);
     }
+    updateSum();
+  }
 
-    // Apply controls
-    function applySettings() {
-      const n = clamp(parseInt(els.n.value, 10) || 6, 2, 24);
-      N = n;
-      minGlobal = clamp(parseFloat(els.min.value) || 0, 0, 1);
-      maxGlobal = clamp(parseFloat(els.max.value) || 1, 0, 1);
-      if (maxGlobal < minGlobal) maxGlobal = minGlobal;
-      step = clamp(parseFloat(els.step.value) || 0.001, 0.0001, 0.1);
-      // Resize per-column bounds arrays
-      minBounds = Array.from({ length: N }, (_, i) => minBounds[i] ?? null);
-      maxBounds = Array.from({ length: N }, (_, i) => maxBounds[i] ?? null);
+  function clamp(x,a,b){ return Math.min(b,Math.max(a,x)); }
 
-      values = initValues(els.init.value, N).map(approx);
-      buildBoundsEditor();
-      render();
-    }
+  function updateSum(){
+    const sum = values.reduce((s,x)=>s+x,0);
+    sumText.textContent = 'Сума: '+sum.toFixed(2);
+  }
 
-    // Events
-    els.apply.addEventListener('click', applySettings);
-    els.toggleBounds.addEventListener('click', () => {
-      const show = els.boundsEditor.style.display === 'none';
-      els.boundsEditor.style.display = show ? 'block' : 'none';
-      if (show) buildBoundsEditor();
-    });
-    els.saveBounds.addEventListener('click', () => {
-      const ok = saveBoundsFromEditor();
-      if (ok) {
-        els.boundsEditor.style.display = 'none';
+  // Normalize so that sum(values) == 1 (if sum == 0, distribute evenly)
+  function normalize(){
+    const sum = values.reduce((s,x)=>s+x,0);
+    if(sum===0){
+      const n = values.length;
+      values = values.map(()=>+(1/n).toFixed(2));
+    } else {
+      values = values.map(v=>+(v/sum).toFixed(2));
+      // fix rounding so total exactly 1.00 by adjusting largest element
+      let newSum = values.reduce((s,x)=>s+x,0);
+      const diff = +(1 - newSum).toFixed(2);
+      if(Math.abs(diff) > 0){
+        const idx = values.reduce((i,cur,ind,arr)=> cur>arr[i]?ind:i,0);
+        values[idx] = +(values[idx] + diff).toFixed(2);
+        if(values[idx] < 0) values[idx] = 0;
       }
-    });
+    }
+    // push values to DOM
+    syncDomFromValues();
+    updateSum();
+  }
 
-    // Boot
-    applySettings();
-  </script>
+  // Rescale values proportionally into [minBound, maxBound]
+  function rescaleToBounds(){
+    let minB = parseFloat(minBoundInput.value);
+    let maxB = parseFloat(maxBoundInput.value);
+    if(isNaN(minB)) minB=0; if(isNaN(maxB)) maxB=1;
+    if(minB<0) minB=0; if(maxB>1) maxB=1;
+    if(minB >= maxB){ alert('Мінімум має бути менше максимуму'); return; }
+
+    // Normalize first so we have proportions
+    const total = values.reduce((s,x)=>s+x,0);
+    let rel = values.slice();
+    if(total === 0) rel = rel.map(()=>1/rel.length);
+    else rel = rel.map(v=>v/total);
+
+    // Map proportionally: new = minB + rel*(maxB-minB)
+    values = rel.map(r=>+(minB + r*(maxB-minB)).toFixed(2));
+
+    // Fix rounding to keep each within bounds and sum maybe not 1
+    syncDomFromValues();
+    updateSum();
+  }
+
+  // Clamp each value to [minBound, maxBound]
+  function clampToBounds(){
+    let minB = parseFloat(minBoundInput.value);
+    let maxB = parseFloat(maxBoundInput.value);
+    if(isNaN(minB)) minB=0; if(isNaN(maxB)) maxB=1;
+    if(minB >= maxB){ alert('Мінімум має бути менше максимуму'); return; }
+    values = values.map(v=>+(clamp(v,minB,maxB)).toFixed(2));
+    syncDomFromValues();
+    updateSum();
+  }
+
+  function syncDomFromValues(){
+    const inputs = colsWrap.querySelectorAll('input[type=range]');
+    inputs.forEach(inp=>{
+      const i = +inp.dataset.index;
+      inp.value = values[i];
+      const col = inp.closest('.col');
+      col.querySelector('.value-pill').textContent = values[i].toFixed(2);
+      col.querySelector('.bar-fill').style.height = (values[i]*100)+'%';
+    });
+  }
+
+  // Event listeners
+  countInput.addEventListener('change', ()=>{ let n = +countInput.value || 1; n = Math.max(1,Math.min(40,n)); countInput.value = n; createCols(n); });
+  randomizeBtn.addEventListener('click', ()=>{ values = values.map(()=>+(Math.random()).toFixed(2)); syncDomFromValues(); updateSum(); });
+  normalizeBtn.addEventListener('click', ()=>{ normalize(); });
+  rescaleBtn.addEventListener('click', ()=>{ rescaleToBounds(); });
+  clampBtn.addEventListener('click', ()=>{ clampToBounds(); });
+
+  exportBtn.addEventListener('click', ()=>{
+    const payload = { values: values, bounds: { min: parseFloat(minBoundInput.value), max: parseFloat(maxBoundInput.value) }, mode: modeSelect.value };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'weights.json'; a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // initialize
+  createCols(+countInput.value);
+</script>
 </body>
 </html>
+
