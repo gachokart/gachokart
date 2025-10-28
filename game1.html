@@ -1,290 +1,63 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Dota 2 Role Prediction – OpenDota</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root {
-      --bg: #0f1320;
-      --panel: #171b2e;
-      --text: #e8ebff;
-      --muted: #9aa3c1;
-      --accent: #6aa9ff;
-      --win: #35c46e;
-      --loss: #ff6b6b;
-      --warn: #ffc857;
-      --grid: rgba(255,255,255,0.08);
-    }
-    body {
-      margin: 0;
-      font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Helvetica, Arial;
-      background: var(--bg);
-      color: var(--text);
-    }
-    header {
-      padding: 16px 20px;
-      background: var(--panel);
-      border-bottom: 1px solid var(--grid);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-    h1 { font-size: 20px; margin: 0 0 6px; }
-    .controls {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(160px, 1fr));
-      gap: 10px;
-      align-items: end;
-    }
-    label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 6px; }
-    input, select, button {
-      width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid var(--grid);
-      background: #0c1020;
-      color: var(--text);
-      outline: none;
-    }
-    button {
-      background: var(--accent);
-      color: #0a1020;
-      font-weight: 600;
-      border: none;
-      cursor: pointer;
-    }
-    button[disabled] { opacity: 0.6; cursor: default; }
-    main { padding: 16px 20px; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .panel {
-      background: var(--panel);
-      border: 1px solid var(--grid);
-      border-radius: 12px;
-      padding: 14px;
-    }
-    .panel h2 { margin: 0 0 10px; font-size: 16px; color: var(--muted); font-weight: 600; }
-    .pill {
-      display: inline-block; padding: 6px 10px; border-radius: 999px;
-      font-size: 12px; border: 1px solid var(--grid); margin-right: 8px; margin-bottom: 6px;
-    }
-    .pill.win { background: rgba(53,196,110,0.15); color: var(--win); border-color: rgba(53,196,110,0.35); }
-    .pill.loss { background: rgba(255,107,107,0.15); color: var(--loss); border-color: rgba(255,107,107,0.35); }
-    .pill.warn { background: rgba(255,200,87,0.15); color: var(--warn); border-color: rgba(255,200,87,0.35); }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--grid); vertical-align: top; }
-    th { color: var(--muted); font-weight: 600; }
-    .mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, Menlo, Consolas, monospace; }
-    .hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
-    .small { font-size: 12px; color: var(--muted); }
-    .flex { display: flex; gap: 12px; flex-wrap: wrap; }
-    .bar { height: 8px; background: #0c1020; border-radius: 999px; border: 1px solid var(--grid); overflow: hidden; margin-top: 6px; }
-    .bar > span { display: block; height: 100%; background: var(--accent); }
-    .danger { color: var(--loss); }
-    .success { color: var(--win); }
-    footer { padding: 12px 20px; color: var(--muted); }
-    @media (max-width: 1024px) { .grid { grid-template-columns: 1fr; } .controls { grid-template-columns: 1fr 1fr; } }
+    body { background:#0f1320; color:#e8ebff; font-family:sans-serif; margin:0; }
+    header { background:#171b2e; padding:12px; position:sticky; top:0; }
+    h1 { margin:0 0 8px; }
+    input,button { padding:8px; border-radius:6px; border:1px solid #333; }
+    button { background:#6aa9ff; color:#000; font-weight:bold; cursor:pointer; }
+    .panel { background:#171b2e; margin:12px; padding:12px; border-radius:8px; }
+    .pill { display:inline-block; padding:4px 8px; border-radius:6px; margin:2px; font-size:12px; }
+    .win { background:#35c46e33; color:#35c46e; }
+    .loss { background:#ff6b6b33; color:#ff6b6b; }
+    table { width:100%; border-collapse:collapse; margin-top:10px; }
+    th,td { border-bottom:1px solid #333; padding:6px; font-size:13px; }
   </style>
 </head>
 <body>
   <header>
-    <h1>Role-based prediction for next match</h1>
-    <div class="controls">
-      <div>
-        <label for="accountId">Steam32 account ID</label>
-        <input id="accountId" type="text" value="863386335" />
-      </div>
-      <div>
-        <label for="matchLimit">Аналіз останніх матчів</label>
-        <select id="matchLimit">
-          <option value="50">50</option>
-          <option value="100" selected>100</option>
-          <option value="200">200</option>
-        </select>
-      </div>
-      <div>
-        <label for="roleNorm">Нормалізація ролей</label>
-        <select id="roleNorm">
-          <option value="recent" selected>Останні ігри (динамічно)</option>
-          <option value="overall">Загальна історія</option>
-        </select>
-      </div>
-      <div>
-        <button id="runBtn">Запустити аналіз</button>
-      </div>
-    </div>
-    <div class="hint">Порада: для стабільності аналізуй 100–200 матчів. Якщо профіль приватний, дані можуть бути неповні.</div>
+    <h1>Прогноз наступного матчу</h1>
+    <input id="accountId" value="863386335" placeholder="Steam32 ID">
+    <button onclick="run()">Запустити аналіз</button>
   </header>
 
-  <main>
-    <div class="grid">
-      <section class="panel">
-        <h2>Прогноз шансів перемоги по ролях</h2>
-        <div id="roleForecast" class="flex"></div>
-        <div class="hint">Рахуємо по вінрейту ролі з довірчою поправкою, стабільності, серії, часу доби та базових KPI.</div>
-      </section>
+  <div id="forecast" class="panel"></div>
+  <div id="streaks" class="panel"></div>
 
-      <section class="panel">
-        <h2>Серії і форма</h2>
-        <div id="streaks"></div>
-      </section>
-    </div>
+<script>
+const API = "https://api.opendota.com/api";
+const ROLE_LABELS = ["Hard Support","Support","Offlane","Mid","Carry"];
 
-    <div class="grid">
-      <section class="panel">
-        <h2>Метрики по ролях</h2>
-        <table id="rolesTable">
-          <thead>
-            <tr>
-              <th>Роль</th>
-              <th>Вінрейт</th>
-              <th>Матчі</th>
-              <th>Стабільність</th>
-              <th>Середні KPI</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </section>
-
-      <section class="panel">
-        <h2>Час доби, режим</h2>
-        <table id="contextTable">
-          <thead>
-            <tr>
-              <th>Фактор</th>
-              <th>Метрика</th>
-              <th>Примітка</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </section>
-    </div>
-
-    <div class="grid">
-      <section class="panel">
-        <h2>Останні матчі (огляд)</h2>
-        <table id="recentTable">
-          <thead>
-            <tr>
-              <th>Матч</th>
-              <th>Дата/час</th>
-              <th>Роль</th>
-              <th>Герой</th>
-              <th>Результат</th>
-              <th>KDA</th>
-              <th>GPM/XPM</th>
-              <th>Лейн</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </section>
-
-      <section class="panel">
-        <h2>Лейн-результати</h2>
-        <table id="laneTable">
-          <thead>
-            <tr>
-              <th>Лейн</th>
-              <th>Вінрейт</th>
-              <th>Матчі</th>
-              <th>Середній proxy нетворк на 10</th>
-              <th>Примітка</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </section>
-    </div>
-  </main>
-
-  <footer class="small">
-    Побудовано на даних OpenDota. Це інструмент ймовірностей і ризиків, не гарантія результату.
-  </footer>
-
-  <script>
-    // ========== CONFIG ==========
-    const API = { base: 'https://api.opendota.com/api', headers: {} };
-    const ROLE_LABELS = ['Hard Support','Support','Offlane','Mid','Carry']; // index 0..4
-    const LANE_MAP = { 1: 'Сейф-лейн', 2: 'Мід', 3: 'Офлейн', 4: 'Джангл/Роум' };
-    const cache = new Map();
-
-    // ========== UTIL ==========
-    const fmtPct = v => (isNaN(v) ? '-' : (v * 100).toFixed(1) + '%');
-    const fmtNum = v => (v == null ? '-' : v.toLocaleString('uk-UA'));
-    const fmtDate = ts => { try { return new Date(ts * 1000).toLocaleString('uk-UA', { hour12:false }); } catch { return '-'; } };
-    const kda = (k, d, a) => (((k||0) + (a||0)) / Math.max(1, d||0));
-    const by = key => (a, b) => (a[key] < b[key] ? 1 : -1);
-
-    function aggAvg(list) {
-      const vals = list.filter(x => typeof x === 'number' && isFinite(x));
-      if (vals.length === 0) return null;
-      return vals.reduce((s, v) => s + v, 0) / vals.length;
-    }
-
-    // Wilson lower bound для довіри вінрейту
-    function stableWinrate(wins, total) {
-      if (total === 0) return { wr: 0, stability: 0 };
-      const p = wins / total;
-      const z = 1.96;
-      const denom = 1 + z*z / total;
-      const center = p + z*z / (2*total);
-      const adj = z * Math.sqrt((p*(1-p) + z*z/(4*total)) / total);
-      const lower = (center - adj) / denom;
-      const stability = Math.max(0, Math.min(1, 1 - (p - lower))); // ближче до 1 — стабільніше
-      return { wr: p, stability };
-    }
-
-    async function getJSON(url) {
-      if (cache.has(url)) return cache.get(url);
-      const res = await fetch(url, { headers: API.headers });
-      if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + url);
-      const data = await res.json();
-      cache.set(url, data);
-      return data;
-    }
-
-    async function fetchPlayer(accountId) {
-      return getJSON(`${API.base}/players/${accountId}`);
-    }
-    async function fetchRecentMatches(accountId, limit = 100) {
-      return getJSON(`${API.base}/players/${accountId}/matches?limit=${limit}`);
-    }
-    async function fetchHeroConstants() {
-      return getJSON(`${API.base}/heroes`);
-    }
-
-    // ========== ROLE INFERENCE ==========
-    // Повертаємо роль як 0..4: 0=Hard Support, 1=Support, 2=Offlane, 3=Mid, 4=Carry
-   async function fetchFullMatch(matchId) {
-  const res = await fetch(`https://api.opendota.com/api/matches/${matchId}`);
-  if (!res.ok) throw new Error("Не вдалося отримати матч " + matchId);
+async function fetchRecentMatches(accountId, limit=20) {
+  const res = await fetch(`${API}/players/${accountId}/matches?limit=${limit}`);
+  return res.json();
+}
+async function fetchFullMatch(matchId) {
+  const res = await fetch(`${API}/matches/${matchId}`);
   return res.json();
 }
 
+// Визначення ролей відносно команди
 function inferRolesByTeam(match, accountId) {
   const me = match.players.find(p => p.account_id == accountId);
+  if (!me) return "Unknown";
   const isRadiant = me.player_slot < 128;
   const teamPlayers = match.players.filter(p => (p.player_slot < 128) === isRadiant);
 
   const roles = {};
-
-  // Carry = топ GPM
   const byGPM = [...teamPlayers].sort((a,b)=>b.gold_per_min - a.gold_per_min);
   roles[byGPM[0].account_id] = "Carry";
 
-  // Mid = топ XPM серед тих, хто ще без ролі
   const byXPM = [...teamPlayers].sort((a,b)=>b.xp_per_min - a.xp_per_min);
   const mid = byXPM.find(p => !roles[p.account_id]);
   if (mid) roles[mid.account_id] = "Mid";
 
-  // Offlane = наступний по GPM серед тих, хто ще без ролі
   const offlane = byGPM.find(p => !roles[p.account_id]);
   if (offlane) roles[offlane.account_id] = "Offlane";
 
-  // Залишились 2 → Supports
   const supports = teamPlayers.filter(p => !roles[p.account_id]);
   if (supports.length === 2) {
     const hard = supports[0].assists >= supports[1].assists ? supports[0] : supports[1];
@@ -292,350 +65,60 @@ function inferRolesByTeam(match, accountId) {
     roles[hard.account_id] = "Hard Support";
     roles[soft.account_id] = "Support";
   }
-
-  return roles[accountId]; // повертає роль саме твого акаунта
+  return roles[accountId] || "Unknown";
 }
-    // ========== ANALYTICS ==========
-    function computeRoleMetrics(matches, heroesById) {
-      const perRole = new Map(); // roleIdx -> stats
-      const roleSeq = [];
 
-      for (const m of matches) {
-        const { role, laneName } = inferRole(m);
-        const win = (m.radiant_win && m.player_slot < 128) || (!m.radiant_win && m.player_slot >= 128);
-        const heroName = (heroesById.get(m.hero_id) || {}).localized_name || `Hero ${m.hero_id}`;
-        const entry = perRole.get(role) || { wins:0, total:0, kdas:[], gpm:[], xpm:[], deaths:[], heroes:new Set(), lanes:new Map() };
-        entry.total += 1;
-        if (win) entry.wins += 1;
-        entry.kdas.push(kda(m.kills, m.deaths, m.assists));
-        if (m.gold_per_min) entry.gpm.push(m.gold_per_min);
-        if (m.xp_per_min) entry.xpm.push(m.xp_per_min);
-        entry.deaths.push(m.deaths || 0);
-        entry.heroes.add(heroName);
-        if (laneName) {
-          const l = entry.lanes.get(laneName) || { wins:0, total:0 };
-          l.total += 1; if (win) l.wins += 1;
-          entry.lanes.set(laneName, l);
-        }
-        perRole.set(role, entry);
-        roleSeq.push(role);
-      }
+async function run() {
+  const accountId = document.getElementById("accountId").value.trim();
+  document.getElementById("forecast").innerText = "Завантаження...";
+  const recent = await fetchRecentMatches(accountId, 20);
 
-      // Стабільність перемикання ролей
-      let switches = 0;
-      for (let i=1; i<roleSeq.length; i++) if (roleSeq[i] !== roleSeq[i-1]) switches++;
-      const roleStability = roleSeq.length ? 1 - (switches / roleSeq.length) : 0;
+  const stats = { "Carry":{w:0,t:0}, "Mid":{w:0,t:0}, "Offlane":{w:0,t:0}, "Support":{w:0,t:0}, "Hard Support":{w:0,t:0} };
+  const results = [];
 
-      const result = [];
-      for (const [role, data] of perRole.entries()) {
-        const { wr, stability } = stableWinrate(data.wins, data.total);
-        const avgKDA = aggAvg(data.kdas);
-        const avgGPM = aggAvg(data.gpm);
-        const avgXPM = aggAvg(data.xpm);
-        const avgDeaths = aggAvg(data.deaths);
-
-        // Найкращий лейн
-        let bestLane = null, bestLaneWr = null, bestLaneTotal = 0;
-        for (const [lname, ldata] of data.lanes.entries()) {
-          const w = ldata.wins / ldata.total;
-          if (bestLaneWr == null || w > bestLaneWr) {
-            bestLaneWr = w; bestLane = lname; bestLaneTotal = ldata.total;
-          }
-        }
-
-        // Базовий score ролі: WR + стабільність + KPI
-        const score =
-          (wr * 0.55) +
-          (stability * 0.15) +
-          ((avgKDA || 1) / 5 * 0.12) +
-          (((avgGPM || 400) - 350) / 300 * 0.09) +
-          (((avgXPM || 450) - 400) / 300 * 0.09) -
-          ((avgDeaths || 6) - 6) * 0.03;
-
-        result.push({
-          roleIdx: role, roleName: ROLE_LABELS[role] || ('Роль '+role),
-          wr, total: data.total, stability,
-          avgKDA, avgGPM, avgXPM, avgDeaths,
-          heroes: Array.from(data.heroes).sort().slice(0, 12),
-          bestLane, bestLaneWr, bestLaneTotal,
-          score
-        });
-      }
-
-      // Сортуємо від кращого до гіршого
-      return { perRole: result.sort(by('score')), roleStability };
+  for (const m of recent) {
+    const full = await fetchFullMatch(m.match_id);
+    const role = inferRolesByTeam(full, accountId);
+    const win = (m.radiant_win && m.player_slot<128) || (!m.radiant_win && m.player_slot>=128);
+    results.push(win?1:0);
+    if (stats[role]) {
+      stats[role].t++;
+      if (win) stats[role].w++;
     }
+  }
 
-    function computeStreaks(matches) {
-      const seq = matches.map(m => ((m.radiant_win && m.player_slot < 128) || (!m.radiant_win && m.player_slot >= 128)) ? 1 : 0);
-      let cur = 0, bestWin = 0, bestLose = 0;
-      for (const w of seq) {
-        if (w === 1) { cur = cur >= 0 ? cur + 1 : 1; bestWin = Math.max(bestWin, cur); }
-        else { cur = cur <= 0 ? cur - 1 : -1; bestLose = Math.max(bestLose, -cur); }
-      }
-      const recent = seq.slice(-10).reduce((s,x)=>s+(x?1:0),0);
-      return { current: cur, bestWin, bestLose, recentWins10: recent };
+  // Прогноз шансів перемоги
+  let forecastHTML = "<h2>Ймовірність перемоги по ролях</h2>";
+  for (const r of Object.keys(stats)) {
+    if (stats[r].t>0) {
+      const wr = stats[r].w / stats[r].t;
+      forecastHTML += `<div class="pill ${wr>=0.5?'win':'loss'}">${r}: ${(wr*100).toFixed(1)}% (на ${stats[r].t} матчах)</div>`;
     }
+  }
+  document.getElementById("forecast").innerHTML = forecastHTML;
 
-    function computeContext(matches) {
-      const byHour = new Map();
-      const modes = new Map();
+  // Аналіз серій
+  let cur=0, bestWin=0, bestLose=0;
+  for (const w of results) {
+    if (w===1) { cur = cur>=0?cur+1:1; bestWin=Math.max(bestWin,cur); }
+    else { cur = cur<=0?cur-1:-1; bestLose=Math.max(bestLose,-cur); }
+  }
+  let streakHTML = "<h2>Серії</h2>";
+  if (cur>0) streakHTML += `<div class="pill win">Поточна win-streak: ${cur}</div>`;
+  else if (cur<0) streakHTML += `<div class="pill loss">Поточна lose-streak: ${-cur}</div>`;
+  else streakHTML += `<div class="pill">Немає серії</div>`;
 
-      for (const m of matches) {
-        const hour = new Date(m.start_time * 1000).getHours();
-        const win = (m.radiant_win && m.player_slot < 128) || (!m.radiant_win && m.player_slot >= 128);
-        const h = byHour.get(hour) || {wins:0,total:0};
-        h.total++; if (win) h.wins++;
-        byHour.set(hour, h);
-
-        const gm = m.game_mode ?? -1;
-        const g = modes.get(gm) || {wins:0,total:0};
-        g.total++; if (win) g.wins++;
-        modes.set(gm, g);
-      }
-
-      const hoursArr = Array.from(byHour.entries())
-        .map(([h, v]) => ({ hour: h, wr: v.wins / v.total, total: v.total }))
-        .sort((a,b) => b.wr - a.wr);
-      const bestHour = hoursArr[0] || null;
-
-      const gmArr = Array.from(modes.entries())
-        .map(([gm, v]) => ({ gm, wr: v.wins / v.total, total: v.total }))
-        .sort((a,b) => b.wr - a.wr);
-      const bestMode = gmArr[0] || null;
-
-      return { bestHour, hoursArr, bestMode, gmArr };
-    }
-
-    function computeLaneStats(matches) {
-      const lanes = new Map();
-      for (const m of matches) {
-        const lr = m.lane_role;
-        if (!lr) continue;
-        const win = (m.radiant_win && m.player_slot < 128) || (!m.radiant_win && m.player_slot >= 128);
-        const e = lanes.get(lr) || { wins:0, total:0, gpm10:[] };
-        e.total++; if (win) e.wins++;
-        if (m.gold_per_min) e.gpm10.push(m.gold_per_min / 6); // ~ proxy нетворку на 10 хв
-        lanes.set(lr, e);
-      }
-      const rows = [];
-      for (const [lr, e] of lanes.entries()) {
-        rows.push({
-          lane: LANE_MAP[lr] || `Lane ${lr}`,
-          wr: e.wins / e.total,
-          total: e.total,
-          net10: aggAvg(e.gpm10),
-          note: e.total < 8 ? 'Мало даних' : ''
-        });
-      }
-      return rows.sort((a,b)=>b.wr - a.wr);
-    }
-
-    // ========== FORECAST ==========
-    // Побудова прогнозу: нормалізуємо score до 0..1, коригуємо серією, годиною, лейном
-    function buildRoleForecast(roleMetrics, streaks, context) {
-      return roleMetrics.perRole.map(r => {
-        let score = r.score;
-
-        // Серія: довга луз-стreak знижує низькостабільні ролі
-        if (streaks.current < -3 && r.stability < 0.4) score -= 0.05;
-        // Кращі години додають невеликий бонус
-        if (context.bestHour && context.bestHour.wr > 0.55) score += 0.02;
-        // Якщо кращий лейн для ролі має високий WR — бонус
-        if (r.bestLaneWr != null && r.bestLaneWr > 0.55) score += 0.02;
-
-        // Нормалізація до 0..1 та обрізання
-        const winProb = Math.max(0.05, Math.min(0.95, score));
-        return {
-          roleIdx: r.roleIdx,
-          roleName: r.roleName,
-          winrate: r.wr,
-          total: r.total,
-          stability: r.stability,
-          winProb,
-          bestLane: r.bestLane
-        };
-      }).sort((a,b)=>b.winProb - a.winProb);
-    }
-
-    // ========== RENDER ==========
-    function renderRoleForecast(list) {
-      const root = document.getElementById('roleForecast');
-      root.innerHTML = '';
-      for (const item of list) {
-        const div = document.createElement('div');
-        div.className = 'panel';
-        div.style.minWidth = '260px';
-        div.innerHTML = `
-          <div style="font-weight:700">${item.roleName}</div>
-          <div class="row" style="display:flex;gap:6px;align-items:center;margin-top:6px">
-            <div class="pill ${item.winrate>=0.5?'win':'loss'}">WR ${fmtPct(item.winrate)}</div>
-            <div class="pill warn">Матчі ${fmtNum(item.total)}</div>
-            <div class="pill">${item.bestLane || '-'}</div>
-          </div>
-          <div class="bar"><span style="width:${(item.winProb*100).toFixed(0)}%"></span></div>
-          <div class="small" style="margin-top:6px">Ймовірність перемоги: <span class="${item.winProb>=0.5?'success':'danger'}">${fmtPct(item.winProb)}</span></div>
-          <div class="small">Стабільність ролі: ${fmtPct(item.stability)}</div>
-        `;
-        root.appendChild(div);
-      }
-    }
-
-    function renderRolesTable(roleMetrics) {
-      const tbody = document.querySelector('#rolesTable tbody');
-      tbody.innerHTML = '';
-      for (const r of roleMetrics.perRole) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${r.roleName}</td>
-          <td class="mono">${fmtPct(r.wr)}</td>
-          <td class="mono">${fmtNum(r.total)}</td>
-          <td class="mono">${fmtPct(r.stability)}</td>
-          <td>
-            <div>Середній KDA: <span class="mono">${(r.avgKDA||0).toFixed(2)}</span></div>
-            <div>GPM/XPM: <span class="mono">${fmtNum(Math.round(r.avgGPM||0))}</span>/<span class="mono">${fmtNum(Math.round(r.avgXPM||0))}</span></div>
-            <div>Deaths: <span class="mono">${(r.avgDeaths||0).toFixed(1)}</span></div>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      }
-    }
-
-    function renderStreaks(streaks) {
-      const root = document.getElementById('streaks');
-      const label =
-        streaks.current > 0 ? `Поточна серія перемог: ${streaks.current}` :
-        streaks.current < 0 ? `Поточна серія поразок: ${-streaks.current}` :
-        'Немає поточної серії';
-      root.innerHTML = `
-        <div class="row" style="display:flex;gap:6px;flex-wrap:wrap">
-          <div class="pill ${streaks.current>0?'win':(streaks.current<0?'loss':'warn')}">${label}</div>
-          <div class="pill win">Найкраща серія перемог: ${streaks.bestWin}</div>
-          <div class="pill loss">Найдовша серія поразок: ${streaks.bestLose}</div>
-          <div class="pill warn">Перемоги за останні 10: ${streaks.recentWins10}/10</div>
-        </div>
-      `;
-    }
-
-    function renderContext(context) {
-      const tbody = document.querySelector('#contextTable tbody');
-      tbody.innerHTML = '';
-      const rows = [];
-
-      if (context.bestHour) {
-        rows.push({
-          factor: 'Час доби (кращий)',
-          metric: `${String(context.bestHour.hour).padStart(2,'0')}:00`,
-          note: `WR ${fmtPct(context.bestHour.wr)} на ${fmtNum(context.bestHour.total)} матчах`
-        });
-      }
-      if (context.bestMode) {
-        rows.push({
-          factor: 'Режим гри (кращий)',
-          metric: `${context.bestMode.gm}`,
-          note: `WR ${fmtPct(context.bestMode.wr)} на ${fmtNum(context.bestMode.total)} матчах`
-        });
-      }
-      if (rows.length === 0) {
-        rows.push({ factor: 'Контекст', metric: '-', note: 'Немає достатньо даних' });
-      }
-      for (const r of rows) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${r.factor}</td><td>${r.metric}</td><td>${r.note}</td>`;
-        tbody.appendChild(tr);
-      }
-    }
-
-    function renderRecent(matches, heroesById) {
-      const tbody = document.querySelector('#recentTable tbody');
-      tbody.innerHTML = '';
-      for (const m of matches.slice(0, 30)) {
-        const { role, laneName } = inferRole(m);
-        const hero = heroesById.get(m.hero_id) || {};
-        const win = (m.radiant_win && m.player_slot < 128) || (!m.radiant_win && m.player_slot >= 128);
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="mono">${m.match_id}</td>
-          <td>${fmtDate(m.start_time)}</td>
-          <td>${ROLE_LABELS[role]}</td>
-          <td>${hero.localized_name || ('Hero '+m.hero_id)}</td>
-          <td><span class="pill ${win?'win':'loss'}">${win?'Win':'Loss'}</span></td>
-          <td class="mono">${(kda(m.kills, m.deaths, m.assists)).toFixed(2)}</td>
-          <td class="mono">${fmtNum(m.gold_per_min||0)}/${fmtNum(m.xp_per_min||0)}</td>
-          <td>${laneName || '-'}</td>
-        `;
-        tbody.appendChild(tr);
-      }
-    }
-
-    function renderLaneStats(rows) {
-      const tbody = document.querySelector('#laneTable tbody');
-      tbody.innerHTML = '';
-      for (const r of rows) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${r.lane}</td>
-          <td class="mono">${fmtPct(r.wr)}</td>
-          <td class="mono">${fmtNum(r.total)}</td>
-          <td class="mono">${fmtNum(Math.round(r.net10||0))}</td>
-          <td>${r.note}</td>
-        `;
-        tbody.appendChild(tr);
-      }
-    }
-
-    // ========== MAIN ==========
-    async function run() {
-      const btn = document.getElementById('runBtn');
-      const accountId = document.getElementById('accountId').value.trim();
-      const limit = parseInt(document.getElementById('matchLimit').value, 10);
-
-      if (!accountId) { alert('Введи Steam32 account_id.'); return; }
-
-      btn.disabled = true;
-      btn.textContent = 'Завантаження...';
-
-      try {
-        const [player, matches, heroes] = await Promise.all([
-          fetchPlayer(accountId),
-          fetchRecentMatches(accountId, limit),
-          fetchHeroConstants()
-        ]);
-
-        const heroesById = new Map(); for (const h of heroes) heroesById.set(h.id, h);
-        const valid = matches.filter(m => m && m.hero_id);
-
-        const roleMetrics = computeRoleMetrics(valid, heroesById);
-        const streaks = computeStreaks(valid);
-        const context = computeContext(valid);
-        const laneStats = computeLaneStats(valid);
-        const forecast = buildRoleForecast(roleMetrics, streaks, context);
-
-        renderRoleForecast(forecast);
-        renderRolesTable(roleMetrics);
-        renderStreaks(streaks);
-        renderContext(context);
-        renderRecent(valid, heroesById);
-        renderLaneStats(laneStats);
-
-      } catch (err) {
-        console.error(err);
-        alert('Помилка завантаження або парсингу даних: ' + err.message);
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Запустити аналіз';
-      }
-    }
-
-    document.getElementById('runBtn').addEventListener('click', run);
-
-    // Ініціалізація з query параметра ?id=...
-    (function initFromQuery() {
-      const params = new URLSearchParams(location.search);
-      const id = params.get('id');
-      if (id) document.getElementById('accountId').value = id;
-    })();
-  </script>
+  // Ймовірність початку нової серії
+  if (cur===0) {
+    // якщо зараз серії немає, оцінюємо шанс початку
+    const last10 = results.slice(-10);
+    const wr10 = last10.reduce((s,x)=>s+x,0)/last10.length;
+    streakHTML += `<div class="pill warn">Шанс почати win-streak: ${(wr10*100).toFixed(1)}%</div>`;
+    streakHTML += `<div class="pill warn">Шанс почати lose-streak: ${((1-wr10)*100).toFixed(1)}%</div>`;
+  }
+  document.getElementById("streaks").innerHTML = streakHTML;
+}
+</script>
 </body>
 </html>
 
