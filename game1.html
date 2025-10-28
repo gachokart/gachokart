@@ -318,34 +318,25 @@
     }
 
     function inferRole(match) {
-      const laneRole = match.lane_role;
-      const laneName = LANE_MAP[laneRole] || null;
-      const gpm = match.gold_per_min || 0;
-      const xpm = match.xp_per_min || 0;
-      const k = match.kills || 0;
-      const a = match.assists || 0;
-      const d = match.deaths || 0;
+  const lr = match.lane_role;
+  const gpm = match.gold_per_min || 0;
+  const xpm = match.xp_per_min || 0;
+  const k = match.kills || 0;
+  const a = match.assists || 0;
+  const d = match.deaths || 0;
 
-      const isMid = laneRole === 2;
-      const isOfflane = laneRole === 3;
-      const isSafelane = laneRole === 1;
+  // Якщо lane_role відомий — довіряємось йому
+  if (lr === 1) return { role: 5, laneName: "Сейф-лейн (Carry)" };
+  if (lr === 2) return { role: 4, laneName: "Мід" };
+  if (lr === 3) return { role: 3, laneName: "Офлейн" };
+  if (lr === 4) return { role: 2, laneName: "Роум/Джангл" };
 
-      const supportScore = a - k - (gpm + xpm) / 200;
-      const coreScore = (gpm + xpm) / 200 + k - d;
-
-      let role;
-      if (isMid) role = 4;
-      else if (isOfflane) role = 3;
-      else if (isSafelane && coreScore > 0.5) role = 5;
-      else if (supportScore > 0.5) role = (k < 6 ? 1 : 2);
-      else {
-        if (gpm > 520 || xpm > 600) role = 5;
-        else if (gpm > 430 || xpm > 500) role = 3;
-        else role = 2;
-      }
-      return { role, laneName };
-    }
-
+  // Якщо lane_role немає — fallback по GPM/XPM
+  if (gpm > 520 || xpm > 600) return { role: 5, laneName: "?" }; // Carry
+  if (gpm > 430 || xpm > 500) return { role: 3, laneName: "?" }; // Offlane
+  if (gpm < 350 && xpm < 400) return { role: 1, laneName: "?" }; // Hard support
+  return { role: 2, laneName: "?" }; // Soft support
+}
     function computeRoleMetrics(matches, heroesById) {
       const perRole = new Map();
       const roleSeq = [];
