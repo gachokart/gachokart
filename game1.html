@@ -3,26 +3,28 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>game1 — Аналітика і закономірності</title>
+  <title>game1 — Прогноз з роллю (стильний)</title>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" />
   <style>
-    :root{--bg:#0b1220;--card:#09111a;--muted:#9aa7bd;--accent:#1f8feb}
-    body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial;margin:0;background:linear-gradient(180deg,#071027 0%,#07111b 100%);color:#e6eef6;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px}
-    .wrap{max-width:1100px;width:100%}
-    .card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.02));border:1px solid rgba(255,255,255,0.03);padding:14px;border-radius:10px}
+    :root{
+      --bg:#07111b; --card:#081323; --muted:#9aa7bd;
+      --accent:#1f8feb; --good:#0db36b; --bad:#e25757; --neutral:#9aa4b2;
+      --glass: rgba(255,255,255,0.03);
+    }
+    *{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
+    body{margin:0;background:linear-gradient(180deg,#071027 0%,#07111b 100%);color:#e6eef6;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px}
+    .wrap{max-width:1200px;width:100%}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));border:1px solid rgba(255,255,255,0.03);padding:14px;border-radius:12px}
     header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-    h1{font-size:18px;margin:0}
+    h1{font-size:20px;margin:0}
     .inputs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     input,button,select{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:9px;border-radius:8px;color:inherit}
     button{cursor:pointer}
-    .grid{display:grid;grid-template-columns:1fr 420px;gap:12px;margin-top:14px}
+    .grid{display:grid;grid-template-columns:1fr 460px;gap:12px;margin-top:14px}
     table{width:100%;border-collapse:collapse;font-size:13px}
     th,td{padding:8px;border-bottom:1px dashed rgba(255,255,255,0.03);text-align:left}
     .meta{font-size:13px;color:var(--muted)}
-    .prediction{padding:12px;border-radius:10px;margin-bottom:10px}
-    .pred-good{background:linear-gradient(90deg,#063b12,#0d6430);color:#dfffe0}
-    .pred-bad{background:linear-gradient(90deg,#3b0606,#641010);color:#ffe0e0}
-    .pred-neutral{background:linear-gradient(90deg,#2a2a3b,#3b3b5a);color:#fff}
+    .prediction{padding:12px;border-radius:12px;margin-bottom:10px;background:linear-gradient(90deg,#22303b,#16232b);box-shadow:0 8px 30px rgba(2,6,23,0.6)}
     .reason{font-size:13px;margin:6px 0;padding:8px;border-radius:8px;background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.02)}
     .small{font-size:12px;color:var(--muted)}
     #patterns{display:none;margin-top:12px}
@@ -30,7 +32,26 @@
     .hero-list{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
     .hero-item{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;background:rgba(255,255,255,0.01)}
     .hero-item img{width:48px;height:28px;object-fit:cover;border-radius:4px}
-    @media (max-width:920px){.grid{grid-template-columns:1fr} .charts{grid-template-columns:1fr}}
+
+    /* NEW: Stylish role-probability card */
+    .role-card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02)); padding:14px; border-radius:12px; border:1px solid rgba(255,255,255,0.04)}
+    .role-row{display:flex;gap:10px;align-items:center;justify-content:space-between}
+    .role-select{display:flex;gap:8px;align-items:center}
+    .prob-large{font-size:28px;font-weight:800}
+    .prob-sub{font-size:12px;color:var(--muted)}
+    .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+    .stat{background:var(--glass);padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.02)}
+    .stat .label{font-size:12px;color:var(--muted);margin-bottom:6px}
+    .bar-wrap{height:10px;background:rgba(255,255,255,0.03);border-radius:999px;overflow:hidden}
+    .bar-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),#036b8a);border-radius:999px}
+    .mini{font-size:12px;color:var(--muted);margin-top:6px}
+
+    /* colored variants */
+    .good { --accent: var(--good); }
+    .bad { --accent: var(--bad); }
+    .neutral { --accent: linear-gradient(90deg,#6b7a89,#525e6a); }
+
+    @media (max-width:980px){.grid{grid-template-columns:1fr} .charts{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -38,8 +59,8 @@
     <header>
       <div class="card" style="flex:1;display:flex;align-items:center;justify-content:space-between;padding:12px">
         <div>
-          <h1>game1 — Прогноз + Закономірності</h1>
-          <div class="small">OpenDota аналіз останніх ігор → прогноз, закономірності, графіки, топ-3 героїв.</div>
+          <h1>game1 — Прогноз + Закономірності (роль & візуал)</h1>
+          <div class="small">OpenDota аналіз останніх ігор → прогноз, закономірності, топ-3 героїв. Додає роль і стильну карту прогнозу.</div>
         </div>
         <div class="small">Тестовий ID: <strong>863386335</strong></div>
       </div>
@@ -59,7 +80,7 @@
           <button id="patternsBtn">Показати закономірності</button>
           <button id="demoBtn">Тестовий ID</button>
         </div>
-        <div class="small" style="margin-top:8px">Натисни «Показати закономірності» після отримання прогнозу — побудуються графіки winrate по днях і годинах і виявляться повторювані патерни.</div>
+        <div class="small" style="margin-top:8px">Після отримання прогнозу — з'явиться стилізована картка для вибору ролі й показу шансів.</div>
       </div>
     </div>
 
@@ -77,8 +98,71 @@
 
       <aside class="card" id="rightCard">
         <h3>Прогноз на наступний матч</h3>
+
+        <!-- Stylish prediction card -->
+        <div id="rolePredictionCard" class="role-card" style="display:none">
+          <div class="role-row">
+            <div class="role-select">
+              <div style="font-size:13px;color:var(--muted);">Оберіть роль:</div>
+              <select id="roleSelect" style="padding:8px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:inherit">
+                <option value="1">1 — Carry</option>
+                <option value="2">2 — Mid</option>
+                <option value="3" selected>3 — Offlane</option>
+                <option value="4">4 — Soft support</option>
+                <option value="5">5 — Hard support</option>
+              </select>
+            </div>
+            <div style="text-align:right">
+              <div class="prob-large" id="winPercent">—%</div>
+              <div class="prob-sub">Шанс перемоги</div>
+            </div>
+          </div>
+
+          <div class="stat-grid" style="margin-top:12px">
+            <div class="stat" id="stat_boosterMy">
+              <div class="label">Бустер (у вашій команді)</div>
+              <div class="bar-wrap"><div class="bar-fill" id="bar_boosterMy"></div></div>
+              <div class="mini" id="text_boosterMy">—%</div>
+            </div>
+
+            <div class="stat" id="stat_ruinerMy">
+              <div class="label">Руінер (у вашій команді)</div>
+              <div class="bar-wrap"><div class="bar-fill" id="bar_ruinerMy"></div></div>
+              <div class="mini" id="text_ruinerMy">—%</div>
+            </div>
+
+            <div class="stat" id="stat_boosterEnemy">
+              <div class="label">Бустер (ворожі)</div>
+              <div class="bar-wrap"><div class="bar-fill" id="bar_boosterEnemy"></div></div>
+              <div class="mini" id="text_boosterEnemy">—%</div>
+            </div>
+
+            <div class="stat" id="stat_ruinerEnemy">
+              <div class="label">Руінер (ворожі)</div>
+              <div class="bar-wrap"><div class="bar-fill" id="bar_ruinerEnemy"></div></div>
+              <div class="mini" id="text_ruinerEnemy">—%</div>
+            </div>
+          </div>
+
+          <div style="margin-top:12px;display:flex;gap:10px">
+            <div class="stat" style="flex:1">
+              <div class="label">Шанс початку вінстріка (3+)</div>
+              <div class="bar-wrap"><div class="bar-fill" id="bar_winstreak"></div></div>
+              <div class="mini" id="text_winstreak">—%</div>
+            </div>
+            <div class="stat" style="flex:1">
+              <div class="label">Шанс початку лузстріка (3+)</div>
+              <div class="bar-wrap"><div class="bar-fill" id="bar_losestreak"></div></div>
+              <div class="mini" id="text_losestreak">—%</div>
+            </div>
+          </div>
+
+          <div style="margin-top:10px" id="roleNotes" class="small"></div>
+        </div>
+
         <div id="predictionArea" class="prediction pred-neutral">Очікування...</div>
         <div id="predictionDetails" class="meta"></div>
+
         <div id="patterns" class="meta card">
           <h4>Закономірності матчів</h4>
           <div class="charts">
@@ -97,7 +181,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <script>
-    // ---- Утиліти
+    // ---- Утиліти (залишив без змін)
     function steam64ToAccountId(steam64){ try{ const n=BigInt(steam64); const base=BigInt('76561197960265728'); if(n<=BigInt(4294967295)) return Number(n); return Number(n-base);}catch(e){return NaN} }
     function playerWon(m){ const playerRadiant = (m.player_slot||0) < 128; return (playerRadiant && m.radiant_win) || (!playerRadiant && !m.radiant_win); }
     function secsToMinSecs(s){ const m=Math.floor(s/60), sec=s%60; return m+':'+String(sec).padStart(2,'0'); }
@@ -105,18 +189,26 @@
     async function fetchOpenDotaMatches(id,limit){ const url=`https://api.opendota.com/api/players/${id}/matches?limit=${limit}`; const res=await fetch(url); if(!res.ok) throw new Error('OpenDota matches fetch failed: '+res.status); return res.json(); }
     async function fetchHeroesConstants(){ const url='https://api.opendota.com/api/constants/heroes'; const res=await fetch(url); if(!res.ok) throw new Error('OpenDota heroes fetch failed'); return res.json(); }
 
-    // ---- Аналіз
+    // ---- Аналіз (залишив твої функції, дрібні доповнення)
     function analyzeMatches(matches){
       const out={games:matches.length,wins:0,k:0,d:0,a:0,dur:0,shortWins:0,shortLosses:0,longWins:0,longLosses:0,leaves:0,byHero:{},seq:[]};
       for(const m of matches){ const won=playerWon(m); out.seq.push(won?'W':'L'); if(won) out.wins++; const kills=m.kills||0,deaths=m.deaths||0,assists=m.assists||0,duration=m.duration||0; out.k+=kills; out.d+=deaths; out.a+=assists; out.dur+=duration; if(duration<1500 && won) out.shortWins++; if(duration<1500 && !won) out.shortLosses++; if(duration>2700 && won) out.longWins++; if(duration>2700 && !won) out.longLosses++; if(m.leaver_status && m.leaver_status!==0) out.leaves++; const hid=m.hero_id||0; if(!out.byHero[hid]) out.byHero[hid]={games:0,wins:0}; out.byHero[hid].games++; if(won) out.byHero[hid].wins++; }
       out.winrate=out.games? out.wins/out.games*100:0; out.avgK=out.games? out.k/out.games:0; out.avgD=out.games? out.d/out.games:0; out.avgA=out.games? out.a/out.games:0; out.avgKDA=out.avgD? (out.avgK+out.avgA)/out.avgD: (out.avgK+out.avgA); out.avgDuration=out.games? out.dur/out.games:0; out.pctShortWins=out.games? out.shortWins/out.games*100:0; out.pctShortLosses=out.games? out.shortLosses/out.games*100:0; out.pctLongWins=out.games? out.longWins/out.games*100:0; out.pctLongLosses=out.games? out.longLosses/out.games*100:0; out.leaveRate=out.games? out.leaves/out.games*100:0; return out; }
 
-    // ---- Прогноз (як раніше, трохи вдосконалено)
-  function computeDetailedProbabilities(summary, weights = defaultWeights) {
+    // ---- Прогноз (твої функції, з невеликим розширенням — повертаємо також reasons)
+  function computeDetailedProbabilities(summary, role = 3, weights = defaultWeights) {
   const reasons = [];
 
   // 1. Базова ймовірність перемоги
   let winProb = baseWinProb(summary, weights, reasons);
+
+  // Role-based modifier (невеликий, естимований)
+  // role 1 (carry) tends to have slightly higher control -> +3
+  // role 2 (mid) -> +2, role 3 -> 0, role 4 -> -1, role 5 -> -2
+  const roleDeltas = {1: 3, 2: 2, 3: 0, 4: -1, 5: -2};
+  const roleDelta = roleDeltas[role] || 0;
+  winProb += roleDelta;
+  reasons.push({ factor: "Role adjustment", value: role, delta: roleDelta });
 
   // 2. Прогноз довжини гри
   const predictedLength = predictGameLength(summary);
@@ -128,10 +220,10 @@
   // 4. Кінцеве обмеження
   winProb = Math.max(3, Math.min(97, Math.round(winProb)));
 
-  return { winProb, predictedLength, boosterMy, ruinerMy, boosterEnemy, ruinerEnemy, reasons };
+  // convert boosters/ruiners (1-95) into percentages (scaled)
+  const toPct = v => Math.max(1, Math.min(95, Math.round(v)));
+  return { winProb, predictedLength, boosterMy: toPct(boosterMy), ruinerMy: toPct(ruinerMy), boosterEnemy: toPct(boosterEnemy), ruinerEnemy: toPct(ruinerEnemy), reasons };
 }
-
-// -------------------- HELPERS --------------------
 
 const defaultWeights = {
   winrate: 0.9,
@@ -251,19 +343,17 @@ function estimateBoostersRuiners(summary) {
     brReasons: reasons
   };
 }
-    // ---- Патерни: дні/години/послідовності
-   // ---- Конфіг для порогів ----
+
+    // ---- Патерни: дні/години/послідовності (залишив)
 const PATTERN_CONFIG = {
   shortGameMax: 1500,   // <25 хв
   longGameMin: 2700,    // >45 хв
   maxSeq: 5,            // макс довжина серії для аналізу
-  minHeroGames: 2       // мінімум ігор на герої для топу
+  minHeroGames: 2       // мінімум ігор на героя для топу
 };
 
-// ---- Хелпер для winrate ----
 const winrate = (wins, games) => games ? wins / games * 100 : 0;
 
-// ---- ГОЛОВНА ФУНКЦІЯ ----
 function analyzePatterns(matches, summary, heroesConst, cfg = PATTERN_CONFIG) {
   const { days, hours } = analyzeDayHourRates(matches);
   const seqPatterns = analyzeSequences(summary.seq, cfg.maxSeq);
@@ -286,7 +376,6 @@ function analyzePatterns(matches, summary, heroesConst, cfg = PATTERN_CONFIG) {
   };
 }
 
-// ---- 1. Аналіз по днях і годинах ----
 function analyzeDayHourRates(matches) {
   const days = Array(7).fill(0).map(() => ({ games: 0, wins: 0 }));
   const hours = Array(24).fill(0).map(() => ({ games: 0, wins: 0 }));
@@ -315,7 +404,6 @@ function analyzeDayHourRates(matches) {
   };
 }
 
-// ---- 2. Аналіз послідовностей ----
 function analyzeSequences(seq, maxN) {
   const patterns = [];
   for (let n = 1; n <= maxN; n++) {
@@ -338,7 +426,6 @@ function analyzeSequences(seq, maxN) {
   return patterns;
 }
 
-// ---- 3. Аналіз коротких/довгих ігор ----
 function analyzeDurations(matches, shortMax, longMin) {
   const shortGames = matches.filter(m => (m.duration || 0) < shortMax);
   const longGames = matches.filter(m => (m.duration || 0) > longMin);
@@ -348,7 +435,8 @@ function analyzeDurations(matches, shortMax, longMin) {
     longWinrate: winrate(longGames.filter(playerWon).length, longGames.length)
   };
 }
-    function analyzePhases(matches) {
+
+function analyzePhases(matches) {
   const phases = [
     { name: 'Фаза 1 (<27 хв)', min: 0, max: 1620, games: 0, wins: 0 },
     { name: 'Фаза 2 (27–37 хв)', min: 1620, max: 2220, games: 0, wins: 0 },
@@ -367,12 +455,10 @@ function analyzeDurations(matches, shortMax, longMin) {
     }
   }
 
-  // додаємо winrate %
   phases.forEach(p => p.winrate = winrate(p.wins, p.games));
   return phases;
 }
 
-// ---- 4. Топ герої ----
 function analyzeTopHeroes(summary, heroesConst, minGames) {
   const heroes = Object.entries(summary.byHero).map(([hid, st]) => ({
     hero_id: Number(hid),
@@ -398,12 +484,16 @@ function analyzeTopHeroes(summary, heroesConst, minGames) {
     });
 }
 
-    // ---- Рендер UI
+    // ---- Рендер UI (оновлений щоб показувати role card)
     function renderMatches(matches, heroesConst){ const tbody=document.querySelector('#matchesTable tbody'); tbody.innerHTML=''; matches.forEach(m=>{ const tr=document.createElement('tr'); const d=new Date((m.start_time||0)*1000); const hid=m.hero_id||0; const heroName = heroesConst && heroesConst[hid] ? heroesConst[hid].localized_name : hid; tr.innerHTML=`<td>${d.toLocaleString()}</td><td>${heroName}</td><td>${m.kills||0}/${m.deaths||0}/${m.assists||0}</td><td>${playerWon(m)?'W':'L'}</td><td>${secsToMinSecs(m.duration||0)}</td>`; tbody.appendChild(tr); }); }
 
-    function renderPredictionUI(summary, result){ document.getElementById('statsSummary').innerText = `Ігор: ${summary.games} · Winrate: ${summary.winrate.toFixed(1)}% · Avg K/D/A: ${summary.avgK.toFixed(2)}/${summary.avgD.toFixed(2)}/${summary.avgA.toFixed(2)} · Avg KDA: ${summary.avgKDA.toFixed(2)} · Avg тривалість: ${Math.round(summary.avgDuration/60)} хв`;
-      const p=document.getElementById('predictionArea'); p.className='prediction '+(result.winProb>60?'pred-good':result.winProb<40?'pred-bad':'pred-neutral'); p.innerHTML=`<strong>Ймовірність перемоги: ${result.winProb}%</strong><div class="small">Прогнозована довжина: ${Math.round(result.predictedLength/60)} хв</div>`;
-      const det=document.getElementById('predictionDetails'); det.innerHTML=`<div class="reason"><strong>Шанси</strong><div class="small">Бустер (мої): ${result.boosterMy}% · Руінер (мої): ${result.ruinerMy}%<br>Бустер (ворог): ${result.boosterEnemy}% · Руінер (ворог): ${result.ruinerEnemy}%</div></div>`;
+    function renderPredictionUI(summary, result){
+      document.getElementById('statsSummary').innerText = `Ігор: ${summary.games} · Winrate: ${summary.winrate.toFixed(1)}% · Avg K/D/A: ${summary.avgK.toFixed(2)}/${summary.avgD.toFixed(2)}/${summary.avgA.toFixed(2)} · Avg KDA: ${summary.avgKDA.toFixed(2)} · Avg тривалість: ${Math.round(summary.avgDuration/60)} хв`;
+      const p=document.getElementById('predictionArea');
+      p.className='prediction '+(result.winProb>60?'pred-good':result.winProb<40?'pred-bad':'pred-neutral');
+      p.innerHTML=`<strong>Ймовірність перемоги (без ролі): ${result.winProb}%</strong><div class="small">Прогнозована довжина: ${Math.round(result.predictedLength/60)} хв</div>`;
+      const det=document.getElementById('predictionDetails');
+      det.innerHTML=`<div class="reason"><strong>Шанси (модель)</strong><div class="small">Бустер (мої): ${result.boosterMy}% · Руінер (мої): ${result.ruinerMy}%<br>Бустер (ворог): ${result.boosterEnemy}% · Руінер (ворог): ${result.ruinerEnemy}%</div></div>`;
     }
 
     // ---- Побудова графіків через Chart.js
@@ -414,60 +504,111 @@ function analyzeTopHeroes(summary, heroesConst, minGames) {
     }
 
     function renderPatternsUI(patterns){ document.getElementById('patterns').style.display='block'; const pt=document.getElementById('patternText'); pt.innerHTML='';
-      // sequence patterns
       const seqRoot=document.createElement('div'); seqRoot.innerHTML='<strong>Послідовності W/L</strong>';
       patterns.seqPatterns.forEach(p=>{ const div=document.createElement('div'); div.className='reason'; div.textContent = `Після ${p.n} поразок поспіль (${p.total} випадків) наступна гра була перемогою у ${p.prob}% випадків.`; seqRoot.appendChild(div); });
       pt.appendChild(seqRoot);
-      // short/long
       const durRoot=document.createElement('div'); durRoot.innerHTML='<strong>Тривалість і winrate</strong>';
       durRoot.appendChild(Object.assign(document.createElement('div'),{className:'reason',textContent:`Короткі ігри (<25хв) winrate: ${patterns.shortWinrate?patterns.shortWinrate.toFixed(1):0}%` }));
       durRoot.appendChild(Object.assign(document.createElement('div'),{className:'reason',textContent:`Довгі ігри (>45хв) winrate: ${patterns.longWinrate?patterns.longWinrate.toFixed(1):0}%` }));
       pt.appendChild(durRoot);
       const phaseRoot=document.createElement('div');
       phaseRoot.innerHTML='<strong>Фази закінчення ігор</strong>';
-      patterns.phases.forEach(p=>{
-        const div=document.createElement('div');
-        div.className='reason';
-        div.textContent = `${p.name}: ${p.games} ігор · Winrate: ${p.winrate ? p.winrate.toFixed(1) : 0}%`;
-        phaseRoot.appendChild(div);
-      });
-      pt.appendChild(phaseRoot);                                  
-      // top heroes
+      patterns.phases.forEach(p=>{ const div=document.createElement('div'); div.className='reason'; div.textContent = `${p.name}: ${p.games} ігор · Winrate: ${p.winrate ? p.winrate.toFixed(1) : 0}%`; phaseRoot.appendChild(div); });
+      pt.appendChild(phaseRoot);
       const topRoot=document.getElementById('topHeroes'); topRoot.innerHTML=''; if(patterns.top3.length===0){ topRoot.innerHTML='<div class="small">Недостатньо ігор на героях (min 2)</div>'; } else { patterns.top3.forEach(h=>{ const el=document.createElement('div'); el.className='hero-item'; const img=document.createElement('img'); img.src = h.img || ''; img.alt=h.name; const info=document.createElement('div'); info.innerHTML=`<div style="font-weight:600">${h.name}</div><div class="small">Winrate: ${h.winrate.toFixed(1)}% · Ігор: ${h.games}</div>`; el.appendChild(img); el.appendChild(info); topRoot.appendChild(el); }); }
     }
 
-    // ---- Пошук закономірностей за днями/годинами та рендер
-    async function showPatterns(matches, summary, heroesConst){ const analysis = analyzePatterns(matches, summary, heroesConst); buildCharts(analysis.dayRates, analysis.hourRates); renderPatternsUI(analysis); }
+    // ---- New: render role prediction card (fills bars & texts)
+    function showRoleCard(summary, baseResult){
+      const card = document.getElementById('rolePredictionCard');
+      card.style.display = 'block';
+      // default render using current role select
+      updateRoleCard(summary, baseResult);
+    }
 
-    // ---- Події кнопок
+    function clamp(v,min,max){ return Math.max(min,Math.min(max,v)); }
+
+    function updateRoleCard(summary, baseResult){
+      const role = Number(document.getElementById('roleSelect').value || 3);
+      const resultWithRole = computeDetailedProbabilities(summary, role);
+      // win percent
+      const winP = resultWithRole.winProb;
+      document.getElementById('winPercent').innerText = winP + '%';
+
+      // boosters/ruiners
+      setBar('boosterMy', resultWithRole.boosterMy);
+      setBar('ruinerMy', resultWithRole.ruinerMy);
+      setBar('boosterEnemy', resultWithRole.boosterEnemy);
+      setBar('ruinerEnemy', resultWithRole.ruinerEnemy);
+
+      // Winstreak (3+): simple independent estimate: p^3
+      const p = winP/100;
+      const winstreakPct = Math.round(Math.pow(p,3) * 10000)/100; // 2 decimals
+      const losestreakPct = Math.round(Math.pow(1-p,3) * 10000)/100;
+      setBar('winstreak', winstreakPct);
+      setBar('losestreak', losestreakPct);
+
+      // notes / reasons
+      const notes = [];
+      notes.push(`Роль: ${role} (мала корекція моделі).`);
+      notes.push(`Базовий шанс (модель): ${baseResult.winProb}% · Після ролі: ${winP}%`);
+      notes.push(`Оцінки бустерів/руінерів — індекс від 1 до 95 (візуалізовано як %).`);
+      document.getElementById('roleNotes').innerText = notes.join(' · ');
+    }
+
+    function setBar(id, pct){
+      const textEl = document.getElementById('text_' + id);
+      const barEl = document.getElementById('bar_' + id);
+      if(!textEl || !barEl) return;
+      const v = clamp(Number(pct) || 0, 0, 100);
+      textEl.innerText = v.toFixed(1) + '%';
+      barEl.style.width = v + '%';
+      // color variant depending on value
+      const parent = document.getElementById('stat_' + id);
+      if(parent){
+        parent.classList.remove('good','bad','neutral');
+        if(v >= 60) parent.classList.add('good');
+        else if(v <= 35) parent.classList.add('bad');
+        else parent.classList.add('neutral');
+      }
+    }
+
+    // ---- Пошук закономірностей / події кнопок
     let lastMatches=null, lastSummary=null, lastHeroesConst=null;
     document.getElementById('demoBtn').addEventListener('click', ()=>{ document.getElementById('idInput').value='863386335'; });
 
     document.getElementById('fetchBtn').addEventListener('click', async ()=>{
-      const raw=document.getElementById('idInput').value.trim(); if(!raw) return alert('Введіть ID'); const id = raw.length>12? steam64ToAccountId(raw): Number(raw); if(isNaN(id)) return alert('Не вдалося розпізнати ID'); const limit = Number(document.getElementById('limitSelect').value);
+      const raw=document.getElementById('idInput').value.trim(); if(!raw) return alert('Введіть ID');
+      const id = raw.length>12? steam64ToAccountId(raw): Number(raw); if(isNaN(id)) return alert('Не вдалося розпізнати ID');
+      const limit = Number(document.getElementById('limitSelect').value);
       document.getElementById('predictionArea').textContent='Завантаження...';
       try{
         const [matches, heroesConstRaw] = await Promise.all([ fetchOpenDotaMatches(id, limit), fetchHeroesConstants() ]);
-        // normalize heroesConst into map by hero_id (OpenDota constants keys are names, values have 'id')
         const heroesConst = {};
         Object.values(heroesConstRaw).forEach(h=>{ if(h.id!==undefined) heroesConst[h.id]=h; });
         lastMatches = matches; lastSummary = analyzeMatches(matches); lastHeroesConst = heroesConst;
-        const pred = computeDetailedProbabilities(lastSummary);
+        const baseResult = computeDetailedProbabilities(lastSummary); // base (role default 3 inside function)
         renderMatches(matches, heroesConst);
-        renderPredictionUI(lastSummary, pred);
+        renderPredictionUI(lastSummary, baseResult);
+        // show role card and wire role change
+        showRoleCard(lastSummary, baseResult);
+        document.getElementById('roleSelect').onchange = ()=> updateRoleCard(lastSummary, baseResult);
         // hide patterns until user presses button
         document.getElementById('patterns').style.display='none';
+        // reset charts area (will be built on patterns)
       }catch(err){ console.error(err); document.getElementById('predictionArea').textContent='Помилка: '+err.message; }
     });
 
     document.getElementById('patternsBtn').addEventListener('click', async ()=>{
       if(!lastMatches || !lastSummary){ alert('Спочатку отримайте прогноз (натисніть "Отримати прогноз").'); return; }
-      try{ await showPatterns(lastMatches, lastSummary, lastHeroesConst); }catch(err){ console.error(err); alert('Проблема при побудові закономірностей: '+err.message); }
+      try{ const analysis = analyzePatterns(lastMatches, lastSummary, lastHeroesConst); buildCharts(analysis.dayRates, analysis.hourRates); renderPatternsUI(analysis); }catch(err){ console.error(err); alert('Проблема при побудові закономірностей: '+err.message); }
     });
 
+    // ---- Ініціалізація (немає)
   </script>
 </body>
 </html>
+
 
 
 
