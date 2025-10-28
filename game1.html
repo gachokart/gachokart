@@ -317,23 +317,29 @@
       return getJSON(`${API.base}/heroes`);
     }
 
-  function inferRole(match) {
+ function inferRole(match) {
   const lr = match.lane_role;
   const gpm = match.gold_per_min || 0;
   const xpm = match.xp_per_min || 0;
 
-  // 1. Якщо lane_role відомий — довіряємось йому
+  // 1. Якщо lane_role відомий
   if (lr === 1) return { role: 5, laneName: "Сейф-лейн (Carry)" };
   if (lr === 2) return { role: 4, laneName: "Мід" };
   if (lr === 3) return { role: 3, laneName: "Офлейн" };
   if (lr === 4) return { role: 2, laneName: "Роум/Джангл" };
 
   // 2. Якщо lane_role немає — fallback по GPM/XPM
-  if (gpm >= 480 || xpm >= 580) return { role: 5, laneName: "?" }; // Carry
-  if (gpm >= 420 || xpm >= 500) return { role: 4, laneName: "?" }; // Mid
-  if (gpm >= 360 || xpm >= 440) return { role: 3, laneName: "?" }; // Offlane
-  if (gpm < 360 && xpm < 440) return { role: 2, laneName: "?" };  // Support 4
-  return { role: 1, laneName: "?" }; // Hard support
+  if (gpm >= 500 || xpm >= 600) {
+    return { role: 5, laneName: "?" }; // Carry
+  } else if (gpm >= 420 || xpm >= 500) {
+    return { role: 4, laneName: "?" }; // Mid
+  } else if (gpm >= 360 || xpm >= 440) {
+    return { role: 3, laneName: "?" }; // Offlane
+  } else if (gpm >= 280 || xpm >= 360) {
+    return { role: 2, laneName: "?" }; // Support 4
+  } else {
+    return { role: 1, laneName: "?" }; // Support 5
+  }
 }
     function computeRoleMetrics(matches, heroesById) {
       const perRole = new Map();
