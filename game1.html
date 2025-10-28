@@ -260,6 +260,8 @@ winProb += (heroMetaStrength-50)*0.5; // невелика корекція
 // Synergy score (з іншими героями у вашій команді)
 const synergyScore = 3; // placeholder
 winProb += synergyScore;
+let reasons = [];
+    
 reasons.push({factor:"Hero meta + synergy", delta: synergyScore});
 // Fatigue factor: якщо граєш >5 матчів поспіль за день
 const fatigueFactor = lastSummary.games>5 ? -3 : 0;
