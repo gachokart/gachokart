@@ -253,6 +253,8 @@ function computeAdvancedMetrics(matches){
 }
 // Hero meta strength (Winrate у поточному патчі)
 const heroMetaStrength = 50; // тут можна підставляти реальні дані через OpenDota constants/patch
+let winProb = 50; // або будь-яке початкове значення
+    
 winProb += (heroMetaStrength-50)*0.5; // невелика корекція
 
 // Synergy score (з іншими героями у вашій команді)
