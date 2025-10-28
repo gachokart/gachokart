@@ -258,25 +258,43 @@
 
     // ========== ROLE INFERENCE ==========
     // Повертаємо роль як 0..4: 0=Hard Support, 1=Support, 2=Offlane, 3=Mid, 4=Carry
-    function inferRole(m) {
-  const lr = m.lane_role;
-  const gpm = m.gold_per_min || 0;
-  const xpm = m.xp_per_min || 0;
-
-  // 1. Якщо lane_role є
-  if (lr === 1) return { role: 4, laneName: "Carry" };
-  if (lr === 2) return { role: 3, laneName: "Mid" };
-  if (lr === 3) return { role: 2, laneName: "Offlane" };
-  if (lr === 4) return { role: 1, laneName: "Support" };
-
-  // 2. Якщо lane_role немає — спочатку перевіряємо високі значення
-  if (gpm >= 550 || xpm >= 700) return { role: 4, laneName: "Carry" };
-  if (xpm >= 500) return { role: 3, laneName: "Mid" };
-  if (gpm >= 400) return { role: 2, laneName: "Offlane" };
-  if (gpm < 320 && xpm < 400) return { role: 0, laneName: "Hard Support" };
-  return { role: 1, laneName: "Support" };
+   async function fetchFullMatch(matchId) {
+  const res = await fetch(`https://api.opendota.com/api/matches/${matchId}`);
+  if (!res.ok) throw new Error("Не вдалося отримати матч " + matchId);
+  return res.json();
 }
 
+function inferRolesByTeam(match, accountId) {
+  const me = match.players.find(p => p.account_id == accountId);
+  const isRadiant = me.player_slot < 128;
+  const teamPlayers = match.players.filter(p => (p.player_slot < 128) === isRadiant);
+
+  const roles = {};
+
+  // Carry = топ GPM
+  const byGPM = [...teamPlayers].sort((a,b)=>b.gold_per_min - a.gold_per_min);
+  roles[byGPM[0].account_id] = "Carry";
+
+  // Mid = топ XPM серед тих, хто ще без ролі
+  const byXPM = [...teamPlayers].sort((a,b)=>b.xp_per_min - a.xp_per_min);
+  const mid = byXPM.find(p => !roles[p.account_id]);
+  if (mid) roles[mid.account_id] = "Mid";
+
+  // Offlane = наступний по GPM серед тих, хто ще без ролі
+  const offlane = byGPM.find(p => !roles[p.account_id]);
+  if (offlane) roles[offlane.account_id] = "Offlane";
+
+  // Залишились 2 → Supports
+  const supports = teamPlayers.filter(p => !roles[p.account_id]);
+  if (supports.length === 2) {
+    const hard = supports[0].assists >= supports[1].assists ? supports[0] : supports[1];
+    const soft = hard === supports[0] ? supports[1] : supports[0];
+    roles[hard.account_id] = "Hard Support";
+    roles[soft.account_id] = "Support";
+  }
+
+  return roles[accountId]; // повертає роль саме твого акаунта
+}
     // ========== ANALYTICS ==========
     function computeRoleMetrics(matches, heroesById) {
       const perRole = new Map(); // roleIdx -> stats
