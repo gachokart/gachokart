@@ -218,13 +218,6 @@
       updateSum();
     }
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/heatmap.js@2.0.5/build/heatmap.min.js"></script>
-
-<canvas id="radarCanvas" width="400" height="400"></canvas>
-<canvas id="trendCanvas" width="400" height="200"></canvas>
-<div id="heroHeatmap" style="width:600px;height:400px;position:relative;"></div>
 
 <script>
 async function renderAnalytics(accountId) {
@@ -338,6 +331,10 @@ renderAnalytics(863386335); // заміни своїм accountId
     function updateSum(){ const sum=values.reduce((s,x)=>s+x,0); document.getElementById('statusText').innerText = 'Поточна сума ваг: '+sum.toFixed(2); }
 
     function syncDomFromValues(){ const inputs=colsWrap.querySelectorAll('input[type=range]'); inputs.forEach(inp=>{const i=+inp.dataset.index; inp.value=values[i]; const col=inp.closest('.col'); col.querySelector('.value-pill').textContent = values[i].toFixed(2); col.querySelector('.bar-fill').style.height = (values[i]*100)+'%'; }); updateSum(); }
+document.addEventListener('DOMContentLoaded', () => {
+    const countInput = document.getElementById('countInput');
+    // далі твій код з countInput
+});
 
     countInput.addEventListener('change', ()=>{ let n=+countInput.value||1; n=Math.max(1,Math.min(40,n)); countInput.value=n; createCols(n); });
     randomizeBtn.addEventListener('click', ()=>{ values = values.map(()=>+(Math.random()).toFixed(2)); syncDomFromValues(); });
