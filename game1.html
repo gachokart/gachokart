@@ -18,7 +18,7 @@
     }
     body {
       margin: 0;
-      font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Helvetica, Arial;
       background: var(--bg);
       color: var(--text);
     }
@@ -33,7 +33,7 @@
     h1 { font-size: 20px; margin: 0 0 6px; }
     .controls {
       display: grid;
-      grid-template-columns: repeat(4, minmax(180px, 1fr));
+      grid-template-columns: repeat(4, minmax(160px, 1fr));
       gap: 10px;
       align-items: end;
     }
@@ -56,72 +56,34 @@
     }
     button[disabled] { opacity: 0.6; cursor: default; }
     main { padding: 16px 20px; }
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .panel {
       background: var(--panel);
       border: 1px solid var(--grid);
       border-radius: 12px;
       padding: 14px;
     }
-    .panel h2 {
-      margin: 0 0 10px;
-      font-size: 16px;
-      color: var(--muted);
-      font-weight: 600;
-    }
+    .panel h2 { margin: 0 0 10px; font-size: 16px; color: var(--muted); font-weight: 600; }
     .pill {
-      display: inline-block;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      border: 1px solid var(--grid);
-      margin-right: 8px;
-      margin-bottom: 6px;
+      display: inline-block; padding: 6px 10px; border-radius: 999px;
+      font-size: 12px; border: 1px solid var(--grid); margin-right: 8px; margin-bottom: 6px;
     }
     .pill.win { background: rgba(53,196,110,0.15); color: var(--win); border-color: rgba(53,196,110,0.35); }
     .pill.loss { background: rgba(255,107,107,0.15); color: var(--loss); border-color: rgba(255,107,107,0.35); }
     .pill.warn { background: rgba(255,200,87,0.15); color: var(--warn); border-color: rgba(255,200,87,0.35); }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
-    th, td {
-      text-align: left;
-      padding: 8px 10px;
-      border-bottom: 1px solid var(--grid);
-      vertical-align: top;
-    }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--grid); vertical-align: top; }
     th { color: var(--muted); font-weight: 600; }
-    .mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, Menlo, Consolas, monospace; }
     .hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
     .small { font-size: 12px; color: var(--muted); }
     .flex { display: flex; gap: 12px; flex-wrap: wrap; }
-    .row { display: flex; gap: 10px; align-items: center; }
-    .bar {
-      height: 8px;
-      background: #0c1020;
-      border-radius: 999px;
-      border: 1px solid var(--grid);
-      overflow: hidden;
-      margin-top: 6px;
-    }
-    .bar > span {
-      display: block;
-      height: 100%;
-      background: var(--accent);
-    }
+    .bar { height: 8px; background: #0c1020; border-radius: 999px; border: 1px solid var(--grid); overflow: hidden; margin-top: 6px; }
+    .bar > span { display: block; height: 100%; background: var(--accent); }
     .danger { color: var(--loss); }
     .success { color: var(--win); }
     footer { padding: 12px 20px; color: var(--muted); }
-    @media (max-width: 1024px) {
-      .grid { grid-template-columns: 1fr; }
-      .controls { grid-template-columns: 1fr 1fr; }
-    }
+    @media (max-width: 1024px) { .grid { grid-template-columns: 1fr; } .controls { grid-template-columns: 1fr 1fr; } }
   </style>
 </head>
 <body>
@@ -151,15 +113,15 @@
         <button id="runBtn">Запустити аналіз</button>
       </div>
     </div>
-    <div class="hint">Підказка: якщо профіль приватний, OpenDota може повернути неповні дані. Для стабільності краще 100–200 матчів.</div>
+    <div class="hint">Порада: для стабільності аналізуй 100–200 матчів. Якщо профіль приватний, дані можуть бути неповні.</div>
   </header>
 
   <main>
     <div class="grid">
       <section class="panel">
-        <h2>Прогноз по ролях</h2>
+        <h2>Прогноз шансів перемоги по ролях</h2>
         <div id="roleForecast" class="flex"></div>
-        <div class="hint">Алгоритм враховує: вінрейти по ролях, стабільність ролі, серії, час доби, лейн-результати, геро-пул і останні KPI.</div>
+        <div class="hint">Рахуємо по вінрейту ролі з довірчою поправкою, стабільності, серії, часу доби та базових KPI.</div>
       </section>
 
       <section class="panel">
@@ -179,7 +141,6 @@
               <th>Матчі</th>
               <th>Стабільність</th>
               <th>Середні KPI</th>
-              <th>Геро-пул</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -187,7 +148,7 @@
       </section>
 
       <section class="panel">
-        <h2>Час доби, патч, режим</h2>
+        <h2>Час доби, режим</h2>
         <table id="contextTable">
           <thead>
             <tr>
@@ -229,7 +190,7 @@
               <th>Лейн</th>
               <th>Вінрейт</th>
               <th>Матчі</th>
-              <th>Середній нетворк на 10</th>
+              <th>Середній proxy нетворк на 10</th>
               <th>Примітка</th>
             </tr>
           </thead>
@@ -240,62 +201,40 @@
   </main>
 
   <footer class="small">
-    Побудовано на даних OpenDota. Для стабільної роботи не перевищуй ліміти запитів. Цей інструмент не гарантує результат, він підсвічує ймовірності та ризики.
+    Побудовано на даних OpenDota. Це інструмент ймовірностей і ризиків, не гарантія результату.
   </footer>
 
   <script>
     // ========== CONFIG ==========
-    const API = {
-      base: 'https://api.opendota.com/api',
-      headers: {}
-      // headers: { 'Authorization': 'Bearer YOUR_KEY' }
-    };
-
-    const ROLE_MAP = {
-      1: 'Саппорт 1',
-      2: 'Саппорт 2',
-      3: 'Офлейн',
-      4: 'Мід',
-      5: 'Керрі'
-    };
-
-    const LANE_MAP = {
-      1: 'Сейф-лейн',
-      2: 'Мід',
-      3: 'Офлейн',
-      4: 'Джангл/Роум'
-    };
-
+    const API = { base: 'https://api.opendota.com/api', headers: {} };
+    const ROLE_LABELS = ['Hard Support','Support','Offlane','Mid','Carry']; // index 0..4
+    const LANE_MAP = { 1: 'Сейф-лейн', 2: 'Мід', 3: 'Офлейн', 4: 'Джангл/Роум' };
     const cache = new Map();
 
+    // ========== UTIL ==========
     const fmtPct = v => (isNaN(v) ? '-' : (v * 100).toFixed(1) + '%');
     const fmtNum = v => (v == null ? '-' : v.toLocaleString('uk-UA'));
-    const fmtDate = ts => {
-      try { return new Date(ts * 1000).toLocaleString('uk-UA', { hour12: false }); }
-      catch { return '-'; }
-    };
-    const kda = (k, d, a) => {
-      const denom = Math.max(1, d || 0);
-      return ((k || 0) + (a || 0)) / denom;
-    };
+    const fmtDate = ts => { try { return new Date(ts * 1000).toLocaleString('uk-UA', { hour12:false }); } catch { return '-'; } };
+    const kda = (k, d, a) => (((k||0) + (a||0)) / Math.max(1, d||0));
     const by = key => (a, b) => (a[key] < b[key] ? 1 : -1);
 
     function aggAvg(list) {
-      const vals = list.filter(x => typeof x === 'number');
+      const vals = list.filter(x => typeof x === 'number' && isFinite(x));
       if (vals.length === 0) return null;
       return vals.reduce((s, v) => s + v, 0) / vals.length;
     }
 
+    // Wilson lower bound для довіри вінрейту
     function stableWinrate(wins, total) {
       if (total === 0) return { wr: 0, stability: 0 };
-      const wr = wins / total;
+      const p = wins / total;
       const z = 1.96;
-      const denom = 1 + z*z/total;
-      const center = wr + z*z/(2*total);
-      const adj = z * Math.sqrt((wr*(1-wr) + z*z/(4*total)) / total);
+      const denom = 1 + z*z / total;
+      const center = p + z*z / (2*total);
+      const adj = z * Math.sqrt((p*(1-p) + z*z/(4*total)) / total);
       const lower = (center - adj) / denom;
-      const stability = Math.max(0, Math.min(1, 1 - (wr - lower)));
-      return { wr, stability };
+      const stability = Math.max(0, Math.min(1, 1 - (p - lower))); // ближче до 1 — стабільніше
+      return { wr: p, stability };
     }
 
     async function getJSON(url) {
@@ -317,32 +256,43 @@
       return getJSON(`${API.base}/heroes`);
     }
 
- function inferRole(match) {
-  const gpm = match.gold_per_min || 0;
-  const xpm = match.xp_per_min || 0;
-  const lr = match.lane_role;
+    // ========== ROLE INFERENCE ==========
+    // Повертаємо роль як 0..4: 0=Hard Support, 1=Support, 2=Offlane, 3=Mid, 4=Carry
+    function inferRole(match) {
+      const lr = match.lane_role;
+      const gpm = match.gold_per_min || 0;
+      const xpm = match.xp_per_min || 0;
+      const k = match.kills || 0;
+      const a = match.assists || 0;
 
-  // Якщо lane_role є — довіряємось
-  if (lr === 1) return { role: 5, laneName: "Carry" };
-  if (lr === 2) return { role: 4, laneName: "Mid" };
-  if (lr === 3) return { role: 3, laneName: "Offlane" };
-  if (lr === 4) return { role: 2, laneName: "Roam" };
+      // 1) Якщо lane_role є — довіряємось йому
+      if (lr === 1) return { role: 4, laneName: LANE_MAP[1] }; // Carry
+      if (lr === 2) return { role: 3, laneName: LANE_MAP[2] }; // Mid
+      if (lr === 3) return { role: 2, laneName: LANE_MAP[3] }; // Offlane
+      if (lr === 4) return { role: 1, laneName: LANE_MAP[4] }; // Support (roam/jungle)
 
-  // Якщо lane_role немає — нормалізуємо
-  if (gpm > 450 && xpm > 500) return { role: 5, laneName: "Carry" };
-  if (xpm > gpm && xpm > 480) return { role: 4, laneName: "Mid" };
-  if (gpm > 380 && xpm > 420) return { role: 3, laneName: "Offlane" };
-  if (gpm < 320 && xpm < 380) return { role: 1, laneName: "Hard Support" };
-  return { role: 2, laneName: "Soft Support" };
-}
+      // 2) Якщо lane_role немає — класифікація за GPM/XPM та участю у кілах
+      const impact = (k + a); // сурогат впливу
+      // Високі економічні показники -> Carry
+      if (gpm >= 500 || xpm >= 600 || (gpm >= 470 && impact >= 20)) return { role: 4, laneName: '?' };
+      // Високий XPM -> Mid
+      if (xpm >= 520 || (xpm >= 480 && k >= 10)) return { role: 3, laneName: '?' };
+      // Середня економіка + участь -> Offlane
+      if (gpm >= 380 || xpm >= 450) return { role: 2, laneName: '?' };
+      // Низька економіка: розділяємо Support vs Hard Support по асистам
+      if (gpm < 340 && xpm < 420 && a >= k + 4) return { role: 0, laneName: '?' }; // Hard Support
+      return { role: 1, laneName: '?' }; // Support
+    }
+
+    // ========== ANALYTICS ==========
     function computeRoleMetrics(matches, heroesById) {
-      const perRole = new Map();
+      const perRole = new Map(); // roleIdx -> stats
       const roleSeq = [];
 
       for (const m of matches) {
         const { role, laneName } = inferRole(m);
         const win = (m.radiant_win && m.player_slot < 128) || (!m.radiant_win && m.player_slot >= 128);
-        const heroname = (heroesById.get(m.hero_id) || {}).localized_name || `Hero ${m.hero_id}`;
+        const heroName = (heroesById.get(m.hero_id) || {}).localized_name || `Hero ${m.hero_id}`;
         const entry = perRole.get(role) || { wins:0, total:0, kdas:[], gpm:[], xpm:[], deaths:[], heroes:new Set(), lanes:new Map() };
         entry.total += 1;
         if (win) entry.wins += 1;
@@ -350,17 +300,17 @@
         if (m.gold_per_min) entry.gpm.push(m.gold_per_min);
         if (m.xp_per_min) entry.xpm.push(m.xp_per_min);
         entry.deaths.push(m.deaths || 0);
-        entry.heroes.add(heroname);
+        entry.heroes.add(heroName);
         if (laneName) {
           const l = entry.lanes.get(laneName) || { wins:0, total:0 };
-          l.total += 1;
-          if (win) l.wins += 1;
+          l.total += 1; if (win) l.wins += 1;
           entry.lanes.set(laneName, l);
         }
         perRole.set(role, entry);
         roleSeq.push(role);
       }
 
+      // Стабільність перемикання ролей
       let switches = 0;
       for (let i=1; i<roleSeq.length; i++) if (roleSeq[i] !== roleSeq[i-1]) switches++;
       const roleStability = roleSeq.length ? 1 - (switches / roleSeq.length) : 0;
@@ -373,6 +323,7 @@
         const avgXPM = aggAvg(data.xpm);
         const avgDeaths = aggAvg(data.deaths);
 
+        // Найкращий лейн
         let bestLane = null, bestLaneWr = null, bestLaneTotal = 0;
         for (const [lname, ldata] of data.lanes.entries()) {
           const w = ldata.wins / ldata.total;
@@ -381,24 +332,26 @@
           }
         }
 
-        const roleScore =
-          (wr * 0.5) +
+        // Базовий score ролі: WR + стабільність + KPI
+        const score =
+          (wr * 0.55) +
           (stability * 0.15) +
-          ((avgKDA || 1) / 5 * 0.15) +
-          (((avgGPM || 400) - 350) / 250 * 0.1) +
-          (((avgXPM || 450) - 400) / 250 * 0.1) -
-          ((avgDeaths || 6) - 6) * 0.02;
+          ((avgKDA || 1) / 5 * 0.12) +
+          (((avgGPM || 400) - 350) / 300 * 0.09) +
+          (((avgXPM || 450) - 400) / 300 * 0.09) -
+          ((avgDeaths || 6) - 6) * 0.03;
 
         result.push({
-          role, roleName: ROLE_MAP[role] || `Роль ${role}`,
+          roleIdx: role, roleName: ROLE_LABELS[role] || ('Роль '+role),
           wr, total: data.total, stability,
           avgKDA, avgGPM, avgXPM, avgDeaths,
-          heroPool: Array.from(data.heroes).sort().slice(0, 12),
+          heroes: Array.from(data.heroes).sort().slice(0, 12),
           bestLane, bestLaneWr, bestLaneTotal,
-          score: roleScore
+          score
         });
       }
 
+      // Сортуємо від кращого до гіршого
       return { perRole: result.sort(by('score')), roleStability };
     }
 
@@ -406,13 +359,8 @@
       const seq = matches.map(m => ((m.radiant_win && m.player_slot < 128) || (!m.radiant_win && m.player_slot >= 128)) ? 1 : 0);
       let cur = 0, bestWin = 0, bestLose = 0;
       for (const w of seq) {
-        if (w === 1) {
-          cur = cur >= 0 ? cur + 1 : 1;
-          bestWin = Math.max(bestWin, cur);
-        } else {
-          cur = cur <= 0 ? cur - 1 : -1;
-          bestLose = Math.max(bestLose, -cur);
-        }
+        if (w === 1) { cur = cur >= 0 ? cur + 1 : 1; bestWin = Math.max(bestWin, cur); }
+        else { cur = cur <= 0 ? cur - 1 : -1; bestLose = Math.max(bestLose, -cur); }
       }
       const recent = seq.slice(-10).reduce((s,x)=>s+(x?1:0),0);
       return { current: cur, bestWin, bestLose, recentWins10: recent };
@@ -421,7 +369,6 @@
     function computeContext(matches) {
       const byHour = new Map();
       const modes = new Map();
-      const patches = new Map();
 
       for (const m of matches) {
         const hour = new Date(m.start_time * 1000).getHours();
@@ -434,11 +381,6 @@
         const g = modes.get(gm) || {wins:0,total:0};
         g.total++; if (win) g.wins++;
         modes.set(gm, g);
-
-        const ver = m.version ?? 'unknown';
-        const p = patches.get(ver) || {wins:0,total:0};
-        p.total++; if (win) p.wins++;
-        patches.set(ver, p);
       }
 
       const hoursArr = Array.from(byHour.entries())
@@ -451,12 +393,7 @@
         .sort((a,b) => b.wr - a.wr);
       const bestMode = gmArr[0] || null;
 
-      const verArr = Array.from(patches.entries())
-        .map(([ver, v]) => ({ ver, wr: v.wins / v.total, total: v.total }))
-        .sort((a,b) => b.wr - a.wr);
-      const bestPatch = verArr[0] || null;
-
-      return { bestHour, hoursArr, bestMode, gmArr, bestPatch, verArr };
+      return { bestHour, hoursArr, bestMode, gmArr };
     }
 
     function computeLaneStats(matches) {
@@ -467,7 +404,7 @@
         const win = (m.radiant_win && m.player_slot < 128) || (!m.radiant_win && m.player_slot >= 128);
         const e = lanes.get(lr) || { wins:0, total:0, gpm10:[] };
         e.total++; if (win) e.wins++;
-        if (m.gold_per_min) e.gpm10.push(m.gold_per_min / 6);
+        if (m.gold_per_min) e.gpm10.push(m.gold_per_min / 6); // ~ proxy нетворку на 10 хв
         lanes.set(lr, e);
       }
       const rows = [];
@@ -483,28 +420,34 @@
       return rows.sort((a,b)=>b.wr - a.wr);
     }
 
+    // ========== FORECAST ==========
+    // Побудова прогнозу: нормалізуємо score до 0..1, коригуємо серією, годиною, лейном
     function buildRoleForecast(roleMetrics, streaks, context) {
       return roleMetrics.perRole.map(r => {
         let score = r.score;
+
+        // Серія: довга луз-стreak знижує низькостабільні ролі
         if (streaks.current < -3 && r.stability < 0.4) score -= 0.05;
-        if (context.bestHour && context.bestHour.wr > 0.55) score += 0.03;
+        // Кращі години додають невеликий бонус
+        if (context.bestHour && context.bestHour.wr > 0.55) score += 0.02;
+        // Якщо кращий лейн для ролі має високий WR — бонус
         if (r.bestLaneWr != null && r.bestLaneWr > 0.55) score += 0.02;
 
+        // Нормалізація до 0..1 та обрізання
         const winProb = Math.max(0.05, Math.min(0.95, score));
-        const risk = 1 - (r.stability * 0.7 + (r.wr * 0.3));
         return {
+          roleIdx: r.roleIdx,
           roleName: r.roleName,
           winrate: r.wr,
           total: r.total,
           stability: r.stability,
           winProb,
-          risk,
-          bestLane: r.bestLane,
-          heroPool: r.heroPool
+          bestLane: r.bestLane
         };
       }).sort((a,b)=>b.winProb - a.winProb);
     }
 
+    // ========== RENDER ==========
     function renderRoleForecast(list) {
       const root = document.getElementById('roleForecast');
       root.innerHTML = '';
@@ -513,16 +456,15 @@
         div.className = 'panel';
         div.style.minWidth = '260px';
         div.innerHTML = `
-          <div class="row">
-            <div style="font-weight:700">${item.roleName}</div>
+          <div style="font-weight:700">${item.roleName}</div>
+          <div class="row" style="display:flex;gap:6px;align-items:center;margin-top:6px">
             <div class="pill ${item.winrate>=0.5?'win':'loss'}">WR ${fmtPct(item.winrate)}</div>
             <div class="pill warn">Матчі ${fmtNum(item.total)}</div>
+            <div class="pill">${item.bestLane || '-'}</div>
           </div>
           <div class="bar"><span style="width:${(item.winProb*100).toFixed(0)}%"></span></div>
-          <div class="small" style="margin-top:6px">Ймовірність виграшу: <span class="${item.winProb>=0.5?'success':'danger'}">${fmtPct(item.winProb)}</span></div>
+          <div class="small" style="margin-top:6px">Ймовірність перемоги: <span class="${item.winProb>=0.5?'success':'danger'}">${fmtPct(item.winProb)}</span></div>
           <div class="small">Стабільність ролі: ${fmtPct(item.stability)}</div>
-          <div class="small">Найкращий лейн: ${item.bestLane || '-'}</div>
-          <div class="small">Геро-пул: ${item.heroPool.join(', ') || '-'}</div>
         `;
         root.appendChild(div);
       }
@@ -543,7 +485,6 @@
             <div>GPM/XPM: <span class="mono">${fmtNum(Math.round(r.avgGPM||0))}</span>/<span class="mono">${fmtNum(Math.round(r.avgXPM||0))}</span></div>
             <div>Deaths: <span class="mono">${(r.avgDeaths||0).toFixed(1)}</span></div>
           </td>
-          <td>${r.heroPool.join(', ') || '-'}</td>
         `;
         tbody.appendChild(tr);
       }
@@ -556,7 +497,7 @@
         streaks.current < 0 ? `Поточна серія поразок: ${-streaks.current}` :
         'Немає поточної серії';
       root.innerHTML = `
-        <div class="row">
+        <div class="row" style="display:flex;gap:6px;flex-wrap:wrap">
           <div class="pill ${streaks.current>0?'win':(streaks.current<0?'loss':'warn')}">${label}</div>
           <div class="pill win">Найкраща серія перемог: ${streaks.bestWin}</div>
           <div class="pill loss">Найдовша серія поразок: ${streaks.bestLose}</div>
@@ -584,13 +525,6 @@
           note: `WR ${fmtPct(context.bestMode.wr)} на ${fmtNum(context.bestMode.total)} матчах`
         });
       }
-      if (context.bestPatch) {
-        rows.push({
-          factor: 'Версія/патч (найкраща)',
-          metric: `${context.bestPatch.ver}`,
-          note: `WR ${fmtPct(context.bestPatch.wr)} на ${fmtNum(context.bestPatch.total)} матчах`
-        });
-      }
       if (rows.length === 0) {
         rows.push({ factor: 'Контекст', metric: '-', note: 'Немає достатньо даних' });
       }
@@ -612,7 +546,7 @@
         tr.innerHTML = `
           <td class="mono">${m.match_id}</td>
           <td>${fmtDate(m.start_time)}</td>
-          <td>${ROLE_MAP[role] || '-'}</td>
+          <td>${ROLE_LABELS[role]}</td>
           <td>${hero.localized_name || ('Hero '+m.hero_id)}</td>
           <td><span class="pill ${win?'win':'loss'}">${win?'Win':'Loss'}</span></td>
           <td class="mono">${(kda(m.kills, m.deaths, m.assists)).toFixed(2)}</td>
@@ -639,15 +573,13 @@
       }
     }
 
+    // ========== MAIN ==========
     async function run() {
       const btn = document.getElementById('runBtn');
       const accountId = document.getElementById('accountId').value.trim();
       const limit = parseInt(document.getElementById('matchLimit').value, 10);
 
-      if (!accountId) {
-        alert('Введи Steam32 account_id.');
-        return;
-      }
+      if (!accountId) { alert('Введи Steam32 account_id.'); return; }
 
       btn.disabled = true;
       btn.textContent = 'Завантаження...';
@@ -659,9 +591,7 @@
           fetchHeroConstants()
         ]);
 
-        const heroesById = new Map();
-        for (const h of heroes) heroesById.set(h.id, h);
-
+        const heroesById = new Map(); for (const h of heroes) heroesById.set(h.id, h);
         const valid = matches.filter(m => m && m.hero_id);
 
         const roleMetrics = computeRoleMetrics(valid, heroesById);
@@ -688,17 +618,15 @@
 
     document.getElementById('runBtn').addEventListener('click', run);
 
+    // Ініціалізація з query параметра ?id=...
     (function initFromQuery() {
       const params = new URLSearchParams(location.search);
       const id = params.get('id');
-      if (id) {
-        document.getElementById('accountId').value = id;
-      }
+      if (id) document.getElementById('accountId').value = id;
     })();
   </script>
 </body>
 </html>
-
 
 
 
