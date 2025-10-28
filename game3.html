@@ -22,7 +22,12 @@
 
     .cols-area{margin-top:18px;padding:14px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:10px}
     .cols{display:flex;gap:12px;align-items:end;height:320px;padding:12px}
-    .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px}
+    .cols {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 12px;
+}
     .bar{width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center}
 
     /* vertical slider styling: rotate the range input */
@@ -110,6 +115,10 @@
 
     <div class="card cols-area">
       <div class="cols" id="cols"></div>
+      <div class="cols">
+  <div id="bars"></div>
+  <div id="values"></div>
+</div>
 
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px">
         <div class="small">Показано числове значення під колонкою. Тягніть круглі повзунки або змініть вручну.</div>
