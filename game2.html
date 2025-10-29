@@ -317,7 +317,11 @@ async function loadOpenDotaData() {
         score: (p.win / Math.max(p.games, 1)) * Math.log10(p.games + 1) * 100
       };
     });
-
+const roleCategories = {
+  carry: { roles: ["Carry", "Pusher", "Nuker"], weight: 3 },
+  support: { roles: ["Support", "Disabler"], weight: 2 },
+  universal: { roles: ["Melee", "Ranged", "Durable", "Initiator", "Escape"], weight: 1 }
+};
     // 3️⃣ Відображення таблиці
     displayPersonalStats();
   } catch (err) {
@@ -417,7 +421,8 @@ async function loadData() {
   }
 
   document.addEventListener('DOMContentLoaded', init);
-loadMyHeroes();
+loadOpenDotaData();
+
 
   heroes.forEach(h => {
   h.score = (h.winrate * 0.7 + h.pickrate * 0.3);
@@ -714,11 +719,7 @@ if (window.personalHeroScores?.length) {
 // Категорії з вагами
 // Категорії з вагами
 // Категорії з вагами
-const roleCategories = {
-  carry: { roles: ["Carry", "Pusher", "Nuker"], weight: 3 },
-  support: { roles: ["Support", "Disabler"], weight: 2 },
-  universal: { roles: ["Melee", "Ranged", "Durable", "Initiator", "Escape"], weight: 1 }
-};
+
 
 function getCategory(role) {
   for (const [cat, data] of Object.entries(roleCategories)) {
