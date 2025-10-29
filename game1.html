@@ -228,32 +228,41 @@ const defaultWeights = {
 function baseWinProb(summary, w, reasons) {
   let winProb = 50;
 
-  const deltaWinrate = (summary.winrate - 50) * w.winrate;
-  winProb += deltaWinrate;
-  reasons.push({ factor: "Winrate", value: summary.winrate, delta: deltaWinrate });
+  // Winrate корекція (логістична)
+  const winrateDelta = Math.log10(Math.max(1, summary.winrate)) * w.winrate - w.winrate * Math.log10(50);
+  winProb += winrateDelta;
+  reasons.push({ factor: "Winrate (log scale)", value: summary.winrate, delta: winrateDelta });
 
-  const deltaKDA = (summary.avgKDA - 2) * w.kda;
-  winProb += deltaKDA;
-  reasons.push({ factor: "KDA", value: summary.avgKDA, delta: deltaKDA });
+  // KDA корекція
+  const kdaRatio = summary.avgD > 0 ? (summary.avgK + summary.avgA)/summary.avgD : summary.avgK + summary.avgA;
+  const kdaDelta = (kdaRatio - 2) * w.kda;
+  winProb += kdaDelta;
+  reasons.push({ factor: "KDA", value: kdaRatio, delta: kdaDelta });
 
+  // Short games
   if (summary.avgDuration < 1200) {
-    winProb += w.shortGamePenalty;
-    reasons.push({ factor: "Short games", value: summary.avgDuration, delta: w.shortGamePenalty });
+    const shortDelta = w.shortGamePenalty * Math.min(1, (1200-summary.avgDuration)/600);
+    winProb += shortDelta;
+    reasons.push({ factor: "Short games", value: summary.avgDuration, delta: shortDelta });
   }
 
+  // Short loss % (м'якше)
   if (summary.pctShortLosses > 20) {
-    winProb += w.shortLossPenalty;
-    reasons.push({ factor: "Short losses", value: summary.pctShortLosses, delta: w.shortLossPenalty });
+    const slDelta = w.shortLossPenalty * Math.min(1, (summary.pctShortLosses-20)/20);
+    winProb += slDelta;
+    reasons.push({ factor: "Short losses", value: summary.pctShortLosses, delta: slDelta });
   }
 
+  // Leave rate
   if (summary.leaveRate > 5) {
-    const v = w.leaveRatePenalty(summary.leaveRate);
-    winProb += v;
-    reasons.push({ factor: "Leave rate", value: summary.leaveRate, delta: v });
+    const leaveDelta = w.leaveRatePenalty(summary.leaveRate);
+    winProb += leaveDelta;
+    reasons.push({ factor: "Leave rate", value: summary.leaveRate, delta: leaveDelta });
   }
 
   return winProb;
 }
+
 
 function predictGameLength(summary) {
   return Math.round(
@@ -263,78 +272,43 @@ function predictGameLength(summary) {
 }
 
 function estimateBoostersRuiners(summary) {
-  function clamp(v) { return Math.max(1, Math.min(95, Math.round(v))); }
+  function clamp(v){ return Math.max(1, Math.min(95, Math.round(v))); }
+  let boosterMy=5, ruinerMy=5, boosterEnemy=5, ruinerEnemy=5;
+  const reasons=[];
 
-  let boosterMy = 5, ruinerMy = 5, boosterEnemy = 5, ruinerEnemy = 5;
-  const reasons = [];
-
-  if (summary.avgKDA > 3.5) {
-    const add = Math.round((summary.avgKDA - 3.5) * 8);
-    boosterMy += add;
-    reasons.push({ factor: "High KDA", value: summary.avgKDA, delta: add, target: "boosterMy" });
+  // High KDA boost: sqrt effect
+  if(summary.avgKDA>3.5){
+    const add = Math.round(Math.sqrt(summary.avgKDA-3.5)*10);
+    boosterMy += add; reasons.push({factor:"High KDA",value:summary.avgKDA,delta:add,target:"boosterMy"});
   }
 
-  if (summary.pctShortWins > 20) {
-    const add = Math.round((summary.pctShortWins - 20) / 2);
-    boosterMy += add;
-    reasons.push({ factor: "Short wins", value: summary.pctShortWins, delta: add, target: "boosterMy" });
+  // Short wins (softened)
+  if(summary.pctShortWins>20){
+    const add = Math.round(Math.sqrt(summary.pctShortWins-20));
+    boosterMy += add; reasons.push({factor:"Short wins",value:summary.pctShortWins,delta:add,target:"boosterMy"});
   }
 
-  if (summary.winrate > 60) {
-    const add = Math.round((summary.winrate - 60) / 1.5);
-    boosterMy += add;
-    reasons.push({ factor: "High winrate", value: summary.winrate, delta: add, target: "boosterMy" });
+  // High deaths
+  if(summary.avgD>7){
+    const add = Math.round(Math.sqrt(summary.avgD-7)*4);
+    ruinerMy += add; reasons.push({factor:"High deaths",value:summary.avgD,delta:add,target:"ruinerMy"});
   }
 
-  if (summary.avgD > 7) {
-    const add = Math.round((summary.avgD - 7) * 4);
-    ruinerMy += add;
-    reasons.push({ factor: "High deaths", value: summary.avgD, delta: add, target: "ruinerMy" });
+  // Leave rate
+  if(summary.leaveRate>3){
+    const add = Math.min(5, summary.leaveRate);
+    ruinerMy += add; reasons.push({factor:"Leave rate",value:summary.leaveRate,delta:add,target:"ruinerMy"});
   }
 
-  if (summary.pctShortLosses > 15) {
-    const add = Math.round((summary.pctShortLosses - 15) / 1.5);
-    ruinerMy += add;
-    reasons.push({ factor: "Short losses", value: summary.pctShortLosses, delta: add, target: "ruinerMy" });
-  }
+  // Enemy effects (mild)
+  boosterEnemy += Math.round(Math.sqrt(Math.max(0, summary.pctShortLosses-20)));
+  ruinerEnemy += Math.round(Math.sqrt(Math.max(0, summary.pctLongWins-15) + Math.max(0, summary.pctLongLosses-12)));
 
-  if (summary.leaveRate > 3) {
-    const add = Math.round(summary.leaveRate);
-    ruinerMy += add;
-    reasons.push({ factor: "Leave rate", value: summary.leaveRate, delta: add, target: "ruinerMy" });
-  }
+  if(summary.leaveRate>6){ boosterEnemy+=2; ruinerEnemy+=2; reasons.push({factor:"High leave rate",value:summary.leaveRate,delta:"+2 each",target:"both"}); }
 
-  if (summary.pctShortLosses > 20) {
-    const add = Math.round((summary.pctShortLosses - 20) / 1.2);
-    boosterEnemy += add;
-    reasons.push({ factor: "Enemy boosted by your short losses", value: summary.pctShortLosses, delta: add, target: "boosterEnemy" });
-  }
-
-  if (summary.pctLongWins > 15) {
-    const add = Math.round((summary.pctLongWins - 15) / 1.2);
-    ruinerEnemy += add;
-    reasons.push({ factor: "Enemy ruined by your long wins", value: summary.pctLongWins, delta: add, target: "ruinerEnemy" });
-  }
-
-  if (summary.pctLongLosses > 12) {
-    const add = Math.round((summary.pctLongLosses - 12) / 1.1);
-    ruinerEnemy += add;
-    reasons.push({ factor: "Enemy ruined by your long losses", value: summary.pctLongLosses, delta: add, target: "ruinerEnemy" });
-  }
-
-  if (summary.leaveRate > 6) {
-    boosterEnemy += 3; ruinerEnemy += 3;
-    reasons.push({ factor: "High leave rate (both sides)", value: summary.leaveRate, delta: "+3 each", target: "both" });
-  }
-
-  return {
-    boosterMy: clamp(boosterMy),
-    ruinerMy: clamp(ruinerMy),
-    boosterEnemy: clamp(boosterEnemy),
-    ruinerEnemy: clamp(ruinerEnemy),
-    brReasons: reasons
-  };
+  return { boosterMy:clamp(boosterMy), ruinerMy:clamp(ruinerMy), boosterEnemy:clamp(boosterEnemy), ruinerEnemy:clamp(ruinerEnemy), brReasons:reasons };
 }
+
 
     // ---- Патерни: дні/години/послідовності (залишив)
 const PATTERN_CONFIG = {
