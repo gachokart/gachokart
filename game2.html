@@ -1453,40 +1453,47 @@ const heroes = [
   }
 
   // 2. Зміксувати локальні дані з API
-  async function mix(localHeroes, apiScores) {
-    return localHeroes.map(h => {
-      const apiHero = apiScores.find(a => a.hero === h.hero);
-      const apiScore = apiHero ? apiHero.score : 0;
-      const avgScore = (h.score + apiScore) / 2;
-      return { hero: h.hero, roles: h.roles, localScore: h.score, apiScore, avgScore };
-    });
-  }
+ async function mix(localHeroes, apiScores) {
+  return localHeroes.map(h => {
+    const apiHero = apiScores.find(a => a.hero === h.hero);
+    const apiScore = apiHero ? apiHero.score : 0;   // якщо не знайдено → 0
+    const localScore = h.score || 0;                // якщо нема score → 0
+    const avgScore = (localScore + apiScore) / 2;
+
+    return { 
+      hero: h.hero, 
+      roles: h.roles || [], 
+      localScore, 
+      apiScore, 
+      avgScore 
+    };
+  });
+}
 
   // 3. Відмалювати у трьох колонках
-  function renderRecommendations(heroes) {
-    const carryCol = document.getElementById("carry");
-    const supportCol = document.getElementById("support");
-    const universalCol = document.getElementById("universal");
+ function renderRecommendations(heroes) {
+  const carryCol = document.getElementById("carry");
+  const supportCol = document.getElementById("support");
+  const universalCol = document.getElementById("universal");
 
-    carryCol.innerHTML = "<h2>Carry</h2>";
-    supportCol.innerHTML = "<h2>Support</h2>";
-    universalCol.innerHTML = "<h2>Universal</h2>";
+  carryCol.innerHTML = "<h2>Carry</h2>";
+  supportCol.innerHTML = "<h2>Support</h2>";
+  universalCol.innerHTML = "<h2>Universal</h2>";
 
-    heroes.sort((a, b) => b.avgScore - a.avgScore).forEach(h => {
-      const div = document.createElement("div");
-      div.className = "hero";
-      div.innerHTML = `
-        <strong>${h.hero}</strong><br>
-        Локальний: ${h.localScore.toFixed(3)}<br>
-        API: ${h.apiScore.toFixed(3)}<br>
-        <b>Середній: ${h.avgScore.toFixed(3)}</b>
-      `;
-      if (h.roles.includes("Carry")) carryCol.appendChild(div);
-      else if (h.roles.includes("Support")) supportCol.appendChild(div);
-      else universalCol.appendChild(div);
-    });
-  }
-
+  heroes.sort((a, b) => b.avgScore - a.avgScore).forEach(h => {
+    const div = document.createElement("div");
+    div.className = "hero";
+    div.innerHTML = `
+      <strong>${h.hero}</strong><br>
+      Локальний: ${(h.localScore ?? 0).toFixed(3)}<br>
+      API: ${(h.apiScore ?? 0).toFixed(3)}<br>
+      <b>Середній: ${(h.avgScore ?? 0).toFixed(3)}</b>
+    `;
+    if (h.roles.includes("Carry")) carryCol.appendChild(div);
+    else if (h.roles.includes("Support")) supportCol.appendChild(div);
+    else universalCol.appendChild(div);
+  });
+}
   // 4. Головна функція
   async function loadData() {
     const steamId = document.getElementById("steamId").value.trim();
