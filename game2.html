@@ -267,6 +267,12 @@ button:hover {
 // =========================
 // 🔥 ВШИТИЙ heroes.json
 // =========================
+  let heroes = [];
+
+async function init() {
+  heroes = await loadLocalHeroes();
+  // далі твій код ініціалізації селекторів
+}
 async function loadData() {
   const steamId = document.getElementById("steamId").value.trim();
   const limit = document.getElementById("matchLimit").value;
