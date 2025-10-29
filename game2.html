@@ -323,7 +323,7 @@ async function loadData() {
   }
 
   document.addEventListener('DOMContentLoaded', init);
-
+loadMyHeroes();
 
   heroes.forEach(h => {
   h.score = (h.winrate * 0.7 + h.pickrate * 0.3);
@@ -343,7 +343,7 @@ const stageLimits = [ { my: 2, enemy: 2 }, { my: 2, enemy: 2 }, { my: 1, enemy: 
 
 // ====================== ІНІЦІАЛІЗАЦІЯ ======================
 document.addEventListener('DOMContentLoaded', () => { createSelectors(); updateTeamDisplays()});
-loadMyHeroes();
+
  
 
 // ====================== СЕЛЕКТОРИ ======================
@@ -896,7 +896,7 @@ async function loadMyHeroes() {
 }
 
 
-
+loadMyHeroes();
 
 </script>
 </body>
