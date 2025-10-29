@@ -294,41 +294,65 @@ let heroes = [];              // масив усіх героїв
 let personalHeroScores = [];  // масив персональної статистики
 
 async function loadOpenDotaData() {
+  const accountId = 863386335;
   try {
-    // 1️⃣ Отримуємо базову інформацію про героїв
-    const heroRes = await fetch("https://api.opendota.com/api/heroStats");
-    const heroData = await heroRes.json();
+    const res = await fetch(`https://api.opendota.com/api/players/${accountId}/heroes`);
+    const data = await res.json();
 
-    heroes = heroData.map(h => ({
-      id: h.id,
-      name: h.localized_name,
-      roles: h.roles,
-      winrate: h.pro_win / Math.max(h.pro_pick || 1, 1),
-      pickrate: (h.pro_pick || 0) / 1000,
-      img: "https://cdn.cloudflare.steamstatic.com" + h.img
-    }));
+    const heroList = await fetch("https://api.opendota.com/api/heroStats").then(r => r.json());
+    const getHero = id => heroList.find(h => h.id === id);
 
-    // 2️⃣ Отримуємо персональну статистику
-    const personalRes = await fetch(`https://api.opendota.com/api/players/${accountId}/heroes`);
-    const personalData = await personalRes.json();
+    // Розрахунок score для кожного героя
+    const scored = data.map(h => {
+      const hero = getHero(h.hero_id);
+      if (!hero) return null;
+      const winrate = h.games ? h.win / h.games : 0;
+      const score = h.games * Math.pow(winrate, 2); // формула балу
+      return { ...h, name: hero.localized_name, roles: hero.roles, score };
+    }).filter(Boolean);
 
-    personalHeroScores = personalData.map(p => {
-      const hero = heroes.find(h => h.id === p.hero_id);
-      return {
-        id: p.hero_id,
-        name: hero ? hero.name : `Hero #${p.hero_id}`,
-        games: p.games,
-        winrate: p.win / Math.max(p.games, 1),
-        score: (p.win / Math.max(p.games, 1)) * Math.log10(p.games + 1) * 100
-      };
-    });
+    // === Визначення основної ролі ===
+    const rolePriority = {
+      carry: ["Carry", "Nuker", "Pusher"],
+      support: ["Support", "Disabler", "Healer"],
+      universal: ["Durable", "Initiator", "Escape"]
+    };
 
-    // 3️⃣ Відображення таблиці
-    displayPersonalStats();
+    const carry = [], support = [], universal = [];
+
+    for (const hero of scored) {
+      const roles = hero.roles || [];
+
+      let main = "universal";
+      if (roles.some(r => rolePriority.carry.includes(r))) main = "carry";
+      else if (roles.some(r => rolePriority.support.includes(r))) main = "support";
+      else if (roles.some(r => rolePriority.universal.includes(r))) main = "universal";
+
+      const winrate = ((hero.win / hero.games) * 100).toFixed(1);
+      const li = `<li>${hero.name} — <span style="color:#ccc;">${hero.games} ігор, ${winrate}% WR</span></li>`;
+
+      if (main === "carry") carry.push({ ...hero, li });
+      else if (main === "support") support.push({ ...hero, li });
+      else universal.push({ ...hero, li });
+    }
+
+    // === Сортуємо за score ===
+    carry.sort((a,b) => b.score - a.score);
+    support.sort((a,b) => b.score - a.score);
+    universal.sort((a,b) => b.score - a.score);
+
+    // === Відображення ===
+    document.getElementById("carryHeroes").innerHTML = carry.slice(0,10).map(h => h.li).join("");
+    document.getElementById("supportHeroes").innerHTML = support.slice(0,10).map(h => h.li).join("");
+    document.getElementById("universalHeroes").innerHTML = universal.slice(0,10).map(h => h.li).join("");
+
+    console.log("✅ Герої завантажені:", carry.length + support.length + universal.length);
+
   } catch (err) {
     console.error("❌ OpenDota API error:", err);
   }
 }
+
 
 // Показуємо 3 колонки з персональними героями
 function displayPersonalStats() {
