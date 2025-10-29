@@ -351,7 +351,29 @@ async function loadData() {
     }
   }
 
- 
+ async function loadHeroes() {
+  try {
+    const response = await fetch("https://api.opendota.com/api/heroStats");
+    const data = await response.json();
+
+    // Трансформуємо під твій формат
+    const heroes = data.map(h => ({
+      name: h.localized_name,
+      roles: h.roles,
+      winrate: h.pro_win ? h.pro_win / (h.pro_pick || 1) : 0,
+      pickrate: h.pro_pick ? h.pro_pick / 1000 : 0, // умовно
+      BestCounters: [], // OpenDota не дає напряму, можна залишити пустим
+      commonCounters: []
+    }));
+
+    initUI(heroes); // твоя функція, яка будує селектори/таблиці
+  } catch (err) {
+    console.error("Помилка завантаження героїв:", err);
+  }
+}
+
+// Виклик при завантаженні сторінки
+window.addEventListener("DOMContentLoaded", loadHeroes);
 
   async function init() {
     heroes = await loadLocalHeroes();
