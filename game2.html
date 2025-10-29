@@ -269,10 +269,7 @@ button:hover {
 // =========================
   let heroes = [];
 
-async function init() {
-  heroes = await loadLocalHeroes();
-  // далі твій код ініціалізації селекторів
-}
+
 async function loadData() {
   const steamId = document.getElementById("steamId").value.trim();
   const limit = document.getElementById("matchLimit").value;
@@ -288,6 +285,10 @@ async function loadData() {
 
   // 4. Відмалювати
   renderRecommendations(merged);
+}
+  async function init() {
+  heroes = await loadLocalHeroes();
+  // далі твій код ініціалізації селекторів
 }
   heroes.forEach(h => {
   h.score = (h.winrate * 0.7 + h.pickrate * 0.3);
