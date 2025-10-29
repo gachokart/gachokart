@@ -570,7 +570,12 @@ function calculateBestPicks() {
     score += getSynergyScore(hero)*weights.synergy;
     score -= getDuplicatePenalty(hero);
     score += getMissingRoleBonus(hero)*weights.roles;
-
+// 🔹 Додаємо персональний OpenDota-вплив
+if (window.personalHeroScores?.length) {
+  const personal = getPersonalScore(hero.name); // 0–1
+  const personalWeight = 0.2; // вплив 20% на загальний бал
+  score += personal * personalWeight;
+}
     // застосовуємо поведінкові фактори
     if (behaviorMode) {
       score *= getToxicityRisk(hero);
