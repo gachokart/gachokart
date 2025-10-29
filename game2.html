@@ -853,6 +853,7 @@ document.getElementById('results').style.display = 'none';
     updateTeamDisplays(false); // залишаємо останні вибрані герої в списках
 }
  
+// ========== ПІДТЯГУЄМО МОЇХ ГЕРОЇВ З OPENDOTA ==========
 const accountId = 863386335;
 
 async function loadMyHeroes() {
@@ -860,42 +861,62 @@ async function loadMyHeroes() {
     const res = await fetch(`https://api.opendota.com/api/players/${accountId}/heroes`);
     const data = await res.json();
 
-    // Сортуємо за кількістю ігор
     const top = data.sort((a,b) => b.games - a.games).slice(0, 100);
-
-    // Список героїв з OpenDota не має назв, тому завантажимо список героїв
     const heroList = await fetch("https://api.opendota.com/api/heroStats").then(r=>r.json());
 
-    // Зʼєднуємо ID -> назву героя
     const getHeroName = id => heroList.find(h => h.id === id)?.localized_name || `Hero ${id}`;
     const getHeroRoles = id => heroList.find(h => h.id === id)?.roles || [];
 
-    // Групуємо по ролях
+    const totalGames = top.reduce((sum, h) => sum + h.games, 0);
+    const now = Date.now() / 1000;
+
     const carry = [], support = [], universal = [];
+    const personalHeroScores = [];
 
     for (const hero of top) {
       const roles = getHeroRoles(hero.hero_id);
       const name = getHeroName(hero.hero_id);
-      const winrate = ((hero.win / hero.games) * 100).toFixed(1);
+      const winrate = (hero.win / hero.games) * 100;
+      const activity = (hero.games / totalGames) * 100;
+      const daysAgo = (now - hero.last_played) / (60*60*24);
+      const recency = Math.max(0, 100 - daysAgo);
 
-      const li = `<li>${name} — <span style="color:#ccc;">${hero.games} ігор, ${winrate}% WR</span></li>`;
+      // 🔹 Формула персонального рейтингу
+      const personalScore = (winrate * 0.6) + (activity * 0.3) + (recency * 0.1);
+
+      personalHeroScores.push({
+        id: hero.hero_id,
+        name,
+        score: +personalScore.toFixed(2),
+        winrate: +winrate.toFixed(1),
+        games: hero.games,
+        lastPlayedDays: Math.round(daysAgo),
+      });
+
+      // 🔹 Формуємо HTML
+      const li = `<li>${name} — <span style="color:#ccc;">${hero.games} ігор, ${winrate.toFixed(1)}% WR, score ${personalScore.toFixed(1)}</span></li>`;
 
       if (roles.includes("Carry")) carry.push(li);
       else if (roles.includes("Support")) support.push(li);
       else universal.push(li);
     }
 
-    // Виводимо на сторінку
+    // Виводимо у три колонки
     document.getElementById("carryHeroes").innerHTML = carry.slice(0,10).join("");
     document.getElementById("supportHeroes").innerHTML = support.slice(0,10).join("");
     document.getElementById("universalHeroes").innerHTML = universal.slice(0,10).join("");
+
+    // 🔹 Зберігаємо у глобальну змінну (для використання у твоїй логіці рекомендацій)
+    window.personalHeroScores = personalHeroScores;
+
+    console.log("✅ Персональні бали героїв:", personalHeroScores);
 
   } catch (err) {
     console.error("Помилка при отриманні даних OpenDota:", err);
   }
 }
 
-
+// 🟢 Завантажуємо одразу при старті сторінки
 loadMyHeroes();
 
 </script>
