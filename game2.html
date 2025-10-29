@@ -358,23 +358,35 @@ async function loadOpenDotaData() {
       return { ...h, name: hero.localized_name, roles: hero.roles, score };
     }).filter(Boolean);
 
-    // Сортування за score
+    // ==========================
+    // Сортуємо за score (спочатку весь масив)
     personalHeroScores.sort((a, b) => b.score - a.score);
 
-    // Відображення у три колонки
-    const carry = [], support = [], universal = [];
+    // Відображаємо у три категорії
+    const carry = [];
+    const support = [];
+    const universal = [];
+
     for (const hero of personalHeroScores) {
       const main = getHeroMainCategory(hero);
       const winrate = ((hero.win / hero.games) * 100).toFixed(1);
-      const li = `<li>${hero.name} — <span style="color:#ccc;">${hero.games} ігор, ${winrate}% WR</span></li>`;
-      if (main === "carry") carry.push(li);
-      else if (main === "support") support.push(li);
-      else universal.push(li);
+      const li = `<li>${hero.name} — <span style="color:#ccc;">${hero.games} ігор, ${winrate}% WR | Score: ${hero.score.toFixed(2)}</span></li>`;
+
+      if (main === "carry") carry.push(hero);
+      else if (main === "support") support.push(hero);
+      else universal.push(hero);
     }
 
-    document.getElementById("carryHeroes").innerHTML = carry.slice(0, 10).join("");
-    document.getElementById("supportHeroes").innerHTML = support.slice(0, 10).join("");
-    document.getElementById("universalHeroes").innerHTML = universal.slice(0, 10).join("");
+    // ==========================
+    // slice після сортування
+    document.getElementById("carryHeroes").innerHTML = carry.slice(0, 10)
+      .map(h => `<li>${h.name} — <span style="color:#ccc;">${h.games} ігор, ${((h.win/h.games)*100).toFixed(1)}% WR | Score: ${h.score.toFixed(2)}</span></li>`).join("");
+
+    document.getElementById("supportHeroes").innerHTML = support.slice(0, 10)
+      .map(h => `<li>${h.name} — <span style="color:#ccc;">${h.games} ігор, ${((h.win/h.games)*100).toFixed(1)}% WR | Score: ${h.score.toFixed(2)}</span></li>`).join("");
+
+    document.getElementById("universalHeroes").innerHTML = universal.slice(0, 10)
+      .map(h => `<li>${h.name} — <span style="color:#ccc;">${h.games} ігор, ${((h.win/h.games)*100).toFixed(1)}% WR | Score: ${h.score.toFixed(2)}</span></li>`).join("");
 
     console.log("✅ OpenDota герої завантажені:", carry.length + support.length + universal.length);
 
@@ -382,6 +394,7 @@ async function loadOpenDotaData() {
     console.error("❌ OpenDota API error:", err);
   }
 }
+
 
 // ====================== Ініціалізація ======================
 async function init() {
