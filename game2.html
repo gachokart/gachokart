@@ -283,6 +283,11 @@ button:hover {
 // =========================
 // 🔥 ВШИТИЙ heroes.json
 // =========================
+  const roleCategories = {
+  carry: { roles: ["Carry", "Pusher", "Nuker"], weight: 3 },
+  support: { roles: ["Support", "Disabler"], weight: 2 },
+  universal: { roles: ["Melee", "Ranged", "Durable", "Initiator", "Escape"], weight: 1 }
+};
   // ====================== OPEN DOTA INTEGRATION ======================
 const accountId = 863386335; // твій ID
 let heroes = [];              // масив усіх героїв
@@ -317,11 +322,7 @@ async function loadOpenDotaData() {
         score: (p.win / Math.max(p.games, 1)) * Math.log10(p.games + 1) * 100
       };
     });
-const roleCategories = {
-  carry: { roles: ["Carry", "Pusher", "Nuker"], weight: 3 },
-  support: { roles: ["Support", "Disabler"], weight: 2 },
-  universal: { roles: ["Melee", "Ranged", "Durable", "Initiator", "Escape"], weight: 1 }
-};
+
     // 3️⃣ Відображення таблиці
     displayPersonalStats();
   } catch (err) {
