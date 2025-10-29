@@ -290,6 +290,28 @@ async function loadData() {
   heroes = await loadLocalHeroes();
   // далі твій код ініціалізації селекторів
 }
+  async function loadLocalHeroes() {
+    try {
+      const response = await fetch("heroes.json");
+      if (!response.ok) throw new Error("Не вдалося завантажити heroes.json");
+      return await response.json();
+    } catch (err) {
+      console.error("Помилка при завантаженні heroes.json:", err);
+      return [];
+    }
+  }
+
+  let heroes = [];
+
+  async function init() {
+    heroes = await loadLocalHeroes();
+    console.log("Герої завантажені:", heroes.length);
+    // далі твій код ініціалізації
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+
+
   heroes.forEach(h => {
   h.score = (h.winrate * 0.7 + h.pickrate * 0.3);
 });
@@ -398,7 +420,7 @@ function updateSelects() {
     if (current) select.value = current;
   });
 }
-  document.addEventListener('DOMContentLoaded', init);
+  
 
 
 // ====================== ВАГИ СТАДІЙ ======================
