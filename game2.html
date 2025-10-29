@@ -228,6 +228,20 @@ button:hover {
     🎭 Увімкнути поведінковий фактор
   </label>
 </div>
+<label>Steam32 ID: <input type="text" id="steamId"></label>
+<select id="matchLimit">
+  <option value="20">Останні 20</option>
+  <option value="50">Останні 50</option>
+  <option value="100">Останні 100</option>
+</select>
+<button onclick="loadData()">Завантажити</button>
+
+<div class="columns">
+  <div class="column" id="carry"><h2>Carry</h2></div>
+  <div class="column" id="support"><h2>Support</h2></div>
+  <div class="column" id="universal"><h2>Universal</h2></div>
+</div>
+
 
   <div id="teamsDisplay">
   <div class="column">
@@ -1405,6 +1419,86 @@ const heroes = [
   }
    // можеш додати всі інших героїв сюди
 ];
+// 1. Отримати API‑оцінки (глобальні або персональні)
+  async function getHeroScores(steamId, limit) {
+    if (!steamId) {
+      // Загальна статистика
+      const apiHeroes = await fetch("https://api.opendota.com/api/heroStats").then(r => r.json());
+      return apiHeroes.map(h => ({
+        hero: h.localized_name,
+        score: h.pro_win && h.pro_pick ? h.pro_win / h.pro_pick : 0
+      }));
+    } else {
+      // Персональна статистика
+      const matches = await fetch(`https://api.opendota.com/api/players/${steamId}/matches?limit=${limit}`)
+        .then(r => r.json());
+
+      const stats = {};
+      matches.forEach(m => {
+        if (!stats[m.hero_id]) stats[m.hero_id] = { games: 0, wins: 0 };
+        stats[m.hero_id].games++;
+        if (m.radiant_win === (m.player_slot < 128)) stats[m.hero_id].wins++;
+      });
+
+      const apiHeroes = await fetch("https://api.opendota.com/api/heroStats").then(r => r.json());
+
+      return Object.entries(stats).map(([hero_id, s]) => {
+        const hero = apiHeroes.find(h => h.id == hero_id);
+        return {
+          hero: hero ? hero.localized_name : hero_id,
+          score: s.wins / s.games
+        };
+      });
+    }
+  }
+
+  // 2. Зміксувати локальні дані з API
+  async function mix(localHeroes, apiScores) {
+    return localHeroes.map(h => {
+      const apiHero = apiScores.find(a => a.hero === h.hero);
+      const apiScore = apiHero ? apiHero.score : 0;
+      const avgScore = (h.score + apiScore) / 2;
+      return { hero: h.hero, roles: h.roles, localScore: h.score, apiScore, avgScore };
+    });
+  }
+
+  // 3. Відмалювати у трьох колонках
+  function renderRecommendations(heroes) {
+    const carryCol = document.getElementById("carry");
+    const supportCol = document.getElementById("support");
+    const universalCol = document.getElementById("universal");
+
+    carryCol.innerHTML = "<h2>Carry</h2>";
+    supportCol.innerHTML = "<h2>Support</h2>";
+    universalCol.innerHTML = "<h2>Universal</h2>";
+
+    heroes.sort((a, b) => b.avgScore - a.avgScore).forEach(h => {
+      const div = document.createElement("div");
+      div.className = "hero";
+      div.innerHTML = `
+        <strong>${h.hero}</strong><br>
+        Локальний: ${h.localScore.toFixed(3)}<br>
+        API: ${h.apiScore.toFixed(3)}<br>
+        <b>Середній: ${h.avgScore.toFixed(3)}</b>
+      `;
+      if (h.roles.includes("Carry")) carryCol.appendChild(div);
+      else if (h.roles.includes("Support")) supportCol.appendChild(div);
+      else universalCol.appendChild(div);
+    });
+  }
+
+  // 4. Головна функція
+  async function loadData() {
+    const steamId = document.getElementById("steamId").value.trim();
+    const limit = document.getElementById("matchLimit").value;
+
+    const localHeroes = await fetch("heroes.json").then(r => r.json());
+    const apiScores = await getHeroScores(steamId, limit);
+    const merged = await mix(localHeroes, apiScores);
+
+    renderRecommendations(merged);
+  }
+
 
   heroes.forEach(h => {
   h.score = (h.winrate * 0.7 + h.pickrate * 0.3);
