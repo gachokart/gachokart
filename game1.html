@@ -70,7 +70,8 @@ async function renderAnalytics(accountId) {
   const matches = await matchesRes.json();
   const heroes = await heroesRes.json();
   const player = await playerRes.json();
-  const mmr = player.mmr_estimate.estimate || 3000;
+  const mmr = (player?.mmr_estimate?.estimate) ?? 3000;
+
 
   // === 2️⃣ Метрики ===
   const wins = matches.filter(m => m.radiant_win === (m.player_slot < 128)).length;
