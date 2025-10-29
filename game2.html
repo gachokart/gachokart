@@ -286,10 +286,7 @@ async function loadData() {
   // 4. Відмалювати
   renderRecommendations(merged);
 }
-  async function init() {
-  heroes = await loadLocalHeroes();
-  // далі твій код ініціалізації селекторів
-}
+  
   async function loadLocalHeroes() {
     try {
       const response = await fetch("heroes.json");
@@ -301,7 +298,7 @@ async function loadData() {
     }
   }
 
-  let heroes = [];
+ 
 
   async function init() {
     heroes = await loadLocalHeroes();
