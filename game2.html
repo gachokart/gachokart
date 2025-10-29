@@ -260,6 +260,12 @@ button:hover {
 </div>
 <div id="behaviorInfo" style="display:none; margin-top:15px; color:#ff6666;"></div>
 
+<div class="columns">
+  <div class="column" id="carryOpendota"><h2>Carry (OpenDota)</h2></div>
+  <div class="column" id="supportOpendota"><h2>Support (OpenDota)</h2></div>
+  <div class="column" id="universalOpendota"><h2>Universal (OpenDota)</h2></div>
+</div>
+
 
 
 
@@ -267,6 +273,53 @@ button:hover {
 // =========================
 // 🔥 ВШИТИЙ heroes.json
 // =========================
+
+  function renderOpendotaRecommendations(heroes) {
+  const carryCol = document.getElementById("carryOpendota");
+  const supportCol = document.getElementById("supportOpendota");
+  const universalCol = document.getElementById("universalOpendota");
+
+  carryCol.innerHTML = "<h2>Carry (OpenDota)</h2>";
+  supportCol.innerHTML = "<h2>Support (OpenDota)</h2>";
+  universalCol.innerHTML = "<h2>Universal (OpenDota)</h2>";
+
+  heroes.sort((a, b) => b.score - a.score).forEach(h => {
+    const div = document.createElement("div");
+    div.className = "hero";
+    div.innerHTML = `
+      <strong>${h.hero}</strong><br>
+      Winrate: ${(h.score * 100).toFixed(1)}%
+    `;
+    if (h.roles.includes("Carry")) carryCol.appendChild(div);
+    else if (h.roles.includes("Support")) supportCol.appendChild(div);
+    else universalCol.appendChild(div);
+  });
+}
+
+async function getOpendotaHeroStats(steamId, limit) {
+  const matches = await fetch(`https://api.opendota.com/api/players/${steamId}/matches?limit=${limit}`)
+    .then(r => r.json());
+
+  const stats = {};
+  matches.forEach(m => {
+    if (!stats[m.hero_id]) stats[m.hero_id] = { games: 0, wins: 0 };
+    stats[m.hero_id].games++;
+    if (m.radiant_win === (m.player_slot < 128)) stats[m.hero_id].wins++;
+  });
+
+  const apiHeroes = await fetch("https://api.opendota.com/api/heroStats").then(r => r.json());
+
+  return Object.entries(stats).map(([hero_id, s]) => {
+    const hero = apiHeroes.find(h => h.id == hero_id);
+    return {
+      hero: hero ? hero.localized_name : hero_id,
+      score: s.wins / s.games,
+      roles: hero ? hero.roles : []
+    };
+  });
+}
+
+
   let heroes = [];
 
 
@@ -274,17 +327,17 @@ async function loadData() {
   const steamId = document.getElementById("steamId").value.trim();
   const limit = document.getElementById("matchLimit").value;
 
-  // 1. Локальні герої
+  // Локальні дані
   const localHeroes = await loadLocalHeroes();
-
-  // 2. API‑дані (глобальні або персональні)
   const apiScores = await getHeroScores(steamId, limit);
-
-  // 3. Зміксувати
   const merged = await mix(localHeroes, apiScores);
+  renderRecommendations(merged); // перші 3 колонки
 
-  // 4. Відмалювати
-  renderRecommendations(merged);
+  // OpenDota дані окремо
+  if (steamId) {
+    const odHeroes = await getOpendotaHeroStats(steamId, limit);
+    renderOpendotaRecommendations(odHeroes); // другі 3 колонки
+  }
 }
   
   async function loadLocalHeroes() {
