@@ -879,63 +879,72 @@ async function loadMyHeroes() {
   }
 }
 // ====================== ОБ'ЄДНАНІ РЕКОМЕНДАЦІЇ HEROES.JSON + OPENDOTA ======================
+// ====================== ОБ'ЄДНАНІ РЕКОМЕНДАЦІЇ HEROES.JSON + OPENDOTA ======================
 async function loadCombinedHeroData() {
-  
+  const accountId = 863386335; // твій акаунт OpenDota
 
-  // Завантажуємо локальні та персональні дані
-  const [localHeroes, personalData, heroStats] = await Promise.all([
-    fetch("heroes.json").then(r => r.json()),
-    fetch(`https://api.opendota.com/api/players/${accountId}/heroes`).then(r => r.json()),
-    fetch("https://api.opendota.com/api/heroStats").then(r => r.json())
-  ]);
+  try {
+    // Завантажуємо локальні та персональні дані
+    const [localHeroes, personalData, heroStats] = await Promise.all([
+      fetch("heroes.json").then(r => r.json()),
+      fetch(`https://api.opendota.com/api/players/${accountId}/heroes`).then(r => r.json()),
+      fetch("https://api.opendota.com/api/heroStats").then(r => r.json())
+    ]);
 
-  // Пошук героя за id
-  const getHeroById = id => heroStats.find(h => h.id === id);
+    // Пошук героя за id
+    const getHeroById = id => heroStats.find(h => h.id === id);
 
-  // Готуємо персональні дані
-  const personalScores = personalData
-    .filter(h => h.games > 5)
-    .map(h => {
-      const hero = getHeroById(h.hero_id);
-      if (!hero) return null;
-      const winrate = h.win / h.games;
-      const score = (winrate * 0.7 + Math.min(h.games, 100) / 100 * 0.3) * 100;
-      return {
-        name: hero.localized_name,
-        score,
-        roles: hero.roles
-      };
-    })
-    .filter(Boolean);
+    // Готуємо персональні дані
+    const personalScores = personalData
+      .filter(h => h.games > 0) // беремо всіх героїв з >0 ігор
+      .map(h => {
+        const hero = getHeroById(h.hero_id);
+        if (!hero) return null;
+        const winrate = h.win / h.games; // 0..1
+        const score = (winrate * 0.7 + Math.min(h.games, 100) / 100 * 0.3) * 100;
+        return {
+          id: h.hero_id,        // порівнюємо по id
+          name: hero.localized_name,
+          score: score,
+          roles: hero.roles
+        };
+      })
+      .filter(Boolean);
 
-  // Зʼєднуємо дані
-  const merged = localHeroes.map(lh => {
-    const match = personalScores.find(ph => ph.name === lh.localized_name);
-    const score = match ? (lh.score + match.score) / 2 : lh.score;
-    const roles = lh.roles || match?.roles || [];
-    return { ...lh, score, roles };
-  });
+    // Зʼєднуємо дані
+    const merged = localHeroes.map(lh => {
+      const match = personalScores.find(ph => ph.id === lh.id); // порівнюємо по id
+      const score = match ? (lh.score + match.score) / 2 : (lh.score || 50); // мінімальний базовий score = 50
+      const roles = lh.roles || match?.roles || [];
+      return { ...lh, score, roles };
+    });
 
-  // Групуємо за ролями
-  const carry = merged
-    .filter(h => h.roles.some(r => ["Carry", "Pusher", "Nuker"].includes(r)))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 15);
+    // Групуємо за ролями
+    const carry = merged
+      .filter(h => h.roles.some(r => ["Carry", "Pusher", "Nuker"].includes(r)))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 15);
 
-  const support = merged
-    .filter(h => h.roles.some(r => ["Support", "Disabler"].includes(r)))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 15);
+    const support = merged
+      .filter(h => h.roles.some(r => ["Support", "Disabler"].includes(r)))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 15);
 
-  const universal = merged
-    .filter(h => !h.roles.some(r => ["Carry", "Support"].includes(r)))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 15);
+    const universal = merged
+      .filter(h => !h.roles.some(r => ["Carry", "Support"].includes(r)))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 15);
 
-  // Малюємо таблиці
-  renderHeroColumn("carryColumn", "🗡 Carry", carry);
-  renderHeroColumn("supportColumn", "💉 Support", support);
-  renderHeroColumn("universalColumn", "🌀 Universal", universal);
+    // Малюємо таблиці
+    renderHeroColumn("carryColumn", "🗡 Carry", carry);
+    renderHeroColumn("supportColumn", "💉 Support", support);
+    renderHeroColumn("universalColumn", "🌀 Universal", universal);
+
+    console.log("✅ Комбіновані дані завантажені", merged);
+
+  } catch (err) {
+    console.error("Помилка при завантаженні комбінованих даних:", err);
+  }
 }
 
 // Створює одну колонку
@@ -949,7 +958,12 @@ function renderHeroColumn(id, title, heroes) {
     div.style.background = "rgba(0,0,0,0.5)";
     div.style.borderRadius = "12px";
     div.style.margin = "10px";
-    document.getElementById("recommendations").appendChild(div);
+    const container = document.getElementById("recommendations");
+    if (!container) {
+      console.error("❌ Не знайдено контейнер #recommendations");
+      return;
+    }
+    container.appendChild(div);
   }
 
   div.innerHTML = `<h3 style="color:#ffcc00;text-align:center;font-family:'Press Start 2P';font-size:12px;">${title}</h3>`;
@@ -960,8 +974,7 @@ function renderHeroColumn(id, title, heroes) {
 
   heroes.forEach(h => {
     const li = document.createElement("li");
-    const score = Number.isFinite(h.score) ? h.score.toFixed(1) : "0.0";
-    li.textContent = `${h.localized_name || h.name} (${score})`;
+    li.textContent = `${h.name} (${h.score.toFixed(1)})`;
     li.style.color = h.score > 65 ? "#7CFC00" : h.score < 45 ? "#ff4444" : "#fff";
     li.style.fontSize = "13px";
     li.style.margin = "4px 0";
@@ -970,6 +983,7 @@ function renderHeroColumn(id, title, heroes) {
 
   div.appendChild(ul);
 }
+
 window.addEventListener("load", () => {
   loadMyHeroes();
   loadCombinedHeroData();
