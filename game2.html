@@ -668,91 +668,75 @@ function calculateHeroWeight(hero) {
 }
 
 // Автоматичне визначення категорії героя
+// Перевірка ролей з heroes.json
 function getHeroMainCategory(hero) {
-  const w = calculateHeroWeight(hero);
-  const max = Math.max(w.carry, w.support, w.universal);
-  if (max === 0) return 'universal'; // якщо ролей немає
+  if (!hero || !hero.roles || !Array.isArray(hero.roles)) return 'universal';
+  const roles = hero.roles.map(r => r.toLowerCase());
 
-  // Пріоритет при однакових значеннях
-  if (w.carry === max) return 'carry';
-  if (w.support === max) return 'support';
+  if (roles.includes('carry')) return 'carry';
+  if (roles.includes('support')) return 'support';
   return 'universal';
 }
 
+// Нове відображення топів (динамічне)
 function displayTop(scores) {
   const resultDiv = document.getElementById('results');
-  const topHeroes = scores.slice(0, 30); // запас
+  if (!resultDiv) return;
 
-  // Визначаємо категорію кожного героя
+  // Сортуємо за фінальним балом
+  const topHeroes = [...scores].sort((a, b) => b.score - a.score).slice(0, 30);
+
+  // Прив'язуємо до об'єктів heroes.json
   const categorized = topHeroes.map(t => {
-    const hero = heroes.find(h => h.name === t.hero);
-    const category = hero ? getHeroMainCategory(hero) : 'universal';
+    const hero = heroes.find(h =>
+      h.name.toLowerCase() === t.hero.toLowerCase() ||
+      h.localized_name?.toLowerCase() === t.hero.toLowerCase()
+    );
+    const category = getHeroMainCategory(hero);
     return { ...t, category };
   });
 
-  // Розподіляємо по категоріях
+  // Розподіл по категоріях
   const carryHeroes = categorized.filter(h => h.category === 'carry').slice(0, 5);
   const supportHeroes = categorized.filter(h => h.category === 'support').slice(0, 5);
   const universalHeroes = categorized.filter(h => h.category === 'universal').slice(0, 5);
 
-  // HTML-відображення
+  // Відображення
   resultDiv.innerHTML = `
-  <h2 style="text-align:center; margin-bottom:15px;">Топ герої для наступного піку</h2>
-  <div id="resultsGrid">
-    <!-- Carry -->
-    <div class="resultColumn">
-      <h3 style="color:#ffcc00;">⚔ Carry</h3>
-      ${
-        carryHeroes.length
-          ? carryHeroes.map(t => {
-              const hero = heroes.find(h => h.name === t.hero);
-              const w = calculateHeroWeight(hero);
-              return `<div class="hero">
-                        <strong>${t.hero}</strong><br>
-                        <small>Бали: ${t.score.toFixed(3)} | Carry: ${w.carry}</small>
-                      </div>`;
-            }).join('')
-          : '<p style="opacity:0.6;">(немає Carry серед топів)</p>'
-      }
-    </div>
+    <h2 style="text-align:center; margin-bottom:15px;">🔥 Топ герої для наступного піку</h2>
+    <div id="resultsGrid">
+      <div class="resultColumn">
+        <h3 style="color:#ffcc00;">⚔ Carry</h3>
+        ${carryHeroes.length
+          ? carryHeroes.map(t => `<div class="hero">
+                <strong>${t.hero}</strong><br>
+                <small>Бали: ${t.score.toFixed(3)}</small>
+              </div>`).join('')
+          : '<p style="opacity:0.6;">(немає Carry)</p>'}
+      </div>
 
-    <!-- Support -->
-    <div class="resultColumn">
-      <h3 style="color:#66ff99;">🛡 Support</h3>
-      ${
-        supportHeroes.length
-          ? supportHeroes.map(t => {
-              const hero = heroes.find(h => h.name === t.hero);
-              const w = calculateHeroWeight(hero);
-              return `<div class="hero">
-                        <strong>${t.hero}</strong><br>
-                        <small>Бали: ${t.score.toFixed(3)} | Support: ${w.support}</small>
-                      </div>`;
-            }).join('')
-          : '<p style="opacity:0.6;">(немає Support серед топів)</p>'
-      }
-    </div>
+      <div class="resultColumn">
+        <h3 style="color:#66ff99;">🛡 Support</h3>
+        ${supportHeroes.length
+          ? supportHeroes.map(t => `<div class="hero">
+                <strong>${t.hero}</strong><br>
+                <small>Бали: ${t.score.toFixed(3)}</small>
+              </div>`).join('')
+          : '<p style="opacity:0.6;">(немає Support)</p>'}
+      </div>
 
-    <!-- Universal -->
-    <div class="resultColumn">
-      <h3 style="color:#66ccff;">🔄 Універсальні</h3>
-      ${
-        universalHeroes.length
-          ? universalHeroes.map(t => {
-              const hero = heroes.find(h => h.name === t.hero);
-              const w = calculateHeroWeight(hero);
-              return `<div class="hero" style="box-shadow:0 0 10px #66ccff;">
-                        <strong>${t.hero}</strong><br>
-                        <small>Бали: ${t.score.toFixed(3)} | Carry: ${w.carry}, Support: ${w.support}, Univ: ${w.universal}</small>
-                      </div>`;
-            }).join('')
-          : '<p style="opacity:0.6;">(немає універсальних серед топів)</p>'
-      }
+      <div class="resultColumn">
+        <h3 style="color:#66ccff;">🔄 Universal</h3>
+        ${universalHeroes.length
+          ? universalHeroes.map(t => `<div class="hero">
+                <strong>${t.hero}</strong><br>
+                <small>Бали: ${t.score.toFixed(3)}</small>
+              </div>`).join('')
+          : '<p style="opacity:0.6;">(немає Universal)</p>'}
+      </div>
     </div>
-  </div>
   `;
 }
-
 
 // ====================== ЕТАПИ ======================
 let stage = 1;
