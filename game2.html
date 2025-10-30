@@ -894,6 +894,97 @@ async function loadMyHeroes() {
     console.error("Помилка при отриманні даних OpenDota:", err);
   }
 }
+// ====================== ОБ'ЄДНАНІ РЕКОМЕНДАЦІЇ HEROES.JSON + OPENDOTA ======================
+async function loadCombinedHeroData() {
+  const accountId = 863386335;
+
+  // Завантажуємо локальні та персональні дані
+  const [localHeroes, personalData, heroStats] = await Promise.all([
+    fetch("heroes.json").then(r => r.json()),
+    fetch(`https://api.opendota.com/api/players/${accountId}/heroes`).then(r => r.json()),
+    fetch("https://api.opendota.com/api/heroStats").then(r => r.json())
+  ]);
+
+  // Пошук героя за id
+  const getHeroById = id => heroStats.find(h => h.id === id);
+
+  // Готуємо персональні дані
+  const personalScores = personalData
+    .filter(h => h.games > 5)
+    .map(h => {
+      const hero = getHeroById(h.hero_id);
+      if (!hero) return null;
+      const winrate = h.win / h.games;
+      const score = (winrate * 0.7 + Math.min(h.games, 100) / 100 * 0.3) * 100;
+      return {
+        name: hero.localized_name,
+        score,
+        roles: hero.roles
+      };
+    })
+    .filter(Boolean);
+
+  // Зʼєднуємо дані
+  const merged = localHeroes.map(lh => {
+    const match = personalScores.find(ph => ph.name === lh.localized_name);
+    const score = match ? (lh.score + match.score) / 2 : lh.score;
+    const roles = lh.roles || match?.roles || [];
+    return { ...lh, score, roles };
+  });
+
+  // Групуємо за ролями
+  const carry = merged
+    .filter(h => h.roles.some(r => ["Carry", "Pusher", "Nuker"].includes(r)))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 15);
+
+  const support = merged
+    .filter(h => h.roles.some(r => ["Support", "Disabler"].includes(r)))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 15);
+
+  const universal = merged
+    .filter(h => !h.roles.some(r => ["Carry", "Support"].includes(r)))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 15);
+
+  // Малюємо таблиці
+  renderHeroColumn("carryColumn", "🗡 Carry", carry);
+  renderHeroColumn("supportColumn", "💉 Support", support);
+  renderHeroColumn("universalColumn", "🌀 Universal", universal);
+}
+
+// Створює одну колонку
+function renderHeroColumn(id, title, heroes) {
+  let div = document.getElementById(id);
+  if (!div) {
+    div = document.createElement("div");
+    div.id = id;
+    div.style.flex = "1";
+    div.style.padding = "10px";
+    div.style.background = "rgba(0,0,0,0.5)";
+    div.style.borderRadius = "12px";
+    div.style.margin = "10px";
+    document.getElementById("recommendations").appendChild(div);
+  }
+  div.innerHTML = `<h3 style="color:#ffcc00;text-align:center;font-family:'Press Start 2P';font-size:12px;">${title}</h3>`;
+
+  const ul = document.createElement("ul");
+  ul.style.listStyle = "none";
+  ul.style.padding = "0";
+  heroes.forEach(h => {
+    const li = document.createElement("li");
+    li.textContent = `${h.localized_name || h.name} (${h.score.toFixed(1)})`;
+    li.style.color = h.score > 65 ? "#7CFC00" : h.score < 45 ? "#ff4444" : "#fff";
+    li.style.fontSize = "13px";
+    li.style.margin = "4px 0";
+    ul.appendChild(li);
+  });
+  div.appendChild(ul);
+}
+
+// Виклик після завантаження сторінки
+window.addEventListener("load", loadCombinedHeroData);
 
 
 loadMyHeroes();
