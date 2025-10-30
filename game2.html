@@ -290,62 +290,66 @@ const accountId = 863386335;
 
 async function loadAndMergeHeroes() {
   try {
-    const [localHeroes, apiHeroes, allHeroes] = await Promise.all([
-      fetch("heroes.json").then(r => r.json()),
-      fetch(`https://api.opendota.com/api/players/${accountId}/heroes`).then(r => r.json()),
-      fetch("https://api.opendota.com/api/heroStats").then(r => r.json())
+    const [localRes, globalRes] = await Promise.all([
+      fetch('heroes.json'),
+      fetch('https://api.opendota.com/api/heroStats')
     ]);
 
-    // Мапа hero_id → localized_name + roles
-    const idToHero = {};
-    allHeroes.forEach(h => {
-      idToHero[h.id] = { name: h.localized_name, roles: h.roles };
-    });
+    const localData = await localRes.json();
+    const globalData = await globalRes.json();
 
-    // Злиття локальних, особистих і глобальних даних
-    const merged = localHeroes.map(local => {
-      const apiHero = apiHeroes.find(a => idToHero[a.hero_id]?.name === local.name);
-      const global = allHeroes.find(h => h.localized_name === local.name);
+    // Об'єднання за name / localized_name
+    const mergedHeroes = localData.map(localHero => {
+      const match = globalData.find(g =>
+        g.localized_name?.toLowerCase() === localHero.name?.toLowerCase()
+      );
 
-      const localScore = local.score || 0;
-      const myGames = apiHero ? apiHero.games : 0;
-      const myWinrate = apiHero && apiHero.games > 0 ? apiHero.win / apiHero.games : 0;
-      const globalWinrate = global && global.pro_pick > 0 ? global.pro_win / global.pro_pick : 0;
-      const globalPickrate = global ? global.pro_pick / 1000 : 0;
+      const combined = {
+        ...localHero,
+        ...match,
+        name: localHero.name || match?.localized_name,
+        roles: match?.roles || localHero.roles || [],
+        localScore: localHero.score || 0,
+        localWinrate: localHero.winrate || 0,
+        localGames: localHero.games || 0,
+        globalWinrate: match?.win_rate || match?.winrate || 0,
+        globalPickrate: match?.pro_pick || 0,
+        globalGames: match?.pro_pick || 0
+      };
 
-      // Фінальна формула з перевагою твоїх матчів
-      let finalScore =
-        localScore * 0.3 +
-        myWinrate * 0.5 * Math.min(myGames / 100, 1) +
-        (globalWinrate * 0.1 + globalPickrate * 0.1) * 0.2;
-
-      finalScore += 2; // додаємо 2, щоб шкала виглядала більша
+      // 🔹 Формула спільного бала (з пріоритетом твоїх даних)
+      const localFactor = combined.localGames > 0 ? combined.localGames / (combined.localGames + combined.globalGames) : 0.7;
+      const finalScore =
+        (combined.localWinrate * 0.6 + combined.globalWinrate * 0.4) * localFactor +
+        (combined.localScore * 0.8 + combined.globalPickrate * 0.2) * (1 - localFactor);
 
       return {
-        ...local,
-        games: myGames,
-        wins: apiHero ? apiHero.win : 0,
-        myWinrate: myWinrate ? (myWinrate * 100).toFixed(1) + "%" : "0%",
-        roles: idToHero[local.id]?.roles || [],
-        finalScore: Number(finalScore.toFixed(3))
+        ...combined,
+        finalScore: finalScore + 2 // твій бонус +2
       };
     });
 
-    // Оновлюємо глобальний масив heroes
-    heroes = merged;
+    // Зберігаємо глобально
+    window.heroes = mergedHeroes;
 
-    // Створюємо список для displayTop
-    const topList = heroes
-      .sort((a, b) => b.finalScore - a.finalScore)
-      .map(h => ({ hero: h.name, score: h.finalScore }));
+    console.log("✅ Герої успішно об'єднані:", mergedHeroes.length);
 
-    // Відображаємо три колонки через твою функцію displayTop()
-    displayTop(topList);
+    // Якщо у тебе вже є функція розрахунку кращих піків:
+    if (typeof calculateBestPicks === 'function') {
+      calculateBestPicks(mergedHeroes);
+    } else if (typeof displayTop === 'function') {
+      // fallback — просто показати топ героїв
+      const scores = mergedHeroes
+        .map(h => ({ hero: h.name, score: h.finalScore }))
+        .sort((a, b) => b.score - a.score);
+      displayTop(scores, mergedHeroes);
+    }
 
   } catch (err) {
-    console.error("Помилка при завантаженні героїв:", err);
+    console.error("❌ Помилка при завантаженні героїв:", err);
   }
 }
+
 
 
 
