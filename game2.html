@@ -268,6 +268,7 @@ button:hover {
 // 🔥 ВШИТИЙ heroes.json
 // =========================
   let heroes = [];
+const accountId = 863386335;
 
 
 async function loadData() {
@@ -879,7 +880,7 @@ async function loadMyHeroes() {
 }
 // ====================== ОБ'ЄДНАНІ РЕКОМЕНДАЦІЇ HEROES.JSON + OPENDOTA ======================
 async function loadCombinedHeroData() {
-  const accountId = 863386335;
+  
 
   // Завантажуємо локальні та персональні дані
   const [localHeroes, personalData, heroStats] = await Promise.all([
