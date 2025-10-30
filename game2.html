@@ -332,55 +332,64 @@ loadMyHeroes();
 });
 
 // ====== Завантаження і злиття героїв ======
-async function loadAndMergeHeroes() {
+async function loadAndMergeHeroes(accountId = 863386335) {
   try {
-    // 1. Локальні герої
+    // 1️⃣ Завантажуємо локальні герої
     const localHeroes = await fetch("heroes.json").then(r => r.json());
 
-    // 2. OpenDota API
-    const [playerHeroes, allHeroes] = await Promise.all([
-      fetch(`https://api.opendota.com/api/players/${accountId}/heroes`).then(r => r.json()),
-      fetch("https://api.opendota.com/api/heroStats").then(r => r.json())
-    ]);
+    // 2️⃣ Завантажуємо статистику твоїх матчів
+    const apiHeroes = await fetch(`https://api.opendota.com/api/players/${accountId}/heroes`)
+                          .then(r => r.json());
 
-    // 3. Мапа hero_id -> локалізоване ім'я + global winrate/pickrate
-    const idToData = {};
-    allHeroes.forEach(h => {
-      idToData[h.id] = {
-        name: h.localized_name,
-        winrate: h.pro_win / h.pro_pick || 0,
-        pickrate: h.pro_pick / 1000 || 0 // приклад нормалізації
-      };
-    });
+    // 3️⃣ Завантажуємо глобальні дані героїв
+    const heroStats = await fetch("https://api.opendota.com/api/heroStats")
+                          .then(r => r.json());
 
-    // 4. Злиття та розрахунок спільного балу
-    heroes = localHeroes.map(local => {
-      const apiHero = playerHeroes.find(a => idToData[a.hero_id]?.name === local.name);
-      const globalData = allHeroes.find(h => h.localized_name === local.name);
+    // 4️⃣ Створюємо мапу id -> localized_name
+    const idToName = {};
+    heroStats.forEach(h => idToName[h.id] = h.localized_name);
 
-      const globalWinrate = globalData ? (globalData.pro_win / globalData.pro_pick || 0) : 0;
-      const globalPickrate = globalData ? (globalData.pro_pick / 1000 || 0) : 0;
+    // 5️⃣ Мержимо локальні герої з твоїми даними і глобальними
+    const merged = localHeroes.map(local => {
+      // шукаємо твої дані
+      const apiHero = apiHeroes.find(a => idToName[a.hero_id] === local.name);
 
+      // шукаємо глобальні дані
+      const globalData = heroStats.find(h => h.localized_name === local.name);
+
+      // локальний бал (з твоїх даних або з heroes.json)
       const localScore = local.score || 0;
 
-      // 🔹 Підсумковий бал із вагами
-      const score = localScore * 0.5 + globalWinrate * 0.3 + globalPickrate * 0.2;
+      // фактор твоїх матчів
+      const myGamesFactor = apiHero ? Math.min(apiHero.games / 100, 1) : 0;
+      const myWinrateFactor = apiHero && apiHero.games > 0 ? apiHero.win / apiHero.games : 0;
+
+      // глобальні фактори
+      const globalWinrateFactor = globalData ? globalData.pro_win / Math.max(globalData.pro_pick, 1) : 0;
+      const globalPickrateFactor = globalData ? globalData.pro_pick / 1000 : 0;
+
+      // 🔹 фінальний бал з перевагою твоїх героїв
+      const finalScore = 
+            localScore * 0.5 +
+            myWinrateFactor * 0.4 * myGamesFactor +
+            (globalWinrateFactor * 0.05 + globalPickrateFactor * 0.05);
 
       return {
         ...local,
         games: apiHero ? apiHero.games : 0,
         wins: apiHero ? apiHero.win : 0,
-        myWinrate: apiHero && apiHero.games > 0 ? ((apiHero.win / apiHero.games) * 100).toFixed(1) + "%" : "0%",
-        globalWinrate: (globalWinrate * 100).toFixed(1) + "%",
-        globalPickrate: (globalPickrate * 100).toFixed(1) + "%",
-        score: Number(score.toFixed(3)) // підсумковий score
+        myWinrate: apiHero && apiHero.games > 0 ? (apiHero.win / apiHero.games * 100).toFixed(1) + "%" : "0%",
+        finalScore: finalScore
       };
     });
 
-    console.log("Герої після злиття і підрахунку score:", heroes);
+    console.log("🔥 Злиті герої з рейтингами:", merged);
 
-  } catch(err) {
-    console.error("Помилка при завантаженні героїв:", err);
+    return merged;
+
+  } catch (err) {
+    console.error("Помилка при завантаженні або злитті героїв:", err);
+    return [];
   }
 }
 
