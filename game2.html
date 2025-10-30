@@ -288,51 +288,7 @@ button:hover {
 const accountId = 863386335;
 
 
-async function loadData() {
-  const steamId = document.getElementById("steamId").value.trim();
-  const limit = document.getElementById("matchLimit").value;
-
-  // 1. Локальні герої
-  const localHeroes = await loadLocalHeroes();
-
-  // 2. API‑дані (глобальні або персональні)
-  const apiScores = await getHeroScores(steamId, limit);
-
-  // 3. Зміксувати
-  const merged = await mix(localHeroes, apiScores);
-
-  // 4. Відмалювати
-  renderRecommendations(merged);
-}
-  
-  async function loadLocalHeroes() {
-    try {
-      const response = await fetch("heroes.json");
-      if (!response.ok) throw new Error("Не вдалося завантажити heroes.json");
-      return await response.json();
-    } catch (err) {
-      console.error("Помилка при завантаженні heroes.json:", err);
-      return [];
-    }
-  }
-
- 
-
-  async function init() {
-    heroes = await loadLocalHeroes();
-    console.log("Герої завантажені:", heroes.length);
-    // далі твій код ініціалізації
-  }
-
-  document.addEventListener('DOMContentLoaded', init);
-loadMyHeroes();
-
-  heroes.forEach(h => {
-  h.score = (h.winrate * 0.7 + h.pickrate * 0.3);
-});
-
-// ====== Завантаження і злиття героїв ======
-async function loadAndMergeHeroes() {
+async function loadAndDisplayHeroes() {
   try {
     const [localHeroes, apiHeroes, allHeroes] = await Promise.all([
       fetch("heroes.json").then(r => r.json()),
@@ -340,52 +296,69 @@ async function loadAndMergeHeroes() {
       fetch("https://api.opendota.com/api/heroStats").then(r => r.json())
     ]);
 
-    // Мапа hero_id → localized_name та глобальні дані
-    const idToName = {};
-    const globalDataMap = {};
+    // Мапа hero_id → localized_name та roles
+    const idToHero = {};
     allHeroes.forEach(h => {
-      idToName[h.id] = h.localized_name;
-      globalDataMap[h.localized_name] = {
-        pro_win: h.pro_win || 0,
-        pro_pick: h.pro_pick || 0
-      };
+      idToHero[h.id] = { name: h.localized_name, roles: h.roles };
     });
 
     const merged = localHeroes.map(local => {
-      const apiHero = apiHeroes.find(a => idToName[a.hero_id] === local.name);
-      const global = globalDataMap[local.name] || { pro_win: 0, pro_pick: 0 };
+      const apiHero = apiHeroes.find(a => idToHero[a.hero_id]?.name === local.name);
+      const heroData = allHeroes.find(h => h.localized_name === local.name) || { pro_win:0, pro_pick:0 };
 
-      const localBase = local.score || 0;
+      const localScore = local.score || 0;
 
       const myGames = apiHero ? apiHero.games : 0;
       const myWinrate = apiHero && apiHero.games > 0 ? apiHero.win / apiHero.games : 0;
 
-      const globalWinrate = global.pro_pick > 0 ? global.pro_win / global.pro_pick : 0;
-      const globalPickrate = global.pro_pick / 1000; // нормалізуємо
+      const globalWinrate = heroData.pro_pick > 0 ? heroData.pro_win / heroData.pro_pick : 0;
+      const globalPickrate = heroData.pro_pick / 1000;
 
-      // фінальний score: локальний + твій winrate + глобальні дані
-      let finalScore = 
-        localBase * 0.3 +                 // базовий локальний
-        myWinrate * 0.5 * Math.min(myGames / 100, 1) + // твої матчі
-        (globalWinrate * 0.1 + globalPickrate * 0.1) * 0.2; // глобальні WR та pickrate
-
-      finalScore += 2; // збільшуємо на 2
+      // фінальний score з перевагою твоїх матчів
+      let finalScore = localScore * 0.3 
+                       + myWinrate * 0.5 * Math.min(myGames / 100, 1)
+                       + (globalWinrate * 0.1 + globalPickrate * 0.1) * 0.2;
+      finalScore += 2; // додатково +2
 
       return {
         ...local,
         games: myGames,
         wins: apiHero ? apiHero.win : 0,
-        myWinrate: myWinrate ? (myWinrate * 100).toFixed(1) + "%" : "0%",
-        finalScore: Number(finalScore.toFixed(3))
+        myWinrate: myWinrate ? (myWinrate*100).toFixed(1)+'%' : "0%",
+        finalScore: Number(finalScore.toFixed(3)),
+        roles: idToHero[local.id]?.roles || []
       };
     });
 
-    console.log("Merged heroes with scores:", merged);
-    return merged;
+    // Оновлюємо глобальний масив героїв
+    heroes = merged;
 
-  } catch (err) {
-    console.error("Помилка при злитті героїв:", err);
-    return [];
+    // Розподіляємо по колонках
+    const carry = [];
+    const support = [];
+    const universal = [];
+
+    merged.sort((a,b) => b.finalScore - a.finalScore).slice(0,30).forEach(h => {
+      if (h.roles.includes("Carry")) carry.push(h);
+      else if (h.roles.includes("Support")) support.push(h);
+      else universal.push(h);
+    });
+
+    // Відображення на сторінці
+    document.getElementById("carryHeroes").innerHTML = carry.map(h => 
+      `<li>${h.name} — <span style="color:#ccc;">${h.games} ігор, ${h.myWinrate}, score ${h.finalScore}</span></li>`
+    ).join("");
+
+    document.getElementById("supportHeroes").innerHTML = support.map(h => 
+      `<li>${h.name} — <span style="color:#ccc;">${h.games} ігор, ${h.myWinrate}, score ${h.finalScore}</span></li>`
+    ).join("");
+
+    document.getElementById("universalHeroes").innerHTML = universal.map(h => 
+      `<li>${h.name} — <span style="color:#ccc;">${h.games} ігор, ${h.myWinrate}, score ${h.finalScore}</span></li>`
+    ).join("");
+
+  } catch(err) {
+    console.error("Помилка при завантаженні та об'єднанні героїв:", err);
   }
 }
 
@@ -393,8 +366,9 @@ async function loadAndMergeHeroes() {
 
 // ====== Виклик при ініціалізації ======
 document.addEventListener('DOMContentLoaded', () => {
-  loadAndMergeHeroes(); // заповнює глобальний масив heroes
+  loadAndDisplayHeroes();
 });
+
 
 // Припустимо, у тебе є масив heroes (як у прикладі з Wraith King)
 const carryHeroes = heroes.filter(h => h.roles.includes("Carry") && !h.roles.includes("Support"));
