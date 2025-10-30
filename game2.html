@@ -957,8 +957,8 @@ function renderHeroColumn(id, title, heroes) {
   ul.style.listStyle = "none";
   ul.style.padding = "0";
   heroes.forEach(h => {
-    const li = document.createElement("li");
-    li.textContent = `${h.localized_name || h.name} (${(h.score ?? 0).toFixed(1)})`;
+    const score = Number.isFinite(h.score) ? h.score.toFixed(1) : "0.0";
+li.textContent = `${h.localized_name || h.name} (${score})`;
     li.style.color = h.score > 65 ? "#7CFC00" : h.score < 45 ? "#ff4444" : "#fff";
     li.style.fontSize = "13px";
     li.style.margin = "4px 0";
