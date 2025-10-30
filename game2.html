@@ -951,21 +951,27 @@ function renderHeroColumn(id, title, heroes) {
     div.style.margin = "10px";
     document.getElementById("recommendations").appendChild(div);
   }
+
   div.innerHTML = `<h3 style="color:#ffcc00;text-align:center;font-family:'Press Start 2P';font-size:12px;">${title}</h3>`;
 
   const ul = document.createElement("ul");
   ul.style.listStyle = "none";
   ul.style.padding = "0";
+
   heroes.forEach(h => {
+    const li = document.createElement("li");
     const score = Number.isFinite(h.score) ? h.score.toFixed(1) : "0.0";
-li.textContent = `${h.localized_name || h.name} (${score})`;
+    li.textContent = `${h.localized_name || h.name} (${score})`;
     li.style.color = h.score > 65 ? "#7CFC00" : h.score < 45 ? "#ff4444" : "#fff";
     li.style.fontSize = "13px";
     li.style.margin = "4px 0";
     ul.appendChild(li);
   });
+
   div.appendChild(ul);
 }
+window.addEventListener("load", loadMyHeroes);
+
 
 // Виклик після завантаження сторінки
 window.addEventListener("load", loadCombinedHeroData);
