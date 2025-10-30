@@ -970,14 +970,11 @@ function renderHeroColumn(id, title, heroes) {
 
   div.appendChild(ul);
 }
-window.addEventListener("load", loadMyHeroes);
+window.addEventListener("load", () => {
+  loadMyHeroes();
+  loadCombinedHeroData();
+});
 
-
-// Виклик після завантаження сторінки
-window.addEventListener("load", loadCombinedHeroData);
-
-
-loadMyHeroes();
 
 </script>
 </body>
