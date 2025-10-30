@@ -288,7 +288,7 @@ button:hover {
 const accountId = 863386335;
 
 
-async function loadAndDisplayHeroes() {
+async function loadAndMergeHeroes() {
   try {
     const [localHeroes, apiHeroes, allHeroes] = await Promise.all([
       fetch("heroes.json").then(r => r.json()),
@@ -296,78 +296,64 @@ async function loadAndDisplayHeroes() {
       fetch("https://api.opendota.com/api/heroStats").then(r => r.json())
     ]);
 
-    // Мапа hero_id → localized_name та roles
+    // Мапа hero_id → localized_name + roles
     const idToHero = {};
     allHeroes.forEach(h => {
       idToHero[h.id] = { name: h.localized_name, roles: h.roles };
     });
 
+    // Злиття локальних, особистих і глобальних даних
     const merged = localHeroes.map(local => {
       const apiHero = apiHeroes.find(a => idToHero[a.hero_id]?.name === local.name);
-      const heroData = allHeroes.find(h => h.localized_name === local.name) || { pro_win:0, pro_pick:0 };
+      const global = allHeroes.find(h => h.localized_name === local.name);
 
       const localScore = local.score || 0;
-
       const myGames = apiHero ? apiHero.games : 0;
       const myWinrate = apiHero && apiHero.games > 0 ? apiHero.win / apiHero.games : 0;
+      const globalWinrate = global && global.pro_pick > 0 ? global.pro_win / global.pro_pick : 0;
+      const globalPickrate = global ? global.pro_pick / 1000 : 0;
 
-      const globalWinrate = heroData.pro_pick > 0 ? heroData.pro_win / heroData.pro_pick : 0;
-      const globalPickrate = heroData.pro_pick / 1000;
+      // Фінальна формула з перевагою твоїх матчів
+      let finalScore =
+        localScore * 0.3 +
+        myWinrate * 0.5 * Math.min(myGames / 100, 1) +
+        (globalWinrate * 0.1 + globalPickrate * 0.1) * 0.2;
 
-      // фінальний score з перевагою твоїх матчів
-      let finalScore = localScore * 0.3 
-                       + myWinrate * 0.5 * Math.min(myGames / 100, 1)
-                       + (globalWinrate * 0.1 + globalPickrate * 0.1) * 0.2;
-      finalScore += 2; // додатково +2
+      finalScore += 2; // додаємо 2, щоб шкала виглядала більша
 
       return {
         ...local,
         games: myGames,
         wins: apiHero ? apiHero.win : 0,
-        myWinrate: myWinrate ? (myWinrate*100).toFixed(1)+'%' : "0%",
-        finalScore: Number(finalScore.toFixed(3)),
-        roles: idToHero[local.id]?.roles || []
+        myWinrate: myWinrate ? (myWinrate * 100).toFixed(1) + "%" : "0%",
+        roles: idToHero[local.id]?.roles || [],
+        finalScore: Number(finalScore.toFixed(3))
       };
     });
 
-    // Оновлюємо глобальний масив героїв
+    // Оновлюємо глобальний масив heroes
     heroes = merged;
 
-    // Розподіляємо по колонках
-    const carry = [];
-    const support = [];
-    const universal = [];
+    // Створюємо список для displayTop
+    const topList = heroes
+      .sort((a, b) => b.finalScore - a.finalScore)
+      .map(h => ({ hero: h.name, score: h.finalScore }));
 
-    merged.sort((a,b) => b.finalScore - a.finalScore).slice(0,30).forEach(h => {
-      if (h.roles.includes("Carry")) carry.push(h);
-      else if (h.roles.includes("Support")) support.push(h);
-      else universal.push(h);
-    });
+    // Відображаємо три колонки через твою функцію displayTop()
+    displayTop(topList);
 
-    // Відображення на сторінці
-    document.getElementById("carryHeroes").innerHTML = carry.map(h => 
-      `<li>${h.name} — <span style="color:#ccc;">${h.games} ігор, ${h.myWinrate}, score ${h.finalScore}</span></li>`
-    ).join("");
-
-    document.getElementById("supportHeroes").innerHTML = support.map(h => 
-      `<li>${h.name} — <span style="color:#ccc;">${h.games} ігор, ${h.myWinrate}, score ${h.finalScore}</span></li>`
-    ).join("");
-
-    document.getElementById("universalHeroes").innerHTML = universal.map(h => 
-      `<li>${h.name} — <span style="color:#ccc;">${h.games} ігор, ${h.myWinrate}, score ${h.finalScore}</span></li>`
-    ).join("");
-
-  } catch(err) {
-    console.error("Помилка при завантаженні та об'єднанні героїв:", err);
+  } catch (err) {
+    console.error("Помилка при завантаженні героїв:", err);
   }
 }
 
 
 
 // ====== Виклик при ініціалізації ======
-document.addEventListener('DOMContentLoaded', () => {
-  loadAndDisplayHeroes();
+document.addEventListener("DOMContentLoaded", () => {
+  loadAndMergeHeroes();
 });
+
 
 
 // Припустимо, у тебе є масив heroes (як у прикладі з Wraith King)
