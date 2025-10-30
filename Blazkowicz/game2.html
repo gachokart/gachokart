@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -259,7 +260,23 @@ button:hover {
   </div>
 </div>
 <div id="behaviorInfo" style="display:none; margin-top:15px; color:#ff6666;"></div>
-
+<div id="myHeroes" style="margin-top:40px;text-align:center;">
+  <h2 style="color:#fff;">Мої найкращі герої</h2>
+  <div id="heroTables" style="display:flex;justify-content:center;gap:30px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:200px;">
+      <h3 style="color:#66c2ff;">Carry</h3>
+      <ul id="carryHeroes" style="list-style:none;padding:0;color:#fff;"></ul>
+    </div>
+    <div style="flex:1;min-width:200px;">
+      <h3 style="color:#7aff66;">Support</h3>
+      <ul id="supportHeroes" style="list-style:none;padding:0;color:#fff;"></ul>
+    </div>
+    <div style="flex:1;min-width:200px;">
+      <h3 style="color:#ffcc66;">Universal</h3>
+      <ul id="universalHeroes" style="list-style:none;padding:0;color:#fff;"></ul>
+    </div>
+  </div>
+</div>
 
 
 
@@ -268,50 +285,88 @@ button:hover {
 // 🔥 ВШИТИЙ heroes.json
 // =========================
   let heroes = [];
+const accountId = 863386335;
 
 
-async function loadData() {
-  const steamId = document.getElementById("steamId").value.trim();
-  const limit = document.getElementById("matchLimit").value;
+async function loadAndMergeHeroes() {
+  try {
+    const [localRes, globalRes] = await Promise.all([
+      fetch('heroes.json'),
+      fetch('https://api.opendota.com/api/heroStats')
+    ]);
 
-  // 1. Локальні герої
-  const localHeroes = await loadLocalHeroes();
+    const localData = await localRes.json();
+    const globalData = await globalRes.json();
 
-  // 2. API‑дані (глобальні або персональні)
-  const apiScores = await getHeroScores(steamId, limit);
+    // Об'єднання за name / localized_name
+    const mergedHeroes = localData.map(localHero => {
+      const match = globalData.find(g =>
+        g.localized_name?.toLowerCase() === localHero.name?.toLowerCase()
+      );
 
-  // 3. Зміксувати
-  const merged = await mix(localHeroes, apiScores);
+      const combined = {
+        ...localHero,
+        ...match,
+        name: localHero.name || match?.localized_name,
+        roles: match?.roles || localHero.roles || [],
+        localScore: localHero.score || 0,
+        localWinrate: localHero.winrate || 0,
+        localGames: localHero.games || 0,
+        globalWinrate: match?.win_rate || match?.winrate || 0,
+        globalPickrate: match?.pro_pick || 0,
+        globalGames: match?.pro_pick || 0
+      };
 
-  // 4. Відмалювати
-  renderRecommendations(merged);
-}
-  
-  async function loadLocalHeroes() {
-    try {
-      const response = await fetch("heroes.json");
-      if (!response.ok) throw new Error("Не вдалося завантажити heroes.json");
-      return await response.json();
-    } catch (err) {
-      console.error("Помилка при завантаженні heroes.json:", err);
-      return [];
-    }
-  }
+      // 🔹 Формула спільного бала (з пріоритетом твоїх даних)
+      const localFactor = combined.localGames > 0 ? combined.localGames / (combined.localGames + combined.globalGames) : 0.7;
+      const finalScore =
+        (combined.localWinrate * 0.6 + combined.globalWinrate * 0.4) * localFactor +
+        (combined.localScore * 0.8 + combined.globalPickrate * 0.2) * (1 - localFactor);
 
+      return {
+        ...combined,
+        finalScore: finalScore + 2 // твій бонус +2
+      };
+    });
+
+    // Зберігаємо глобально
+    window.heroes = mergedHeroes;
+   window.allHeroes = mergedHeroes;
  
+// Зробити сумісність зі старим кодом
+if (typeof heroes === "undefined") {
+  window.heroes = mergedHeroes;
+} else {
+  heroes.length = 0;
+  mergedHeroes.forEach(h => heroes.push(h));
+}
 
-  async function init() {
-    heroes = await loadLocalHeroes();
-    console.log("Герої завантажені:", heroes.length);
-    // далі твій код ініціалізації
+    console.log("✅ Герої успішно об'єднані:", mergedHeroes.length);
+
+    // Якщо у тебе вже є функція розрахунку кращих піків:
+    if (typeof calculateBestPicks === 'function') {
+      calculateBestPicks(mergedHeroes);
+    } else if (typeof displayTop === 'function') {
+      // fallback — просто показати топ героїв
+      const scores = mergedHeroes
+        .map(h => ({ hero: h.name, score: h.finalScore }))
+        .sort((a, b) => b.score - a.score);
+      displayTop(scores, mergedHeroes);
+    }
+
+  } catch (err) {
+    console.error("❌ Помилка при завантаженні героїв:", err);
   }
+}
 
-  document.addEventListener('DOMContentLoaded', init);
 
 
-  heroes.forEach(h => {
-  h.score = (h.winrate * 0.7 + h.pickrate * 0.3);
+
+// ====== Виклик при ініціалізації ======
+document.addEventListener("DOMContentLoaded", () => {
+  loadAndMergeHeroes();
 });
+
 
 
 // Припустимо, у тебе є масив heroes (як у прикладі з Wraith King)
@@ -626,88 +681,68 @@ function calculateHeroWeight(hero) {
 }
 
 // Автоматичне визначення категорії героя
+// Перевірка ролей з heroes.json
 function getHeroMainCategory(hero) {
-  const w = calculateHeroWeight(hero);
-  const max = Math.max(w.carry, w.support, w.universal);
-  if (max === 0) return 'universal'; // якщо ролей немає
+  if (!hero || !hero.roles || !Array.isArray(hero.roles)) return 'universal';
 
-  // Пріоритет при однакових значеннях
-  if (w.carry === max) return 'carry';
-  if (w.support === max) return 'support';
+  const roles = hero.roles.map(r => r.toLowerCase());
+  const isCarry = roles.includes('carry');
+  const isSupport = roles.includes('support');
+
+  if (isCarry && !isSupport) return 'carry';
+  if (isSupport && !isCarry) return 'support';
+  if (isCarry && isSupport) return 'universal';
   return 'universal';
 }
 
-function displayTop(scores) {
+function displayTop(scores, heroes = window.heroes || window.allHeroes) {
+
   const resultDiv = document.getElementById('results');
   const topHeroes = scores.slice(0, 30); // запас
 
-  // Визначаємо категорію кожного героя
+  // Додаємо категорію до кожного героя
   const categorized = topHeroes.map(t => {
-    const hero = heroes.find(h => h.name === t.hero);
-    const category = hero ? getHeroMainCategory(hero) : 'universal';
+    const hero = heroes.find(h =>
+      h.localized_name?.toLowerCase() === t.hero.toLowerCase() ||
+      h.name?.toLowerCase().includes(t.hero.toLowerCase())
+    );
+    const category = getHeroMainCategory(hero);
     return { ...t, category };
   });
 
-  // Розподіляємо по категоріях
   const carryHeroes = categorized.filter(h => h.category === 'carry').slice(0, 5);
   const supportHeroes = categorized.filter(h => h.category === 'support').slice(0, 5);
   const universalHeroes = categorized.filter(h => h.category === 'universal').slice(0, 5);
 
-  // HTML-відображення
   resultDiv.innerHTML = `
-  <h2 style="text-align:center; margin-bottom:15px;">Топ герої для наступного піку</h2>
-  <div id="resultsGrid">
-    <!-- Carry -->
-    <div class="resultColumn">
-      <h3 style="color:#ffcc00;">⚔ Carry</h3>
-      ${
-        carryHeroes.length
-          ? carryHeroes.map(t => {
-              const hero = heroes.find(h => h.name === t.hero);
-              const w = calculateHeroWeight(hero);
-              return `<div class="hero">
-                        <strong>${t.hero}</strong><br>
-                        <small>Бали: ${t.score.toFixed(3)} | Carry: ${w.carry}</small>
-                      </div>`;
-            }).join('')
-          : '<p style="opacity:0.6;">(немає Carry серед топів)</p>'
-      }
-    </div>
+    <h2 style="text-align:center;margin-bottom:15px;">Топ герої для наступного піку</h2>
+    <div id="resultsGrid" style="display:flex;justify-content:space-around;gap:20px;align-items:flex-start;">
+      
+      <div class="resultColumn" style="flex:1;">
+        <h3 style="color:#ffcc00;">⚔ Carry</h3>
+        ${carryHeroes.length
+          ? carryHeroes.map(t => `<div class="hero"><strong>${t.hero}</strong><br>
+              <small>Бали: ${(t.score + 2).toFixed(3)}</small></div>`).join('')
+          : '<p style="opacity:0.6;">(немає Carry серед топів)</p>'}
+      </div>
 
-    <!-- Support -->
-    <div class="resultColumn">
-      <h3 style="color:#66ff99;">🛡 Support</h3>
-      ${
-        supportHeroes.length
-          ? supportHeroes.map(t => {
-              const hero = heroes.find(h => h.name === t.hero);
-              const w = calculateHeroWeight(hero);
-              return `<div class="hero">
-                        <strong>${t.hero}</strong><br>
-                        <small>Бали: ${t.score.toFixed(3)} | Support: ${w.support}</small>
-                      </div>`;
-            }).join('')
-          : '<p style="opacity:0.6;">(немає Support серед топів)</p>'
-      }
-    </div>
+      <div class="resultColumn" style="flex:1;">
+        <h3 style="color:#66ff99;">🛡 Support</h3>
+        ${supportHeroes.length
+          ? supportHeroes.map(t => `<div class="hero"><strong>${t.hero}</strong><br>
+              <small>Бали: ${(t.score + 2).toFixed(3)}</small></div>`).join('')
+          : '<p style="opacity:0.6;">(немає Support серед топів)</p>'}
+      </div>
 
-    <!-- Universal -->
-    <div class="resultColumn">
-      <h3 style="color:#66ccff;">🔄 Універсальні</h3>
-      ${
-        universalHeroes.length
-          ? universalHeroes.map(t => {
-              const hero = heroes.find(h => h.name === t.hero);
-              const w = calculateHeroWeight(hero);
-              return `<div class="hero" style="box-shadow:0 0 10px #66ccff;">
-                        <strong>${t.hero}</strong><br>
-                        <small>Бали: ${t.score.toFixed(3)} | Carry: ${w.carry}, Support: ${w.support}, Univ: ${w.universal}</small>
-                      </div>`;
-            }).join('')
-          : '<p style="opacity:0.6;">(немає універсальних серед топів)</p>'
-      }
+      <div class="resultColumn" style="flex:1;">
+        <h3 style="color:#66ccff;">🔄 Універсальні</h3>
+        ${universalHeroes.length
+          ? universalHeroes.map(t => `<div class="hero"><strong>${t.hero}</strong><br>
+              <small>Бали: ${(t.score + 2).toFixed(3)}</small></div>`).join('')
+          : '<p style="opacity:0.6;">(немає універсальних серед топів)</p>'}
+      </div>
+
     </div>
-  </div>
   `;
 }
 
@@ -838,8 +873,50 @@ document.getElementById('results').style.display = 'none';
 }
  
 
+async function loadMyHeroes() {
+  try {
+    const res = await fetch(`https://api.opendota.com/api/players/${accountId}/heroes`);
+    const data = await res.json();
 
+    // Сортуємо за кількістю ігор
+    const top = data.sort((a,b) => b.games - a.games).slice(0, 100);
+
+    // Список героїв з OpenDota не має назв, тому завантажимо список героїв
+    const heroList = await fetch("https://api.opendota.com/api/heroStats").then(r=>r.json());
+
+    // Зʼєднуємо ID -> назву героя
+    const getHeroName = id => heroList.find(h => h.id === id)?.localized_name || `Hero ${id}`;
+    const getHeroRoles = id => heroList.find(h => h.id === id)?.roles || [];
+
+    // Групуємо по ролях
+    const carry = [], support = [], universal = [];
+
+    for (const hero of top) {
+      const roles = getHeroRoles(hero.hero_id);
+      const name = getHeroName(hero.hero_id);
+      const winrate = ((hero.win / hero.games) * 100).toFixed(1);
+
+      const li = `<li>${name} — <span style="color:#ccc;">${hero.games} ігор, ${winrate}% WR</span></li>`;
+
+      if (roles.includes("Carry")) carry.push(li);
+      else if (roles.includes("Support")) support.push(li);
+      else universal.push(li);
+    }
+
+    // Виводимо на сторінку
+    document.getElementById("carryHeroes").innerHTML = carry.slice(0,10).join("");
+    document.getElementById("supportHeroes").innerHTML = support.slice(0,10).join("");
+    document.getElementById("universalHeroes").innerHTML = universal.slice(0,10).join("");
+
+  } catch (err) {
+    console.error("Помилка при отриманні даних OpenDota:", err);
+  }
+}
+
+
+loadMyHeroes();
 
 </script>
 </body>
 </html>
+
