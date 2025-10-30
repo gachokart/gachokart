@@ -318,18 +318,7 @@ async function loadData() {
 
  
 
-  async function init() {
-    heroes = await loadLocalHeroes();
-    console.log("Герої завантажені:", heroes.length);
-    // далі твій код ініціалізації
-  }
-
-  document.addEventListener('DOMContentLoaded', init);
-loadMyHeroes();
-
-  heroes.forEach(h => {
-  h.score = (h.winrate * 0.7 + h.pickrate * 0.3);
-});
+ 
 
 
 // Припустимо, у тебе є масив heroes (як у прикладі з Wraith King)
@@ -352,29 +341,55 @@ document.addEventListener('DOMContentLoaded', () => { createSelectors(); updateT
     fetch(`https://api.opendota.com/api/players/${accountId}/heroes`).then(r => r.json()),
     fetch("https://api.opendota.com/api/heroes").then(r => r.json())
   ]);
+let heroes = [];        // локальні герої
+let mergedHeroes = [];  // після об'єднання з OpenDota
+const accountId = 863386335;
 
-  // Мапа hero_id → localized_name
-  const idToName = {};
-  allHeroes.forEach(h => idToName[h.id] = h.localized_name);
+async function init() {
+  try {
+    // 1. Завантажуємо локальні герої
+    heroes = await fetch("heroes.json").then(r => r.json());
+    console.log("Локальні герої завантажено:", heroes.length);
 
-  // Злиття по name ↔ localized_name
-  const merged = localHeroes.map(local => {
-    const apiHero = apiHeroes.find(a => idToName[a.hero_id] === local.name);
-    return {
-      ...local,
-      games: apiHero ? apiHero.games : 0,
-      wins: apiHero ? apiHero.win : 0,
-      myWinrate: apiHero && apiHero.games > 0
-        ? (apiHero.win / apiHero.games * 100).toFixed(1) + "%"
-        : "0%"
-    };
-  });
+    // 2. Завантажуємо OpenDota дані
+    const [apiHeroes, allHeroes] = await Promise.all([
+      fetch(`https://api.opendota.com/api/players/${accountId}/heroes`).then(r=>r.json()),
+      fetch("https://api.opendota.com/api/heroStats").then(r=>r.json())
+    ]);
 
-  renderTable(merged);
+    // Створюємо мапу id -> localized_name
+    const idToName = {};
+    allHeroes.forEach(h => idToName[h.id] = h.localized_name);
+
+    // 3. Об'єднуємо локальні і API дані
+    mergedHeroes = heroes.map(local => {
+      const apiHero = apiHeroes.find(a => idToName[a.hero_id] === local.name);
+      return {
+        ...local,
+        games: apiHero ? apiHero.games : 0,
+        wins: apiHero ? apiHero.win : 0,
+        myWinrate: apiHero && apiHero.games > 0 ? ((apiHero.win / apiHero.games) * 100).toFixed(1) + "%" : "0%"
+      };
+    });
+
+    console.log("Об'єднані герої:", mergedHeroes.length);
+
+    // 4. Відобразити таблицю (якщо потрібно)
+    renderTable(mergedHeroes);
+
+  } catch(err) {
+    console.error("Помилка при ініціалізації героїв:", err);
+  }
 }
 
+// Виклик при завантаженні сторінки
+document.addEventListener('DOMContentLoaded', init);
+
+// Приклад функції відображення таблиці
 function renderTable(data) {
   const container = document.getElementById("draftSummary");
+  if (!container) return;
+
   const table = document.createElement("table");
   table.innerHTML = `
     <tr>
@@ -388,7 +403,7 @@ function renderTable(data) {
     const row = document.createElement("tr");
     row.innerHTML = `
       <td>${h.name}</td>
-      <td>${(h.winrate * 100).toFixed(1)}%</td>
+      <td>${(h.winrate*100).toFixed(1)}%</td>
       <td>${h.myWinrate}</td>
       <td>${h.games}</td>
     `;
@@ -398,57 +413,6 @@ function renderTable(data) {
   container.appendChild(table);
 }
 
-// ====================== СЕЛЕКТОРИ ======================
-function createSelectors(savedMy = [], savedEnemy = []) {
-  const myTeamDiv = document.getElementById('myTeam');
-  const enemyTeamDiv = document.getElementById('enemyTeam');
-  myTeamDiv.innerHTML = "<h2>Моя команда</h2>";
-  enemyTeamDiv.innerHTML = "<h2>Суперник</h2>";
-  const limits = stageLimits[stage - 1];
-
-  createTeamSelectors(myTeamDiv, limits.my, savedMy);
-  createTeamSelectors(enemyTeamDiv, limits.enemy, savedEnemy);
-  updateSelects();
-  document.getElementById('nextBtn').onclick = nextStage;
-}
-
-function createTeamSelectors(container, count, saved = []) {
-  const heroOptions = ['<option value="">Вибери героя</option>']
-    .concat(heroes.map(h => `<option value="${h.name}">${h.name}</option>`))
-    .join('');
-  for (let i = 0; i < count; i++) {
-    const wrapper = document.createElement('div');
-    const input = document.createElement('input');
-    const select = document.createElement('select');
-    select.innerHTML = heroOptions;
-
-    if (saved[i]) select.value = saved[i];
-
-    // 🔍 автопідсвічування при введенні
-    input.placeholder = 'Пиши героя...';
-    input.addEventListener('input', () => {
-      const val = input.value.trim().toLowerCase();
-      const opt = Array.from(select.options).find(o => o.text.toLowerCase().startsWith(val));
-      if (opt) {
-        select.value = opt.value;
-        select.style.background = '#ffd700';
-        setTimeout(() => select.style.background = '', 400);
-      }
-      updateSelects();
-      updateTeamDisplays();
-    });
-
-    select.addEventListener('change', () => {
-      input.value = select.value;
-      updateSelects();
-      updateTeamDisplays();
-    });
-
-    wrapper.appendChild(input);
-    wrapper.appendChild(select);
-    container.appendChild(wrapper);
-  }
-}
 
 // ====================== БЛОКУВАННЯ ПОВТОРІВ ======================
 function updateSelects() {
