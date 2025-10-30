@@ -332,66 +332,63 @@ loadMyHeroes();
 });
 
 // ====== Завантаження і злиття героїв ======
-async function loadAndMergeHeroes(accountId = 863386335) {
+async function loadAndMergeHeroes() {
   try {
-    // 1️⃣ Завантажуємо локальні герої
-    const localHeroes = await fetch("heroes.json").then(r => r.json());
+    const [localHeroes, apiHeroes, allHeroes] = await Promise.all([
+      fetch("heroes.json").then(r => r.json()),
+      fetch(`https://api.opendota.com/api/players/${accountId}/heroes`).then(r => r.json()),
+      fetch("https://api.opendota.com/api/heroStats").then(r => r.json())
+    ]);
 
-    // 2️⃣ Завантажуємо статистику твоїх матчів
-    const apiHeroes = await fetch(`https://api.opendota.com/api/players/${accountId}/heroes`)
-                          .then(r => r.json());
-
-    // 3️⃣ Завантажуємо глобальні дані героїв
-    const heroStats = await fetch("https://api.opendota.com/api/heroStats")
-                          .then(r => r.json());
-
-    // 4️⃣ Створюємо мапу id -> localized_name
+    // Мапа hero_id → localized_name та глобальні дані
     const idToName = {};
-    heroStats.forEach(h => idToName[h.id] = h.localized_name);
-
-    // 5️⃣ Мержимо локальні герої з твоїми даними і глобальними
-    const merged = localHeroes.map(local => {
-      // шукаємо твої дані
-      const apiHero = apiHeroes.find(a => idToName[a.hero_id] === local.name);
-
-      // шукаємо глобальні дані
-      const globalData = heroStats.find(h => h.localized_name === local.name);
-
-      // локальний бал (з твоїх даних або з heroes.json)
-      const localScore = local.score || 0;
-
-      // фактор твоїх матчів
-      const myGamesFactor = apiHero ? Math.min(apiHero.games / 100, 1) : 0;
-      const myWinrateFactor = apiHero && apiHero.games > 0 ? apiHero.win / apiHero.games : 0;
-
-      // глобальні фактори
-      const globalWinrateFactor = globalData ? globalData.pro_win / Math.max(globalData.pro_pick, 1) : 0;
-      const globalPickrateFactor = globalData ? globalData.pro_pick / 1000 : 0;
-
-      // 🔹 фінальний бал з перевагою твоїх героїв
-      const finalScore = 
-            localScore * 0.5 +
-            myWinrateFactor * 0.4 * myGamesFactor +
-            (globalWinrateFactor * 0.05 + globalPickrateFactor * 0.05);
-
-      return {
-        ...local,
-        games: apiHero ? apiHero.games : 0,
-        wins: apiHero ? apiHero.win : 0,
-        myWinrate: apiHero && apiHero.games > 0 ? (apiHero.win / apiHero.games * 100).toFixed(1) + "%" : "0%",
-        finalScore: finalScore
+    const globalDataMap = {};
+    allHeroes.forEach(h => {
+      idToName[h.id] = h.localized_name;
+      globalDataMap[h.localized_name] = {
+        pro_win: h.pro_win || 0,
+        pro_pick: h.pro_pick || 0
       };
     });
 
-    console.log("🔥 Злиті герої з рейтингами:", merged);
+    const merged = localHeroes.map(local => {
+      const apiHero = apiHeroes.find(a => idToName[a.hero_id] === local.name);
+      const global = globalDataMap[local.name] || { pro_win: 0, pro_pick: 0 };
 
+      const localBase = local.score || 0;
+
+      const myGames = apiHero ? apiHero.games : 0;
+      const myWinrate = apiHero && apiHero.games > 0 ? apiHero.win / apiHero.games : 0;
+
+      const globalWinrate = global.pro_pick > 0 ? global.pro_win / global.pro_pick : 0;
+      const globalPickrate = global.pro_pick / 1000; // нормалізуємо
+
+      // фінальний score: локальний + твій winrate + глобальні дані
+      let finalScore = 
+        localBase * 0.3 +                 // базовий локальний
+        myWinrate * 0.5 * Math.min(myGames / 100, 1) + // твої матчі
+        (globalWinrate * 0.1 + globalPickrate * 0.1) * 0.2; // глобальні WR та pickrate
+
+      finalScore += 2; // збільшуємо на 2
+
+      return {
+        ...local,
+        games: myGames,
+        wins: apiHero ? apiHero.win : 0,
+        myWinrate: myWinrate ? (myWinrate * 100).toFixed(1) + "%" : "0%",
+        finalScore: Number(finalScore.toFixed(3))
+      };
+    });
+
+    console.log("Merged heroes with scores:", merged);
     return merged;
 
   } catch (err) {
-    console.error("Помилка при завантаженні або злитті героїв:", err);
+    console.error("Помилка при злитті героїв:", err);
     return [];
   }
 }
+
 
 
 // ====== Виклик при ініціалізації ======
