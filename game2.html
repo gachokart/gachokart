@@ -259,23 +259,6 @@ button:hover {
   </div>
 </div>
 <div id="behaviorInfo" style="display:none; margin-top:15px; color:#ff6666;"></div>
-<div id="myHeroes" style="margin-top:40px;text-align:center;">
-  <h2 style="color:#fff;">Мої найкращі герої</h2>
-  <div id="heroTables" style="display:flex;justify-content:center;gap:30px;flex-wrap:wrap;">
-    <div style="flex:1;min-width:200px;">
-      <h3 style="color:#66c2ff;">Carry</h3>
-      <ul id="carryHeroes" style="list-style:none;padding:0;color:#fff;"></ul>
-    </div>
-    <div style="flex:1;min-width:200px;">
-      <h3 style="color:#7aff66;">Support</h3>
-      <ul id="supportHeroes" style="list-style:none;padding:0;color:#fff;"></ul>
-    </div>
-    <div style="flex:1;min-width:200px;">
-      <h3 style="color:#ffcc66;">Universal</h3>
-      <ul id="universalHeroes" style="list-style:none;padding:0;color:#fff;"></ul>
-    </div>
-  </div>
-</div>
 <div id="recommendations" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:20px;"></div>
 
 
@@ -974,7 +957,7 @@ function renderHeroColumn(id, title, heroes) {
   ul.style.padding = "0";
   heroes.forEach(h => {
     const li = document.createElement("li");
-    li.textContent = `${h.localized_name || h.name} (${h.score.toFixed(1)})`;
+    li.textContent = `${h.localized_name || h.name} (${(h.score ?? 0).toFixed(1)})`;
     li.style.color = h.score > 65 ? "#7CFC00" : h.score < 45 ? "#ff4444" : "#fff";
     li.style.fontSize = "13px";
     li.style.margin = "4px 0";
