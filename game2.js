@@ -1,4 +1,4 @@
-const accountId = "863386335"; // заміни на свій OpenDota ID
+
 
 async function loadAndMerge() {
   const [localHeroes, apiHeroes, allHeroes] = await Promise.all([
