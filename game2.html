@@ -331,6 +331,8 @@ async function loadAndMergeHeroes() {
 
     // Зберігаємо глобально
     window.heroes = mergedHeroes;
+   window.allHeroes = mergedHeroes;
+ 
 // Зробити сумісність зі старим кодом
 if (typeof heroes === "undefined") {
   window.heroes = mergedHeroes;
@@ -693,7 +695,8 @@ function getHeroMainCategory(hero) {
   return 'universal';
 }
 
-function displayTop(scores, heroes) {
+function displayTop(scores, heroes = window.heroes || window.allHeroes) {
+
   const resultDiv = document.getElementById('results');
   const topHeroes = scores.slice(0, 30); // запас
 
