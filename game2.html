@@ -880,6 +880,7 @@ async function loadMyHeroes() {
 }
 // ====================== ОБ'ЄДНАНІ РЕКОМЕНДАЦІЇ HEROES.JSON + OPENDOTA ======================
 // ====================== ОБ'ЄДНАНІ РЕКОМЕНДАЦІЇ HEROES.JSON + OPENDOTA ======================
+// ====================== ОБ'ЄДНАНІ РЕКОМЕНДАЦІЇ HEROES.JSON + OPENDOTA ======================
 async function loadCombinedHeroData() {
   const accountId = 863386335; // твій OpenDota ID
 
@@ -941,36 +942,7 @@ async function loadCombinedHeroData() {
   }
 }
 
-    // Зʼєднуємо дані
-    const merged = localHeroes.map(lh => {
-      const match = personalScores.find(ph => ph.name === lh.localized_name);
-      const score = match ? (lh.score + match.score) / 2 : lh.score;
-      const roles = lh.roles || match?.roles || [];
-      return { ...lh, score, roles, picked: false };
-    });
-
-    // Розподіляємо за ролями
-    const carry = merged.filter(h => h.roles.some(r => ["Carry", "Pusher", "Nuker"].includes(r)))
-                        .sort((a,b)=>b.score-a.score)
-                        .slice(0,15);
-    const support = merged.filter(h => h.roles.some(r => ["Support","Disabler"].includes(r)))
-                          .sort((a,b)=>b.score-a.score)
-                          .slice(0,15);
-    const universal = merged.filter(h => !h.roles.some(r => ["Carry","Support"].includes(r)))
-                            .sort((a,b)=>b.score-a.score)
-                            .slice(0,15);
-
-    // Малюємо колонки
-    renderHeroColumn("carryColumn", "🗡 Carry", carry);
-    renderHeroColumn("supportColumn", "💉 Support", support);
-    renderHeroColumn("universalColumn", "🌀 Universal", universal);
-
-  } catch(err) {
-    console.error("Помилка при отриманні даних OpenDota:", err);
-  }
-}
-
-// Створює одну колонку
+// ====================== Функція відрисовки колонки ======================
 function renderHeroColumn(id, title, heroes) {
   let div = document.getElementById(id);
   if (!div) {
@@ -1009,6 +981,8 @@ function renderHeroColumn(id, title, heroes) {
 
   div.appendChild(ul);
 }
+
+
 
 window.addEventListener("load", () => {
   loadMyHeroes();
