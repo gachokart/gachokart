@@ -276,6 +276,7 @@ button:hover {
     </div>
   </div>
 </div>
+<div id="recommendations" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:20px;"></div>
 
 
 
@@ -853,7 +854,6 @@ document.getElementById('results').style.display = 'none';
     updateTeamDisplays(false); // залишаємо останні вибрані герої в списках
 }
  
-const accountId = 863386335;
 
 async function loadMyHeroes() {
   try {
