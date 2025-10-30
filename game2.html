@@ -331,6 +331,13 @@ async function loadAndMergeHeroes() {
 
     // Зберігаємо глобально
     window.heroes = mergedHeroes;
+// Зробити сумісність зі старим кодом
+if (typeof heroes === "undefined") {
+  window.heroes = mergedHeroes;
+} else {
+  heroes.length = 0;
+  mergedHeroes.forEach(h => heroes.push(h));
+}
 
     console.log("✅ Герої успішно об'єднані:", mergedHeroes.length);
 
