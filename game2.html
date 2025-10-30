@@ -881,7 +881,7 @@ async function loadMyHeroes() {
 // ====================== ОБ'ЄДНАНІ РЕКОМЕНДАЦІЇ HEROES.JSON + OPENDOTA ======================
 // ====================== ОБ'ЄДНАНІ РЕКОМЕНДАЦІЇ HEROES.JSON + OPENDOTA ======================
 async function loadCombinedHeroData() {
-  const accountId = 863386335; // твій акаунт OpenDota
+  const accountId = 863386335; // твій OpenDota ID
 
   try {
     // Завантажуємо локальні та персональні дані
@@ -891,59 +891,82 @@ async function loadCombinedHeroData() {
       fetch("https://api.opendota.com/api/heroStats").then(r => r.json())
     ]);
 
-    // Пошук героя за id
+    // Допоміжна функція для пошуку героя за id
     const getHeroById = id => heroStats.find(h => h.id === id);
 
-    // Готуємо персональні дані
+    // Формуємо персональні дані
     const personalScores = personalData
-      .filter(h => h.games > 0) // беремо всіх героїв з >0 ігор
+      .filter(h => h.games > 5)
       .map(h => {
         const hero = getHeroById(h.hero_id);
         if (!hero) return null;
-        const winrate = h.win / h.games; // 0..1
+        const winrate = h.win / h.games;
         const score = (winrate * 0.7 + Math.min(h.games, 100) / 100 * 0.3) * 100;
         return {
-          id: h.hero_id,        // порівнюємо по id
+          id: hero.id,
           name: hero.localized_name,
-          score: score,
-          roles: hero.roles
+          score,
+          roles: hero.roles,
+          picked: false
         };
       })
       .filter(Boolean);
 
     // Зʼєднуємо дані
     const merged = localHeroes.map(lh => {
-      const match = personalScores.find(ph => ph.id === lh.id); // порівнюємо по id
-      const score = match ? (lh.score + match.score) / 2 : (lh.score || 50); // мінімальний базовий score = 50
+      const match = personalScores.find(ph => ph.name === lh.localized_name);
+      const score = match ? (lh.score + match.score) / 2 : lh.score;
       const roles = lh.roles || match?.roles || [];
-      return { ...lh, score, roles };
+      return { ...lh, score, roles, picked: false };
     });
 
-    // Групуємо за ролями
-    const carry = merged
-      .filter(h => h.roles.some(r => ["Carry", "Pusher", "Nuker"].includes(r)))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 15);
+    // Розподіляємо за ролями
+    const carry = merged.filter(h => h.roles.some(r => ["Carry", "Pusher", "Nuker"].includes(r)))
+                        .sort((a,b)=>b.score-a.score)
+                        .slice(0,15);
+    const support = merged.filter(h => h.roles.some(r => ["Support","Disabler"].includes(r)))
+                          .sort((a,b)=>b.score-a.score)
+                          .slice(0,15);
+    const universal = merged.filter(h => !h.roles.some(r => ["Carry","Support"].includes(r)))
+                            .sort((a,b)=>b.score-a.score)
+                            .slice(0,15);
 
-    const support = merged
-      .filter(h => h.roles.some(r => ["Support", "Disabler"].includes(r)))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 15);
-
-    const universal = merged
-      .filter(h => !h.roles.some(r => ["Carry", "Support"].includes(r)))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 15);
-
-    // Малюємо таблиці
+    // Малюємо колонки
     renderHeroColumn("carryColumn", "🗡 Carry", carry);
     renderHeroColumn("supportColumn", "💉 Support", support);
     renderHeroColumn("universalColumn", "🌀 Universal", universal);
 
-    console.log("✅ Комбіновані дані завантажені", merged);
+  } catch(err) {
+    console.error("Помилка при отриманні даних OpenDota:", err);
+  }
+}
 
-  } catch (err) {
-    console.error("Помилка при завантаженні комбінованих даних:", err);
+    // Зʼєднуємо дані
+    const merged = localHeroes.map(lh => {
+      const match = personalScores.find(ph => ph.name === lh.localized_name);
+      const score = match ? (lh.score + match.score) / 2 : lh.score;
+      const roles = lh.roles || match?.roles || [];
+      return { ...lh, score, roles, picked: false };
+    });
+
+    // Розподіляємо за ролями
+    const carry = merged.filter(h => h.roles.some(r => ["Carry", "Pusher", "Nuker"].includes(r)))
+                        .sort((a,b)=>b.score-a.score)
+                        .slice(0,15);
+    const support = merged.filter(h => h.roles.some(r => ["Support","Disabler"].includes(r)))
+                          .sort((a,b)=>b.score-a.score)
+                          .slice(0,15);
+    const universal = merged.filter(h => !h.roles.some(r => ["Carry","Support"].includes(r)))
+                            .sort((a,b)=>b.score-a.score)
+                            .slice(0,15);
+
+    // Малюємо колонки
+    renderHeroColumn("carryColumn", "🗡 Carry", carry);
+    renderHeroColumn("supportColumn", "💉 Support", support);
+    renderHeroColumn("universalColumn", "🌀 Universal", universal);
+
+  } catch(err) {
+    console.error("Помилка при отриманні даних OpenDota:", err);
   }
 }
 
@@ -958,12 +981,7 @@ function renderHeroColumn(id, title, heroes) {
     div.style.background = "rgba(0,0,0,0.5)";
     div.style.borderRadius = "12px";
     div.style.margin = "10px";
-    const container = document.getElementById("recommendations");
-    if (!container) {
-      console.error("❌ Не знайдено контейнер #recommendations");
-      return;
-    }
-    container.appendChild(div);
+    document.getElementById("recommendations").appendChild(div);
   }
 
   div.innerHTML = `<h3 style="color:#ffcc00;text-align:center;font-family:'Press Start 2P';font-size:12px;">${title}</h3>`;
@@ -972,12 +990,20 @@ function renderHeroColumn(id, title, heroes) {
   ul.style.listStyle = "none";
   ul.style.padding = "0";
 
-  heroes.forEach(h => {
+  heroes.filter(h => !h.picked).forEach(h => {
     const li = document.createElement("li");
     li.textContent = `${h.name} (${h.score.toFixed(1)})`;
     li.style.color = h.score > 65 ? "#7CFC00" : h.score < 45 ? "#ff4444" : "#fff";
     li.style.fontSize = "13px";
     li.style.margin = "4px 0";
+    li.style.cursor = "pointer";
+
+    // Клік на героя -> pick
+    li.onclick = () => {
+      h.picked = true;
+      renderHeroColumn(id, title, heroes);
+    };
+
     ul.appendChild(li);
   });
 
