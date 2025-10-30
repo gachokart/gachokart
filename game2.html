@@ -341,32 +341,47 @@ async function loadAndMergeHeroes() {
       fetch("https://api.opendota.com/api/heroStats").then(r => r.json())
     ]);
 
-    // 3. Мапа hero_id -> localized_name
-    const idToName = {};
-    allHeroes.forEach(h => idToName[h.id] = h.localized_name);
+    // 3. Мапа hero_id -> локалізоване ім'я + global winrate/pickrate
+    const idToData = {};
+    allHeroes.forEach(h => {
+      idToData[h.id] = {
+        name: h.localized_name,
+        winrate: h.pro_win / h.pro_pick || 0,
+        pickrate: h.pro_pick / 1000 || 0 // приклад нормалізації
+      };
+    });
 
-    // 4. Злиття
+    // 4. Злиття та розрахунок спільного балу
     heroes = localHeroes.map(local => {
-      const apiHero = playerHeroes.find(a => idToName[a.hero_id] === local.name);
+      const apiHero = playerHeroes.find(a => idToData[a.hero_id]?.name === local.name);
+      const globalData = allHeroes.find(h => h.localized_name === local.name);
+
+      const globalWinrate = globalData ? (globalData.pro_win / globalData.pro_pick || 0) : 0;
+      const globalPickrate = globalData ? (globalData.pro_pick / 1000 || 0) : 0;
+
+      const localScore = local.score || 0;
+
+      // 🔹 Підсумковий бал із вагами
+      const score = localScore * 0.5 + globalWinrate * 0.3 + globalPickrate * 0.2;
+
       return {
         ...local,
         games: apiHero ? apiHero.games : 0,
         wins: apiHero ? apiHero.win : 0,
-        myWinrate: apiHero && apiHero.games > 0
-          ? ((apiHero.win / apiHero.games) * 100).toFixed(1) + "%"
-          : "0%"
+        myWinrate: apiHero && apiHero.games > 0 ? ((apiHero.win / apiHero.games) * 100).toFixed(1) + "%" : "0%",
+        globalWinrate: (globalWinrate * 100).toFixed(1) + "%",
+        globalPickrate: (globalPickrate * 100).toFixed(1) + "%",
+        score: Number(score.toFixed(3)) // підсумковий score
       };
     });
 
-    console.log("Герої після злиття:", heroes);
-
-    // Якщо треба, можна одразу оновити таблицю з твоїми героями
-    loadMyHeroes(); 
+    console.log("Герої після злиття і підрахунку score:", heroes);
 
   } catch(err) {
     console.error("Помилка при завантаженні героїв:", err);
   }
 }
+
 
 // ====== Виклик при ініціалізації ======
 document.addEventListener('DOMContentLoaded', () => {
