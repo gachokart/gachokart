@@ -1,110 +1,99 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="uk">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dota 2 Draft Helper</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Role-based Prediction Demo</title>
 <style>
-  body { background:#07111b; color:#fff; font-family:sans-serif; text-align:center; }
-  h1 { color:#ff0000; }
-  table { margin: 20px auto; border-collapse: collapse; }
-  th, td { border: 1px solid #fff; padding: 5px 10px; }
+  body { background:#0b1220; color:#fff; font-family:sans-serif; padding:20px; }
+  .card { background:#111a2a; padding:20px; border-radius:12px; max-width:360px; margin:auto; }
+  select { padding:8px; border-radius:8px; background:transparent; color:white; border:1px solid rgba(255,255,255,0.2); }
+  .prob { font-size:48px; font-weight:600; margin-top:10px; }
 </style>
 </head>
 <body>
-<h1>Dota 2 Draft Helper — Об'єднання героїв</h1>
-<div id="output"></div>
+
+<div class="card" id="rolePredictionCard">
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <div>
+      <div style="font-size:13px; color:#9ca3af;">Оберіть роль:</div>
+      <select id="roleSelect">
+        <option value="1">1 — Carry</option>
+        <option value="2">2 — Mid</option>
+        <option value="3" selected>3 — Offlane</option>
+        <option value="4">4 — Soft support</option>
+        <option value="5">5 — Hard support</option>
+      </select>
+    </div>
+    <div style="text-align:right;">
+      <div id="winPercent" class="prob">—%</div>
+      <div style="font-size:12px; color:#9ca3af;">Шанс перемоги</div>
+    </div>
+  </div>
+</div>
 
 <script>
-const accountId = 863386335; // твій OpenDota ID
-let heroes = [];
-
-async function loadAndMergeHeroes() {
-  try {
-    // 1. Локальні герої
-    const localHeroes = await fetch("heroes.json").then(r => r.json());
-
-    // 2. OpenDota API: гравець і загальні дані
-    const [playerHeroes, allHeroes] = await Promise.all([
-      fetch(`https://api.opendota.com/api/players/${accountId}/heroes`).then(r => r.json()),
-      fetch("https://api.opendota.com/api/heroStats").then(r => r.json())
-    ]);
-
-    // 3. Мапа hero_id -> глобальні дані
-    const idToData = {};
-    allHeroes.forEach(h => {
-      idToData[h.id] = {
-        name: h.localized_name,
-        globalWinrate: h.pro_pick ? h.pro_win / h.pro_pick : 0,
-        globalPickrate: h.pro_pick ? h.pro_pick / 1000 : 0
-      };
-    });
-
-    // 4. Злиття і обчислення підсумкового score
-    heroes = localHeroes.map(local => {
-      const apiHero = playerHeroes.find(a => idToData[a.hero_id]?.name === local.name);
-      const globalData = allHeroes.find(h => h.localized_name === local.name);
-
-      const globalWinrate = globalData ? (globalData.pro_win / globalData.pro_pick || 0) : 0;
-      const globalPickrate = globalData ? (globalData.pro_pick / 1000 || 0) : 0;
-      const localScore = local.score || 0;
-
-      const finalScore = localScore * 0.5 + globalWinrate * 0.3 + globalPickrate * 0.2;
-
-      return {
-        ...local,
-        games: apiHero ? apiHero.games : 0,
-        wins: apiHero ? apiHero.win : 0,
-        myWinrate: apiHero && apiHero.games > 0 ? ((apiHero.win / apiHero.games) * 100).toFixed(1) + "%" : "0%",
-        globalWinrate: (globalWinrate * 100).toFixed(1) + "%",
-        globalPickrate: (globalPickrate * 100).toFixed(1) + "%",
-        score: Number(finalScore.toFixed(3))
-      };
-    });
-
-    console.log("Герої після злиття і підрахунку score:", heroes);
-    renderHeroes(heroes);
-
-  } catch(err) {
-    console.error("Помилка при завантаженні героїв:", err);
+// --- Фейкові дані, схожі на ті що з analyzeMatches()
+const lastSummary = {
+  winrate: 54,
+  avgK: 7.1, avgD: 5.5, avgA: 10.3,
+  avgDuration: 1800,
+  pctShortLosses: 12,
+  leaveRate: 1,
+  byRole: {
+    1: { winrate: 60 },
+    2: { winrate: 48 },
+    3: { winrate: 52 },
+    4: { winrate: 56 },
+    5: { winrate: 50 }
   }
+};
+
+// --- Ваги
+const defaultWeights = {
+  winrate: 0.9,
+  kda: 6,
+  shortGamePenalty: -3,
+  shortLossPenalty: -4,
+  leaveRatePenalty: v => -Math.min(10, Math.round(v))
+};
+
+// --- Головна функція
+function computeDetailedProbabilities(summary, role = 3, weights = defaultWeights) {
+  let winProb = baseWinProb(summary, weights);
+  const roleHistory = summary.byRole ? (summary.byRole[role] || { winrate: 50 }) : { winrate: 50 };
+  const roleEffect = 0.3 * (roleHistory.winrate - 50); // ±15% макс
+  winProb += roleEffect;
+  return { winProb: Math.max(3, Math.min(97, Math.round(winProb))) };
 }
 
-// Функція для виводу на екран
-function renderHeroes(data) {
-  const container = document.getElementById("output");
-  const table = document.createElement("table");
-  table.innerHTML = `
-    <tr>
-      <th>Герой</th>
-      <th>Локальний score</th>
-      <th>Global WR</th>
-      <th>Global Pickrate</th>
-      <th>Мій WR</th>
-      <th>Ігри</th>
-      <th>Фінальний score</th>
-    </tr>
-  `;
-  data.forEach(h => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${h.name}</td>
-      <td>${h.score ? h.score.toFixed(3) : 0}</td>
-      <td>${h.globalWinrate}</td>
-      <td>${h.globalPickrate}</td>
-      <td>${h.myWinrate}</td>
-      <td>${h.games}</td>
-      <td>${h.score}</td>
-    `;
-    table.appendChild(row);
-  });
-  container.innerHTML = "";
-  container.appendChild(table);
+// --- Базовий розрахунок
+function baseWinProb(summary, w) {
+  let winProb = 50;
+  const winrateDelta = Math.log10(Math.max(1, summary.winrate)) * w.winrate - w.winrate * Math.log10(50);
+  const kdaRatio = summary.avgD > 0 ? (summary.avgK + summary.avgA) / summary.avgD : summary.avgK + summary.avgA;
+  const kdaDelta = (kdaRatio - 2) * w.kda;
+  winProb += winrateDelta + kdaDelta;
+  return winProb;
 }
 
-// Запуск
-loadAndMergeHeroes();
+// --- Оновлення UI
+function updateRoleCard(summary, result) {
+  document.getElementById("winPercent").textContent = result.winProb + "%";
+}
+
+// --- При старті (роля 3)
+updateRoleCard(lastSummary, computeDetailedProbabilities(lastSummary, 3));
+
+// --- Реакція на зміну
+document.getElementById("roleSelect").addEventListener("change", () => {
+  const role = Number(document.getElementById("roleSelect").value);
+  const result = computeDetailedProbabilities(lastSummary, role, defaultWeights);
+  updateRoleCard(lastSummary, result);
+});
 </script>
+
 </body>
 </html>
+
 
