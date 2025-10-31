@@ -540,41 +540,64 @@ function analyzeTopHeroes(summary, heroesConst, minGames) {
     }
 
     // ---- Пошук закономірностей / події кнопок
-    let lastMatches=null, lastSummary=null, lastHeroesConst=null;
-    document.getElementById('demoBtn').addEventListener('click', ()=>{ document.getElementById('idInput').value='863386335'; });
+    // ---- Пошук закономірностей / події кнопок
+let lastMatches=null, lastSummary=null, lastHeroesConst=null;
 
-    document.getElementById('fetchBtn').addEventListener('click', async ()=>{
-      const raw=document.getElementById('idInput').value.trim(); if(!raw) return alert('Введіть ID');
-      const id = raw.length>12? steam64ToAccountId(raw): Number(raw); if(isNaN(id)) return alert('Не вдалося розпізнати ID');
-      const limit = Number(document.getElementById('limitSelect').value);
-      document.getElementById('predictionArea').textContent='Завантаження...';
-      try{
-        const [matches, heroesConstRaw] = await Promise.all([ fetchOpenDotaMatches(id, limit), fetchHeroesConstants() ]);
-        const heroesConst = {};
-        Object.values(heroesConstRaw).forEach(h=>{ if(h.id!==undefined) heroesConst[h.id]=h; });
-        lastMatches = matches; lastSummary = analyzeMatches(matches); lastHeroesConst = heroesConst;
-        const baseResult = computeDetailedProbabilities(lastSummary); // base (role default 3 inside function)
-        renderMatches(matches, heroesConst);
-        renderPredictionUI(lastSummary, baseResult);
-        // show role card and wire role change
-        showRoleCard(lastSummary, baseResult);
-        document.getElementById('roleSelect').addEventListener('change', ()=>{
-  const base = computeDetailedProbabilities(lastSummary); // базовий результат без ролі
-  updateRoleCard(lastSummary, base);
+document.getElementById('demoBtn').addEventListener('click', ()=>{
+  document.getElementById('idInput').value='863386335';
 });
 
-        // hide patterns until user presses button
-        document.getElementById('patterns').style.display='none';
-        // reset charts area (will be built on patterns)
-      }catch(err){ console.error(err); document.getElementById('predictionArea').textContent='Помилка: '+err.message; }
+document.getElementById('fetchBtn').addEventListener('click', async ()=>{
+  const raw=document.getElementById('idInput').value.trim();
+  if(!raw) return alert('Введіть ID');
+
+  const id = raw.length>12 ? steam64ToAccountId(raw) : Number(raw);
+  if(isNaN(id)) return alert('Не вдалося розпізнати ID');
+
+  const limit = Number(document.getElementById('limitSelect').value);
+  document.getElementById('predictionArea').textContent='Завантаження...';
+
+  try {
+    const [matches, heroesConstRaw] = await Promise.all([
+      fetchOpenDotaMatches(id, limit),
+      fetchHeroesConstants()
+    ]);
+
+    const heroesConst = {};
+    Object.values(heroesConstRaw).forEach(h => {
+      if(h.id!==undefined) heroesConst[h.id] = h;
     });
 
-    document.getElementById('patternsBtn').addEventListener('click', async ()=>{
-      if(!lastMatches || !lastSummary){ alert('Спочатку отримайте прогноз (натисніть "Отримати прогноз").'); return; }
-      try{ const analysis = analyzePatterns(lastMatches, lastSummary, lastHeroesConst); buildCharts(analysis.dayRates, analysis.hourRates); renderPatternsUI(analysis); }catch(err){ console.error(err); alert('Проблема при побудові закономірностей: '+err.message); }
+    lastMatches = matches;
+    lastSummary = analyzeMatches(matches);
+    lastHeroesConst = heroesConst;
+
+    // Базова модель без врахування ролі
+    const baseResult = computeDetailedProbabilities(lastSummary);
+
+    renderMatches(matches, heroesConst);
+    renderPredictionUI(lastSummary, baseResult);
+
+    // Показати карту ролей
+    showRoleCard(lastSummary, baseResult);
+
+    // !!! головне: при зміні селектора ролей перераховувати з новим role
+    const roleSelect = document.getElementById('roleSelect');
+    roleSelect.addEventListener('change', ()=>{
+      const role = Number(roleSelect.value);
+      const resultWithRole = computeDetailedProbabilities(lastSummary, role);
+      updateRoleCard(lastSummary, resultWithRole);
     });
 
-    // ---- Ініціалізація (немає)
+    // Сховати закономірності до натискання кнопки
+    document.getElementById('patterns').style.display='none';
+  }
+  catch(err) {
+    console.error(err);
+    document.getElementById('predictionArea').textContent = 'Помилка: ' + err.message;
+  }
+});
+
   </script>
 </body>
 </html>
