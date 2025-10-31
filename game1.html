@@ -266,7 +266,7 @@ const roleMap = {
 const roleId = roleMap[role] || 0;
   
   const roleHistory = summary.byRole && roleId
-  ? (summary.byRole[roleId] || { games: 0, winrate: 50 })
+  ? (summary.byRole[role] || { games: 0, winrate: 50 })
   : { games: 0, winrate: 50 };
 
   const roleEffect = 0.3 * (roleHistory.winrate - 50); // ±15% max
