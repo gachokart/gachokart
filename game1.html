@@ -487,82 +487,25 @@ function analyzeTopHeroes(summary, heroesConst, minGames) {
     // ---- New: render role prediction card (fills bars & texts)
     // --- Показує картку прогнозу та слухає зміну ролі
 // --- Картка прогнозу ролі (створює та оновлює)
-function showRoleCard(summary, baseResult) {
-  const card = document.getElementById('rolePredictionCard');
-  if (!card) return console.warn('rolePredictionCard not found');
-  card.style.display = 'block';
-  updateRoleCard(summary, baseResult);
-}
+<script>
+// ---- Змінні стану
+let lastMatches = null, lastSummary = null, lastHeroesConst = null;
 
-function updateRoleCard(summary, baseResult) {
-  const roleSelect = document.getElementById('roleSelect');
-  if (!roleSelect) return;
-
-  const role = Number(roleSelect.value || 3);
-  const resultWithRole = computeDetailedProbabilities(summary, role, defaultWeights);
-  const winP = resultWithRole.winProb;
-
-  // головний відсоток
-  const winPercentEl = document.getElementById('winPercent');
-  if (winPercentEl) winPercentEl.innerText = winP + '%';
-
-
-
-      // boosters/ruiners
-      setBar('boosterMy', resultWithRole.boosterMy);
-      setBar('ruinerMy', resultWithRole.ruinerMy);
-      setBar('boosterEnemy', resultWithRole.boosterEnemy);
-      setBar('ruinerEnemy', resultWithRole.ruinerEnemy);
-
-      // Winstreak (3+): simple independent estimate: p^3
-      const p = winP/100;
-      const winstreakPct = Math.round(Math.pow(p,3) * 10000)/100; // 2 decimals
-      const losestreakPct = Math.round(Math.pow(1-p,3) * 10000)/100;
-      setBar('winstreak', winstreakPct);
-      setBar('losestreak', losestreakPct);
-
-      // notes / reasons
-      const notes = [];
-      notes.push(`Роль: ${role} (мала корекція моделі).`);
-      notes.push(`Базовий шанс (модель): ${baseResult.winProb}% · Після ролі: ${winP}%`);
-      notes.push(`Оцінки бустерів/руінерів — індекс від 1 до 95 (візуалізовано як %).`);
-      document.getElementById('roleNotes').innerText = notes.join(' · ');
-    }
-
-    function setBar(id, pct){
-      const textEl = document.getElementById('text_' + id);
-      const barEl = document.getElementById('bar_' + id);
-      if(!textEl || !barEl) return;
-      const v = clamp(Number(pct) || 0, 0, 100);
-      textEl.innerText = v.toFixed(1) + '%';
-      barEl.style.width = v + '%';
-      // color variant depending on value
-      const parent = document.getElementById('stat_' + id);
-      if(parent){
-        parent.classList.remove('good','bad','neutral');
-        if(v >= 60) parent.classList.add('good');
-        else if(v <= 35) parent.classList.add('bad');
-        else parent.classList.add('neutral');
-      }
-    }
-
-    // ---- Пошук закономірностей / події кнопок
-    // ---- Пошук закономірностей / події кнопок
-let lastMatches=null, lastSummary=null, lastHeroesConst=null;
-
-document.getElementById('demoBtn').addEventListener('click', ()=>{
-  document.getElementById('idInput').value='863386335';
+// ---- Кнопка демо ID
+document.getElementById('demoBtn').addEventListener('click', () => {
+  document.getElementById('idInput').value = '863386335';
 });
 
-document.getElementById('fetchBtn').addEventListener('click', async ()=>{
-  const raw=document.getElementById('idInput').value.trim();
-  if(!raw) return alert('Введіть ID');
+// ---- Кнопка отримання прогнозу
+document.getElementById('fetchBtn').addEventListener('click', async () => {
+  const raw = document.getElementById('idInput').value.trim();
+  if (!raw) return alert('Введіть ID');
 
-  const id = raw.length>12 ? steam64ToAccountId(raw) : Number(raw);
-  if(isNaN(id)) return alert('Не вдалося розпізнати ID');
+  const id = raw.length > 12 ? steam64ToAccountId(raw) : Number(raw);
+  if (isNaN(id)) return alert('Не вдалося розпізнати ID');
 
   const limit = Number(document.getElementById('limitSelect').value);
-  document.getElementById('predictionArea').textContent='Завантаження...';
+  document.getElementById('predictionArea').textContent = 'Завантаження...';
 
   try {
     const [matches, heroesConstRaw] = await Promise.all([
@@ -571,39 +514,114 @@ document.getElementById('fetchBtn').addEventListener('click', async ()=>{
     ]);
 
     const heroesConst = {};
-    Object.values(heroesConstRaw).forEach(h => {
-      if(h.id!==undefined) heroesConst[h.id] = h;
-    });
+    Object.values(heroesConstRaw).forEach(h => { if(h.id!==undefined) heroesConst[h.id]=h; });
 
     lastMatches = matches;
     lastSummary = analyzeMatches(matches);
     lastHeroesConst = heroesConst;
 
-    // Базова модель без врахування ролі
     const baseResult = computeDetailedProbabilities(lastSummary);
 
     renderMatches(matches, heroesConst);
     renderPredictionUI(lastSummary, baseResult);
 
-    // Показати карту ролей
+    // ---- Показ картки прогнозу ролі
     showRoleCard(lastSummary, baseResult);
 
-    // !!! головне: при зміні селектора ролей перераховувати з новим role
-    document.getElementById('roleSelect').addEventListener('change', () => {
-  const role = Number(document.getElementById('roleSelect').value);
-  const resultWithRole = computeDetailedProbabilities(lastSummary, role, defaultWeights);
-  updateRoleCard(lastSummary, resultWithRole);
-});
+    // ---- Селектор ролі
+    const roleSelect = document.getElementById("roleSelect");
+    const newSelect = roleSelect.cloneNode(true);
+    roleSelect.parentNode.replaceChild(newSelect, roleSelect);
 
+    newSelect.addEventListener("change", () => {
+      const role = Number(newSelect.value);
+      const result = computeDetailedProbabilities(lastSummary, role, defaultWeights);
+      updateRoleCard(lastSummary, result);
+    });
 
-    // Сховати закономірності до натискання кнопки
-    document.getElementById('patterns').style.display='none';
-  }
-  catch(err) {
+    // ---- Ховаємо закономірності до натискання кнопки
+    document.getElementById('patterns').style.display = 'none';
+
+  } catch (err) {
     console.error(err);
     document.getElementById('predictionArea').textContent = 'Помилка: ' + err.message;
   }
 });
+
+// ---- Кнопка показу закономірностей
+document.getElementById('patternsBtn').addEventListener('click', async () => {
+  if (!lastMatches || !lastSummary) {
+    alert('Спочатку отримайте прогноз (натисніть "Отримати прогноз").');
+    return;
+  }
+  try {
+    const analysis = analyzePatterns(lastMatches, lastSummary, lastHeroesConst);
+    buildCharts(analysis.dayRates, analysis.hourRates);
+    renderPatternsUI(analysis);
+  } catch(err) {
+    console.error(err);
+    alert('Проблема при побудові закономірностей: '+err.message);
+  }
+});
+
+// ---- Картка прогнозу ролі
+function showRoleCard(summary, baseResult) {
+  const card = document.getElementById('rolePredictionCard');
+  if (!card) return console.warn('rolePredictionCard not found');
+  card.style.display = 'block';
+  updateRoleCard(summary, baseResult);
+}
+
+function updateRoleCard(summary, resultWithRole) {
+  const roleSelect = document.getElementById('roleSelect');
+  const role = roleSelect ? Number(roleSelect.value) : 3;
+
+  const result = resultWithRole || computeDetailedProbabilities(summary, role, defaultWeights);
+  const winP = result.winProb;
+
+  const winPercentEl = document.getElementById('winPercent');
+  if (winPercentEl) winPercentEl.innerText = winP + '%';
+
+  // Обновлення барів
+  setBar('boosterMy', result.boosterMy);
+  setBar('ruinerMy', result.ruinerMy);
+  setBar('boosterEnemy', result.boosterEnemy);
+  setBar('ruinerEnemy', result.ruinerEnemy);
+
+  // Winstreak/Losestreak
+  const p = winP/100;
+  setBar('winstreak', Math.round(Math.pow(p,3)*10000)/100);
+  setBar('losestreak', Math.round(Math.pow(1-p,3)*10000)/100);
+
+  // Ноти
+  const notes = [];
+  notes.push(`Роль: ${role} (мала корекція моделі).`);
+  notes.push(`Базовий шанс (модель): ${resultWithRole?.winProb || winP}% · Після ролі: ${winP}%`);
+  notes.push(`Оцінки бустерів/руінерів — індекс від 1 до 95 (візуалізовано як %).`);
+  const notesEl = document.getElementById('roleNotes');
+  if(notesEl) notesEl.innerText = notes.join(' · ');
+}
+
+// ---- Службова функція для барів
+function setBar(id, pct){
+  const textEl = document.getElementById('text_' + id);
+  const barEl = document.getElementById('bar_' + id);
+  if(!textEl || !barEl) return;
+  const v = clamp(Number(pct)||0, 0, 100);
+  textEl.innerText = v.toFixed(1)+'%';
+  barEl.style.width = v+'%';
+  const parent = document.getElementById('stat_' + id);
+  if(parent){
+    parent.classList.remove('good','bad','neutral');
+    if(v >= 60) parent.classList.add('good');
+    else if(v <= 35) parent.classList.add('bad');
+    else parent.classList.add('neutral');
+  }
+}
+
+// ---- Clamp
+function clamp(v,min,max){ return Math.max(min,Math.min(max,v)); }
+</script>
 
   </script>
 </body>
