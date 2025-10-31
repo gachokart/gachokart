@@ -522,16 +522,7 @@ function updateRoleCard(summary, baseResult) {
     el.textContent = winProb.toFixed(1) + "%";
   }
 
-  // пояснення
-  const notesEl = document.getElementById('roleNotes');
-  if (notesEl) {
-    const notes = [];
-    notes.push(`Роль: ${role ?? "—"} (корекція: ${roleDelta >= 0 ? "+" : ""}${roleDelta}%).`);
-    notes.push(`Базовий шанс (модель): ${baseResult.winProb}% · Після ролі: ${winProb.toFixed(1)}%`);
-    notesEl.innerText = notes.join(' · ');
-  }
-
-
+ 
   // додаткові пояснення (опціонально)
   const notesEl = document.getElementById('roleNotes');
   if (notesEl) {
