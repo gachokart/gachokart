@@ -569,6 +569,15 @@ function analyzeTopHeroes(summary, heroesConst, minGames) {
       if(!lastMatches || !lastSummary){ alert('Спочатку отримайте прогноз (натисніть "Отримати прогноз").'); return; }
       try{ const analysis = analyzePatterns(lastMatches, lastSummary, lastHeroesConst); buildCharts(analysis.dayRates, analysis.hourRates); renderPatternsUI(analysis); }catch(err){ console.error(err); alert('Проблема при побудові закономірностей: '+err.message); }
     });
+const roleSelect = document.getElementById("roleSelect");
+if (roleSelect) {
+  roleSelect.addEventListener("change", () => {
+    if (typeof lastSummary !== "undefined" && typeof lastBaseResult !== "undefined") {
+      updateRoleCard(lastSummary, lastBaseResult);
+    }
+  });
+}
+
 
     // ---- Ініціалізація (немає)
   </script>
