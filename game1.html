@@ -510,7 +510,11 @@ function analyzeTopHeroes(summary, heroesConst, minGames) {
   winProb = Math.max(0, Math.min(100, winProb));
 
   // оновлюємо UI
-  document.getElementById("roleWinPercent").textContent = winProb.toFixed(1) + "%";
+  const el = document.getElementById("winPercent");
+  if (el) {
+    el.textContent = winProb.toFixed(1) + "%";
+  }
+}
 
 
       // boosters/ruiners
