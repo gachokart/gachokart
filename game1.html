@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>game3 — Аналітика + Ваги в колонках</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#06b6d4;--muted:#9aa4b2;--good:#0db36b;--bad:#e25757}
+    *{box-sizing:border-box;font-family:Inter, system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),#071024);color:#e6eef6;min-height:100vh;padding:28px}
+    .container{max-width:1200px;margin:0 auto}
+    header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+    h1{font-size:20px;margin:0}
+    .card{background:rgba(255,255,255,0.03);padding:14px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6)}
+    .small{font-size:13px;color:var(--muted)}
+    .controls{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+    input,select,button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px;border-radius:8px;color:inherit}
+    button{cursor:pointer}
+    .cols{display:flex;gap:12px;align-items:end;height:260px;padding:12px;margin-top:12px}
+    .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px}
+    .bar{width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center}
+    .bar-fill{width:70%;background:linear-gradient(180deg,var(--accent),#036b8a);border-radius:6px 6px 2px 2px;display:flex;align-items:flex-end;justify-content:center}
+    .value-pill{background:rgba(255,255,255,0.04);padding:6px 8px;border-radius:999px;font-weight:700;font-size:13px;position:relative;left:0}
+    .vrange{appearance:none;width:220px;height:18px;transform:rotate(-90deg);-webkit-transform:rotate(-90deg)}
+    .grid{display:grid;grid-template-columns:1fr 420px;gap:12px;margin-top:14px}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{padding:8px;border-bottom:1px dashed rgba(255,255,255,0.03);text-align:left}
+    .right-panel{display:flex;flex-direction:column;gap:12px}
+    .role-card{padding:12px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.02));border:1px solid rgba(255,255,255,0.03)}
+    .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .bar-wrap{height:10px;background:rgba(255,255,255,0.03);border-radius:999px;overflow:hidden}
+    .bar-fill-sm{height:100%;width:0%;background:var(--accent)}
+    canvas{background:transparent;border-radius:8px}
+    .charts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    @media (max-width:980px){.grid{grid-template-columns:1fr} .cols{height:200px}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>game3 — Ваги колонками + Аналітика прогнозу</h1>
+      <div class="small">Виставляй ваги в колонках (0–1) і отримуй розширений прогноз (MMR, тренди, бустери, руінери, вінстрік/лузстрік, top-3 герої).</div>
+    </header>
+
+    <div class="card">
+      <div class="controls">
+        <div>
+          <label class="small">Steam64 або OpenDota account_id</label><br>
+          <input id="idInput" placeholder="863386335 або Steam64" style="width:220px">
+        </div>
+        <div>
+          <label class="small">Останні матчі (limit)</label><br>
+          <select id="limitSelect"><option value="20">20</option><option value="50">50</option><option value="100" selected>100</option></select>
+        </div>
+        <div style="display:flex;flex-direction:column;justify-content:flex-end;gap:8px">
+          <button id="fetchBtn">Отримати прогноз</button>
+          <button id="demoBtn">Тестовий ID</button>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+          <div>
+            <label class="small">Кількість колонок</label><br>
+            <input id="count" type="number" min="1" max="40" value="6" style="width:80px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06)">
+          </div>
+          <div>
+            <label class="small">Мін межі</label><br>
+            <input id="minBound" type="number" step="0.01" min="0" max="1" value="0.04" style="width:90px">
+          </div>
+          <div>
+            <label class="small">Макс межі</label><br>
+            <input id="maxBound" type="number" step="0.01" min="0" max="1" value="0.96" style="width:90px">
+          </div>
+        </div>
+      </div>
+
+      <div id="cols" class="cols"></div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+        <div class="small">Потягни повзунки, потім натисни «Масштабувати в межі» або «Нормалізувати». Дані можна експортувати.</div>
+        <div style="display:flex;gap:8px">
+          <button id="randomize">Випадково</button>
+          <button id="normalize">Нормалізувати (сума=1)</button>
+          <button id="rescale">Масштабувати в межі</button>
+          <button id="clamp">Прив'язати до меж</button>
+          <button id="export">Експорт JSON</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Останні матчі / таблиця</h3>
+        <div id="statsSummary" class="small" style="margin-bottom:8px"></div>
+        <div style="max-height:360px;overflow:auto">
+          <table id="matchesTable"><thead><tr><th>Дата</th><th>Герой</th><th>Роль</th><th>K/D/A</th><th>Dur</th></tr></thead><tbody></tbody></table>
+        </div>
+
+        <div id="analytics" style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="card" style="padding:10px">
+            <strong>Radar: форма</strong>
+            <canvas id="radarChart" width="300" height="220"></canvas>
+          </div>
+          <div class="card" style="padding:10px">
+            <strong>Heatmap / Top heroes</strong>
+            <div id="topHeroes" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"></div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="card right-panel">
+        <div class="role-card" id="roleCard" style="display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div class="small">Оберіть роль</div>
+              <select id="roleSelect"><option value="1">1 — Carry</option><option value="2">2 — Mid</option><option value="3" selected>3 — Offlane</option><option value="4">4 — Soft</option><option value="5">5 — Hard</option></select>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:28px;font-weight:800" id="winPercent">—%</div>
+              <div class="small">Шанс перемоги</div>
+            </div>
+          </div>
+
+          <div class="stat-grid" style="margin-top:12px">
+            <div>
+              <div class="small">Бустер (мої)</div>
+              <div class="bar-wrap"><div id="bar_boosterMy" class="bar-fill-sm"></div></div>
+              <div class="small" id="text_boosterMy">—%</div>
+            </div>
+            <div>
+              <div class="small">Руінер (мої)</div>
+              <div class="bar-wrap"><div id="bar_ruinerMy" class="bar-fill-sm"></div></div>
+              <div class="small" id="text_ruinerMy">—%</div>
+            </div>
+            <div>
+              <div class="small">Бустер (ворог)</div>
+              <div class="bar-wrap"><div id="bar_boosterEnemy" class="bar-fill-sm"></div></div>
+              <div class="small" id="text_boosterEnemy">—%</div>
+            </div>
+            <div>
+              <div class="small">Руінер (ворог)</div>
+              <div class="bar-wrap"><div id="bar_ruinerEnemy" class="bar-fill-sm"></div></div>
+              <div class="small" id="text_ruinerEnemy">—%</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <div style="flex:1">
+              <div class="small">Шанс вінстріка (3+)</div>
+              <div class="bar-wrap"><div id="bar_winstreak" class="bar-fill-sm"></div></div>
+              <div class="small" id="text_winstreak">—%</div>
+            </div>
+            <div style="flex:1">
+              <div class="small">Шанс лузстріка (3+)</div>
+              <div class="bar-wrap"><div id="bar_losestreak" class="bar-fill-sm"></div></div>
+              <div class="small" id="text_losestreak">—%</div>
+            </div>
+          </div>
+
+          <div id="notes" class="small" style="margin-top:8px"></div>
+        </div>
+
+        <div id="summaryBox" class="role-card">
+          <div class="small">Статус</div>
+          <div id="statusText" style="font-weight:700;margin-top:6px">Очікування дій</div>
+          <div style="margin-top:8px;display:flex;gap:8px">
+            <button id="exportReport">Експорт прогнозу</button>
+            <button id="saveLocal">Зберегти локально</button>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <strong>Charts</strong>
+          <div class="charts" style="margin-top:8px">
+            <canvas id="chartDays" width="300" height="140"></canvas>
+            <canvas id="chartHours" width="300" height="140"></canvas>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    /* ------------------------------- UI: weights columns (from earlier) ------------------------------- */
+    const countInput = document.getElementById('count');
+    const colsWrap = document.getElementById('cols');
+    const minBoundInput = document.getElementById('minBound');
+    const maxBoundInput = document.getElementById('maxBound');
+    const randomizeBtn = document.getElementById('randomize');
+    const normalizeBtn = document.getElementById('normalize');
+    const rescaleBtn = document.getElementById('rescale');
+    const clampBtn = document.getElementById('clamp');
+    const exportBtn = document.getElementById('export');
+
+    let values = [];
+
+    function clampVal(x,a,b){return Math.min(b,Math.max(a,x));}
+
+    function createCols(n){
+      colsWrap.innerHTML=''; values = new Array(n).fill(0).map(()=>+(Math.random()).toFixed(2));
+      if(values.every(v=>v===0)) values[0]=0.5;
+      values = values.map(v=>clampVal(v,0,1));
+      for(let i=0;i<n;i++){
+        const col=document.createElement('div');col.className='col';
+        const label=document.createElement('div');label.className='value-pill';label.textContent=values[i].toFixed(2);
+        const barWrap=document.createElement('div');barWrap.className='bar';
+        const barFill=document.createElement('div');barFill.className='bar-fill';barFill.style.height=(values[i]*100)+'%';
+        barWrap.appendChild(barFill);
+        const input=document.createElement('input');input.type='range';input.min=0;input.max=1;input.step=0.01;input.value=values[i];input.className='vrange';input.dataset.index=i;
+        input.addEventListener('input',e=>{const idx=+e.target.dataset.index;const v=+(+e.target.value).toFixed(2);values[idx]=v;label.textContent=v.toFixed(2);barFill.style.height=(v*100)+'%';});
+        col.appendChild(label);col.appendChild(barWrap);col.appendChild(input);colsWrap.appendChild(col);
+      }
+      updateSum();
+    }
+
+    function updateSum(){ const sum=values.reduce((s,x)=>s+x,0); document.getElementById('statusText').innerText = 'Поточна сума ваг: '+sum.toFixed(2); }
+
+    function syncDomFromValues(){ const inputs=colsWrap.querySelectorAll('input[type=range]'); inputs.forEach(inp=>{const i=+inp.dataset.index; inp.value=values[i]; const col=inp.closest('.col'); col.querySelector('.value-pill').textContent = values[i].toFixed(2); col.querySelector('.bar-fill').style.height = (values[i]*100)+'%'; }); updateSum(); }
+
+    countInput.addEventListener('change', ()=>{ let n=+countInput.value||1; n=Math.max(1,Math.min(40,n)); countInput.value=n; createCols(n); });
+    randomizeBtn.addEventListener('click', ()=>{ values = values.map(()=>+(Math.random()).toFixed(2)); syncDomFromValues(); });
+    normalizeBtn.addEventListener('click', ()=>{ const sum = values.reduce((s,x)=>s+x,0); if(sum===0){values = values.map(()=>+(1/values.length).toFixed(2));} else { values = values.map(v=>+(v/sum).toFixed(2)); let newSum = values.reduce((s,x)=>s+x,0); const diff = +(1-newSum).toFixed(2); if(Math.abs(diff)>0){ const idx = values.reduce((i,cur,ind,arr)=> cur>arr[i]?ind:i,0); values[idx] = +(values[idx]+diff).toFixed(2); if(values[idx]<0) values[idx]=0; } } syncDomFromValues(); });
+    rescaleBtn.addEventListener('click', ()=>{ let minB=parseFloat(minBoundInput.value)||0, maxB=parseFloat(maxBoundInput.value)||1; if(minB>=maxB){alert('Мінімум має бути менше максимуму');return;} const total = values.reduce((s,x)=>s+x,0); let rel = values.slice(); if(total===0) rel = rel.map(()=>1/rel.length); else rel = rel.map(v=>v/total); values = rel.map(r=>+(minB + r*(maxB-minB)).toFixed(2)); syncDomFromValues(); });
+    clampBtn.addEventListener('click', ()=>{ let minB=parseFloat(minBoundInput.value)||0, maxB=parseFloat(maxBoundInput.value)||1; if(minB>=maxB){alert('Мінімум має бути менше максимуму');return;} values = values.map(v=>+(clampVal(v,minB,maxB)).toFixed(2)); syncDomFromValues(); });
+    exportBtn.addEventListener('click', ()=>{ const payload = { values, bounds:{min:parseFloat(minBoundInput.value), max:parseFloat(maxBoundInput.value)} }; const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='weights.json'; a.click(); URL.revokeObjectURL(url); });
+    createCols(+countInput.value);
+
+    /* ------------------------------- Analytics: fetch OpenDota and compute metrics ------------------------------- */
+    const fetchBtn = document.getElementById('fetchBtn');
+    const demoBtn = document.getElementById('demoBtn');
+    let lastMatches=null, lastSummary=null, lastHeroesConst=null, lastAccount=null;
+
+    demoBtn.addEventListener('click', ()=>{ document.getElementById('idInput').value='863386335'; });
+
+    function steam64ToAccountId(steam64){ try{ const n=BigInt(steam64); const base=BigInt('76561197960265728'); if(n<=BigInt(4294967295)) return Number(n); return Number(n-base);}catch(e){return NaN} }
+
+    async function fetchJson(url){ const r=await fetch(url); if(!r.ok) throw new Error('fetch failed: '+r.status); return r.json(); }
+
+    async function fetchAllData(id, limit){
+      const accountId = id;
+      const matches = await fetchJson(`https://api.opendota.com/api/players/${accountId}/matches?limit=${limit}`);
+      const player = await fetchJson(`https://api.opendota.com/api/players/${accountId}`);
+      const heroesConstRaw = await fetchJson('https://api.opendota.com/api/constants/heroes');
+      const heroStats = await fetchJson('https://api.opendota.com/api/heroStats');
+      const wl = await fetchJson(`https://api.opendota.com/api/players/${accountId}/wl?limit=${limit}`);
+      // normalize heroes const
+      const heroesConst = {}; Object.values(heroesConstRaw).forEach(h=>{ if(h.id!==undefined) heroesConst[h.id]=h; });
+      return {matches, player, heroesConst, heroStats, wl};
+    }
+
+    function analyzeMatches(matches){
+      const out = {games:matches.length,wins:0,k:0,d:0,a:0,dur:0,shortWins:0,shortLosses:0,longWins:0,longLosses:0,leaves:0,byHero:{},seq:[],teamKillsSeq:[]};
+      for(const m of matches){ const won = ((m.player_slot||0)<128?m.radiant_win:!m.radiant_win); out.seq.push(won?'W':'L'); if(won) out.wins++; const kills=m.kills||0,deaths=m.deaths||0,assists=m.assists||0,duration=m.duration||0; out.k+=kills; out.d+=deaths; out.a+=assists; out.dur+=duration; if(duration<1500 && won) out.shortWins++; if(duration<1500 && !won) out.shortLosses++; if(duration>2700 && won) out.longWins++; if(duration>2700 && !won) out.longLosses++; if(m.leaver_status && m.leaver_status!==0) out.leaves++; const hid=m.hero_id||0; if(!out.byHero[hid]) out.byHero[hid]={games:0,wins:0}; out.byHero[hid].games++; if(won) out.byHero[hid].wins++; }
+      out.winrate = out.games? out.wins/out.games*100:0; out.avgK = out.games? out.k/out.games:0; out.avgD = out.games? out.d/out.games:0; out.avgA = out.games? out.a/out.games:0; out.avgKDA = out.avgD? (out.avgK+out.avgA)/out.avgD: (out.avgK+out.avgA); out.avgDuration = out.games? out.dur/out.games:0; out.pctShortWins = out.games? out.shortWins/out.games*100:0; out.pctShortLosses = out.games? out.shortLosses/out.games*100:0; out.pctLongWins = out.games? out.longWins/out.games*100:0; out.pctLongLosses = out.games? out.longLosses/out.games*100:0; out.leaveRate = out.games? out.leaves/out.games*100:0; return out;
+    }
+
+    // performance metrics per match (approximate, using available fields)
+    function enrichMatchMetrics(matches){
+      // compute team kills if present; OpenDota match object per-player sometimes lacks teamKills; we'll estimate
+      return matches.map(m=>{
+        const KDA = ((m.kills||0)+(m.assists||0))/Math.max(1,(m.deaths||0));
+        const impact = ((m.gold_per_min||m.gpm||0) + (m.xp_per_min||m.xpm||0))/1000;
+        const killParticipation = m.team_kills? ((m.kills||0)+(m.assists||0))/Math.max(1,m.team_kills) : 0.3;
+        const dmgPerGold = (m.hero_damage||0)/Math.max(1,(m.net_worth||m.gold||0));
+        const perf = 0.4*normalizeScalar(KDA,0,8) + 0.2*normalizeScalar(impact,0,2) + 0.2*normalizeScalar(killParticipation,0,1) + 0.2*normalizeScalar(dmgPerGold,0,3);
+        return {...m, KDA, impact, killParticipation, dmgPerGold, performance: perf};
+      });
+    }
+
+    function normalizeScalar(v,min,max){ if(isNaN(v)) return 0; return clampVal((v-min)/(max-min||1),0,1); }
+
+    // exponential weighted mean
+    function ewma(values, alpha=0.15){ let s=0; let w=0; for(let i=0;i<values.length;i++){ const weight=Math.pow(1-alpha,values.length-1-i); s+=values[i]*weight; w+=weight; } return w? s/w:0; }
+
+    // linear regression slope (trend)
+    function linearTrend(values){ const n=values.length; if(n<2) return 0; let sx=0, sy=0, sxx=0, sxy=0; for(let i=0;i<n;i++){ sx+=i; sy+=values[i]; sxx+=i*i; sxy+=i*values[i]; } const slope = (n*sxy - sx*sy) / (n*sxx - sx*sx || 1); return slope; }
+
+    // markov simple
+    function estimateStreakProb(p){ const pWin = p/100; const win3 = Math.pow(pWin,3)*100; const lose3 = Math.pow(1-pWin,3)*100; return {win3: +win3.toFixed(2), lose3:+lose3.toFixed(2)}; }
+
+    // boosters/ruiners estimate
+    function estimateBoostersRuiners(summary, matches){
+      // variance of performance last 10
+      const perf = enrichMatchMetrics(matches).slice(0,10).map(m=>m.performance);
+      const mean = perf.reduce((s,x)=>s+x,0)/Math.max(1,perf.length);
+      const variance = perf.reduce((s,x)=>s+Math.pow(x-mean,2),0)/Math.max(1,perf.length);
+      const leaveRate = summary.leaveRate/100;
+      let ruiner = clampVal(0.5*variance + 0.2*leaveRate,0,1);
+      let booster = clampVal((summary.avgKDA>4?0.2:0) + (summary.winrate>55?0.2:0) + (summary.games<50?0.05:0),0,1);
+      // scale to 0..100
+      return { boosterMy: Math.round(booster*100), ruinerMy: Math.round(ruiner*100), boosterEnemy: Math.round((1-booster)*100), ruinerEnemy: Math.round((1-ruiner)*100) };
+    }
+
+    // confidence interval
+    function confidenceInterval(values, z=1.96){ const n=values.length; if(n===0) return 0; const mean=values.reduce((s,x)=>s+x,0)/n; const sd=Math.sqrt(values.reduce((s,x)=>s+Math.pow(x-mean,2),0)/n); return z*sd/Math.sqrt(n); }
+
+    // top heroes selection
+    function topHeroesList(summary, heroesConst){ const arr=Object.entries(summary.byHero).map(([hid,st])=>({hero_id:+hid,games:st.games,wins:st.wins,winrate: st.games?st.wins/st.games*100:0})); arr.sort((a,b)=> (b.winrate-a.winrate)||(b.games-a.games)); return arr.slice(0,6).map(h=>({...h,name:heroesConst[h.hero_id]?.localized_name||h.hero_id,img:heroesConst[h.hero_id]?.img? 'https://api.opendota.com'+heroesConst[h.hero_id].img:null})); }
+
+    // main compute function (integrates all enhancements)
+    function computeForecast(summary, matches, player, heroStats, role=3){
+      // enrich
+      const enriched = enrichMatchMetrics(matches);
+      const perfValues = enriched.map(m=>m.performance);
+      const avgPerf = ewma(perfValues,0.12);
+      const trend = linearTrend(perfValues);
+      const roleConfidence = 0.6 + 0.4*Math.min(1, (summary.byHero?Object.keys(summary.byHero).length:0)/20);
+
+      // hero meta strength: take average hero winrate from heroStats (approx)
+      const heroMeta = (heroStats && heroStats.length)? heroStats.reduce((s,h)=>s+(h.win? (h.win/h.games):0),0)/heroStats.length : 0.5;
+
+      // fatigue & party factor
+      const gamesToday = matches.filter(m=>{ const d=new Date((m.start_time||0)*1000); const today=new Date(); return d.getDate()===today.getDate() && d.getMonth()===today.getMonth() && d.getFullYear()===today.getFullYear(); }).length;
+      const fatigue = gamesToday>5? -0.03*(gamesToday-5):0;
+      const partyFactor = (matches[0] && matches[0].party_size && matches[0].party_size>1)? 0.03*(matches[0].party_size-1):0;
+
+      // next win chance core
+      let nextWin = clampVal((avgPerf)*100 + 20*trend + 10*roleConfidence + 10*(heroMeta*100 - 50)/100 + 100*partyFactor + 100*fatigue, 3, 97);
+      // normalize to percent
+      nextWin = Math.round(nextWin);
+
+      const boosters = estimateBoostersRuiners(summary, matches);
+      const streak = estimateStreakProb(nextWin);
+      const ci = confidenceInterval(perfValues)*100;
+
+      return {
+        winProb: nextWin,
+        trend: trend,
+        avgPerf,
+        boosters,
+        streak,
+        ci
+      };
+    }
+
+    // render functions
+    function renderMatches(matches, heroesConst){ const tbody=document.querySelector('#matchesTable tbody'); tbody.innerHTML=''; matches.forEach(m=>{ const tr=document.createElement('tr'); const d=new Date((m.start_time||0)*1000); const hid=m.hero_id||0; const heroName = heroesConst && heroesConst[hid] ? heroesConst[hid].localized_name : hid; const role = (m.lane_role||'') ; tr.innerHTML=`<td>${d.toLocaleString()}</td><td>${heroName}</td><td>${role}</td><td>${m.kills||0}/${m.deaths||0}/${m.assists||0}</td><td>${Math.floor((m.duration||0)/60)}m</td>`; tbody.appendChild(tr); }); }
+
+    function renderRadar(summary, matches){ const labels=['KDA','GPM/XPM','Consistency','Impact','KillPart']; const enriched = enrichMatchMetrics(matches); const avgKDA = enriched.reduce((s,m)=>s+m.KDA,0)/Math.max(1,enriched.length); const avgImpact = enriched.reduce((s,m)=>s+m.impact,0)/Math.max(1,enriched.length); const consistency = 1/(1+Math.sqrt(enriched.reduce((s,m)=>s+Math.pow(m.performance - (enriched.reduce((a,b)=>a+b,0)/enriched.length),2),0)/enriched.length)); const avgPerf = enriched.reduce((s,m)=>s+m.performance,0)/Math.max(1,enriched.length); const avgKP = enriched.reduce((s,m)=>s+m.killParticipation,0)/Math.max(1,enriched.length);
+      const ctx = document.getElementById('radarChart').getContext('2d'); if(window.radarChart) window.radarChart.destroy(); window.radarChart = new Chart(ctx,{type:'radar',data:{labels, datasets:[{label:'Player profile', data:[avgKDA/4, avgImpact/2, consistency, avgPerf, avgKP], fill:true}]}, options:{scales:{r:{beginAtZero:true, max:1}}}}); }
+
+    function renderTopHeroes(topArr){ const root=document.getElementById('topHeroes'); root.innerHTML=''; topArr.forEach(h=>{ const el=document.createElement('div'); el.style.display='flex'; el.style.alignItems='center'; el.style.gap='8px'; el.style.padding='6px'; el.style.background='rgba(255,255,255,0.02)'; el.style.borderRadius='8px'; const img=document.createElement('img'); img.src=h.img||''; img.style.width='48px'; img.style.height='28px'; img.style.objectFit='cover'; const info=document.createElement('div'); info.innerHTML=`<div style="font-weight:700">${h.name}</div><div class="small">${h.games} ігор · ${h.winrate.toFixed(1)}%</div>`; el.appendChild(img); el.appendChild(info); root.appendChild(el); }); }
+
+    function setBarSimple(id, pct){ const bar=document.getElementById('bar_'+id); const text=document.getElementById('text_'+id); if(!bar||!text) return; const v = clampVal(Number(pct)||0,0,100); bar.style.width = v + '%'; text.innerText = v.toFixed(1) + '%'; }
+
+    async function onFetch(){ const raw=document.getElementById('idInput').value.trim(); if(!raw) return alert('Введіть ID'); const id = raw.length>12? steam64ToAccountId(raw): Number(raw); if(isNaN(id)) return alert('Не вдалося розпізнати ID'); const limit = Number(document.getElementById('limitSelect').value);
+      document.getElementById('statusText').innerText = 'Завантаження...';
+      try{
+        const {matches, player, heroesConst, heroStats, wl} = await fetchAllData(id, limit);
+        lastMatches = matches; lastSummary = analyzeMatches(matches); lastHeroesConst = heroesConst; lastAccount = player;
+        renderMatches(matches, heroesConst);
+        renderRadar(lastSummary, matches);
+        renderTopHeroes(topHeroesList(lastSummary, heroesConst));
+        const forecast = computeForecast(lastSummary, matches, player, heroStats, Number(document.getElementById('roleSelect').value||3));
+        // update role card
+        document.getElementById('roleCard').style.display='block';
+        document.getElementById('winPercent').innerText = forecast.winProb + '%';
+        setBarSimple('boosterMy', forecast.boosters.boosterMy);
+        setBarSimple('ruinerMy', forecast.boosters.ruinerMy);
+        setBarSimple('boosterEnemy', forecast.boosters.boosterEnemy);
+        setBarSimple('ruinerEnemy', forecast.boosters.ruinerEnemy);
+        setBarSimple('winstreak', forecast.streak.win3);
+        setBarSimple('losestreak', forecast.streak.lose3);
+        document.getElementById('notes').innerText = `MMR: ${player.rank_tier||'N/A'} · games=${lastSummary.games} · CI ±${forecast.ci.toFixed(2)}%`;
+        document.getElementById('statusText').innerText = 'Прогноз готовий';
+
+        // charts by day/hour
+        const analysis = (function(){ const days = Array(7).fill(0).map(()=>({games:0,wins:0})); const hours = Array(24).fill(0).map(()=>({games:0,wins:0})); for(const m of matches){ const d=new Date((m.start_time||0)*1000); const dow=d.getDay(), h=d.getHours(); const won = ((m.player_slot||0)<128?m.radiant_win:!m.radiant_win); days[dow].games++; if(won) days[dow].wins++; hours[h].games++; if(won) hours[h].wins++; } return { days: days.map((x,i)=>({day:i, winrate: x.games? x.wins/x.games*100:0, games:x.games})), hours: hours.map((x,h)=>({hour:h, winrate:x.games? x.wins/x.games*100:0, games:x.games})) }; })();
+        buildCharts(analysis.days, analysis.hours);
+
+        // wire role change
+        document.getElementById('roleSelect').onchange = ()=>{ const r=Number(document.getElementById('roleSelect').value); const f2 = computeForecast(lastSummary, lastMatches, player, heroStats, r); document.getElementById('winPercent').innerText = f2.winProb + '%'; setBarSimple('boosterMy', f2.boosters.boosterMy); setBarSimple('ruinerMy', f2.boosters.ruinerMy); setBarSimple('boosterEnemy', f2.boosters.boosterEnemy); setBarSimple('ruinerEnemy', f2.boosters.ruinerEnemy); setBarSimple('winstreak', f2.streak.win3); setBarSimple('losestreak', f2.streak.lose3); document.getElementById('notes').innerText = `MMR: ${player.rank_tier||'N/A'} · CI ±${f2.ci.toFixed(2)}%`; };
+
+      }catch(err){ console.error(err); document.getElementById('statusText').innerText = 'Помилка: '+err.message; alert('Помилка: '+err.message); }
+    }
+
+    fetchBtn.addEventListener('click', onFetch);
+
+    // charts builder
+    let chartDays=null, chartHours=null;
+    function buildCharts(dayRates, hourRates){ const daysLabels=['Нд','Пн','Вт','Ср','Чт','Пт','Сб']; const dayData = dayRates.map(d=>+d.winrate.toFixed(1)); const hourLabels = hourRates.map(h=>h.hour); const hourData = hourRates.map(h=>+h.winrate.toFixed(1)); const ctxD=document.getElementById('chartDays').getContext('2d'); if(chartDays) chartDays.destroy(); chartDays=new Chart(ctxD,{type:'bar',data:{labels:daysLabels,datasets:[{label:'Winrate %',data:dayData}]},options:{scales:{y:{beginAtZero:true,max:100}}}}); const ctxH=document.getElementById('chartHours').getContext('2d'); if(chartHours) chartHours.destroy(); chartHours=new Chart(ctxH,{type:'line',data:{labels:hourLabels,datasets:[{label:'Winrate %',data:hourData,fill:true,tension:0.3}]},options:{scales:{y:{beginAtZero:true,max:100}}}}); }
+
+    // export report
+    document.getElementById('exportReport').addEventListener('click', ()=>{ if(!lastSummary) return alert('Немає даних'); const payload={summary:lastSummary, matches:lastMatches, forecastTimestamp:new Date().toISOString()}; const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='forecast_report.json'; a.click(); URL.revokeObjectURL(url); });
+    document.getElementById('saveLocal').addEventListener('click', ()=>{ if(!lastSummary) return alert('Немає даних'); localStorage.setItem('lastForecast', JSON.stringify({summary:lastSummary,matches:lastMatches,ts:new Date().toISOString()})); alert('Збережено локально'); });
+
+  </script>
+</body>
+</html>
