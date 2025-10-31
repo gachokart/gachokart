@@ -591,13 +591,7 @@ document.getElementById('patternsBtn').addEventListener('click', async () => {
   }
 });
 
-// ---- Картка прогнозу ролі
-function showRoleCard(summary, baseResult) {
-  const card = document.getElementById('rolePredictionCard');
-  if (!card) return console.warn('rolePredictionCard not found');
-  card.style.display = 'block';
-  updateRoleCard(summary, baseResult);
-}
+
 
 function updateRoleCard(summary, resultWithRole) {
   const roleSelect = document.getElementById('roleSelect');
