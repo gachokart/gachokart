@@ -485,12 +485,24 @@ function analyzeTopHeroes(summary, heroesConst, minGames) {
     }
 
     // ---- New: render role prediction card (fills bars & texts)
-    function showRoleCard(summary, baseResult){
-      const card = document.getElementById('rolePredictionCard');
-      card.style.display = 'block';
-      // default render using current role select
-      updateRoleCard(summary, baseResult);
-    }
+    // --- Показує картку прогнозу та слухає зміну ролі
+showRoleCard(lastSummary, baseResult);
+
+// важливо: спочатку видалимо попередні слухачі, щоб не дублювались
+const roleSelect = document.getElementById("roleSelect");
+const newSelect = roleSelect.cloneNode(true);
+roleSelect.parentNode.replaceChild(newSelect, roleSelect);
+
+// тепер додаємо слухача зміни ролі
+newSelect.addEventListener("change", () => {
+  const role = Number(newSelect.value);
+  const result = computeDetailedProbabilities(lastSummary, role, defaultWeights);
+  updateRoleCard(lastSummary, result);
+});
+
+// приховуємо закономірності до натискання кнопки
+document.getElementById("patterns").style.display = "none";
+
 
     function clamp(v,min,max){ return Math.max(min,Math.min(max,v)); }
 
