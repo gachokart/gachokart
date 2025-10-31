@@ -246,27 +246,25 @@
 
 
     // ---- Прогноз (твої функції, з невеликим розширенням — повертаємо також reasons)
-  function computeDetailedProbabilities(summary, role = 3, weights = defaultWeights) {
- 
+  function computeDetailedProbabilities(summary, role = "offlane", weights = defaultWeights) {
   const reasons = [];
   let winProb = baseWinProb(summary, weights, reasons);
 
-  // Role modifier покращено: враховує твої ігри на ролі
-  // відповідність між назвами ролей та lane_role з OpenDota
-const roleMap = {
-  carry: 1,
-  mid: 2,
-  offlane: 3,
-  support: 4,
-  hard_support: 5
-};
+  // Відповідність між назвами ролей та lane_role з OpenDota
+  const roleMap = {
+    carry: 1,
+    mid: 2,
+    offlane: 3,
+    support: 4,
+    hard_support: 5
+  };
 
-// замінюємо роль з select на числове значення
-const role = roleMap[role] || 0;
+  // замінюємо роль з select на числове значення
+  const roleId = roleMap[role] || 0;
   
-  const roleHistory = summary.byRole && role
-  ? (summary.byRole[role] || { games: 0, winrate: 50 })
-  : { games: 0, winrate: 50 };
+  const roleHistory = summary.byRole && roleId
+    ? (summary.byRole[roleId] || { games: 0, winrate: 50 })
+    : { games: 0, winrate: 50 };
 
   const roleEffect = 0.3 * (roleHistory.winrate - 50); // ±15% max
   winProb += roleEffect;
