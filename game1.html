@@ -486,32 +486,27 @@ function analyzeTopHeroes(summary, heroesConst, minGames) {
 
     // ---- New: render role prediction card (fills bars & texts)
     // --- Показує картку прогнозу та слухає зміну ролі
-showRoleCard(lastSummary, baseResult);
+// --- Картка прогнозу ролі (створює та оновлює)
+function showRoleCard(summary, baseResult) {
+  const card = document.getElementById('rolePredictionCard');
+  if (!card) return console.warn('rolePredictionCard not found');
+  card.style.display = 'block';
+  updateRoleCard(summary, baseResult);
+}
 
-// важливо: спочатку видалимо попередні слухачі, щоб не дублювались
-const roleSelect = document.getElementById("roleSelect");
-const newSelect = roleSelect.cloneNode(true);
-roleSelect.parentNode.replaceChild(newSelect, roleSelect);
+function updateRoleCard(summary, baseResult) {
+  const roleSelect = document.getElementById('roleSelect');
+  if (!roleSelect) return;
 
-// тепер додаємо слухача зміни ролі
-newSelect.addEventListener("change", () => {
-  const role = Number(newSelect.value);
-  const result = computeDetailedProbabilities(lastSummary, role, defaultWeights);
-  updateRoleCard(lastSummary, result);
-});
+  const role = Number(roleSelect.value || 3);
+  const resultWithRole = computeDetailedProbabilities(summary, role, defaultWeights);
+  const winP = resultWithRole.winProb;
 
-// приховуємо закономірності до натискання кнопки
-document.getElementById("patterns").style.display = "none";
+  // головний відсоток
+  const winPercentEl = document.getElementById('winPercent');
+  if (winPercentEl) winPercentEl.innerText = winP + '%';
+}
 
-
-    function clamp(v,min,max){ return Math.max(min,Math.min(max,v)); }
-
-    function updateRoleCard(summary, baseResult){
-      const role = Number(document.getElementById('roleSelect').value || 3);
-      const resultWithRole = computeDetailedProbabilities(summary, role);
-      // win percent
-      const winP = resultWithRole.winProb;
-      document.getElementById('winPercent').innerText = winP + '%';
 
       // boosters/ruiners
       setBar('boosterMy', resultWithRole.boosterMy);
