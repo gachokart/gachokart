@@ -261,7 +261,22 @@
   let winProb = baseWinProb(summary, weights, reasons);
 
   // Role modifier покращено: враховує твої ігри на ролі
-  const roleHistory = summary.byRole ? (summary.byRole[role] || { games: 0, winrate: 50 }) : { games: 0, winrate: 50 };
+  // відповідність між назвами ролей та lane_role з OpenDota
+const roleMap = {
+  carry: 1,
+  mid: 2,
+  offlane: 3,
+  support: 4,
+  hard_support: 5
+};
+
+// замінюємо роль з select на числове значення
+const roleId = roleMap[role] || 0;
+  
+  const roleHistory = summary.byRole && roleId
+  ? (summary.byRole[roleId] || { games: 0, winrate: 50 })
+  : { games: 0, winrate: 50 };
+
   const roleEffect = 0.3 * (roleHistory.winrate - 50); // ±15% max
   winProb += roleEffect;
   reasons.push({ factor: "Role-based winrate", value: roleHistory.winrate, delta: roleEffect });
