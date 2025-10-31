@@ -190,10 +190,70 @@
     async function fetchHeroesConstants(){ const url='https://api.opendota.com/api/constants/heroes'; const res=await fetch(url); if(!res.ok) throw new Error('OpenDota heroes fetch failed'); return res.json(); }
 
     // ---- Аналіз (залишив твої функції, дрібні доповнення)
-    function analyzeMatches(matches){
-      const out={games:matches.length,wins:0,k:0,d:0,a:0,dur:0,shortWins:0,shortLosses:0,longWins:0,longLosses:0,leaves:0,byHero:{},seq:[]};
-      for(const m of matches){ const won=playerWon(m); out.seq.push(won?'W':'L'); if(won) out.wins++; const kills=m.kills||0,deaths=m.deaths||0,assists=m.assists||0,duration=m.duration||0; out.k+=kills; out.d+=deaths; out.a+=assists; out.dur+=duration; if(duration<1500 && won) out.shortWins++; if(duration<1500 && !won) out.shortLosses++; if(duration>2700 && won) out.longWins++; if(duration>2700 && !won) out.longLosses++; if(m.leaver_status && m.leaver_status!==0) out.leaves++; const hid=m.hero_id||0; if(!out.byHero[hid]) out.byHero[hid]={games:0,wins:0}; out.byHero[hid].games++; if(won) out.byHero[hid].wins++; }
-      out.winrate=out.games? out.wins/out.games*100:0; out.avgK=out.games? out.k/out.games:0; out.avgD=out.games? out.d/out.games:0; out.avgA=out.games? out.a/out.games:0; out.avgKDA=out.avgD? (out.avgK+out.avgA)/out.avgD: (out.avgK+out.avgA); out.avgDuration=out.games? out.dur/out.games:0; out.pctShortWins=out.games? out.shortWins/out.games*100:0; out.pctShortLosses=out.games? out.shortLosses/out.games*100:0; out.pctLongWins=out.games? out.longWins/out.games*100:0; out.pctLongLosses=out.games? out.longLosses/out.games*100:0; out.leaveRate=out.games? out.leaves/out.games*100:0; return out; }
+    function analyzeMatches(matches) {
+  const out = {
+    games: matches.length, wins: 0, k: 0, d: 0, a: 0, dur: 0,
+    shortWins: 0, shortLosses: 0, longWins: 0, longLosses: 0, leaves: 0,
+    byHero: {}, byRole: {}, seq: []
+  };
+
+  for (const m of matches) {
+    const won = playerWon(m);
+    out.seq.push(won ? 'W' : 'L');
+    if (won) out.wins++;
+
+    const kills = m.kills || 0,
+          deaths = m.deaths || 0,
+          assists = m.assists || 0,
+          duration = m.duration || 0;
+
+    out.k += kills;
+    out.d += deaths;
+    out.a += assists;
+    out.dur += duration;
+
+    if (duration < 1500 && won) out.shortWins++;
+    if (duration < 1500 && !won) out.shortLosses++;
+    if (duration > 2700 && won) out.longWins++;
+    if (duration > 2700 && !won) out.longLosses++;
+    if (m.leaver_status && m.leaver_status !== 0) out.leaves++;
+
+    const hid = m.hero_id || 0;
+    if (!out.byHero[hid]) out.byHero[hid] = { games: 0, wins: 0 };
+    out.byHero[hid].games++;
+    if (won) out.byHero[hid].wins++;
+
+    // --- нове: підрахунок по ролях ---
+    const role = m.lane_role || 0;
+    if (role > 0) {
+      if (!out.byRole[role]) out.byRole[role] = { games: 0, wins: 0 };
+      out.byRole[role].games++;
+      if (won) out.byRole[role].wins++;
+    }
+  }
+
+  // середні статистики
+  out.winrate = out.games ? out.wins / out.games * 100 : 0;
+  out.avgK = out.games ? out.k / out.games : 0;
+  out.avgD = out.games ? out.d / out.games : 0;
+  out.avgA = out.games ? out.a / out.games : 0;
+  out.avgKDA = out.avgD ? (out.avgK + out.avgA) / out.avgD : (out.avgK + out.avgA);
+  out.avgDuration = out.games ? out.dur / out.games : 0;
+  out.pctShortWins = out.games ? out.shortWins / out.games * 100 : 0;
+  out.pctShortLosses = out.games ? out.shortLosses / out.games * 100 : 0;
+  out.pctLongWins = out.games ? out.longWins / out.games * 100 : 0;
+  out.pctLongLosses = out.games ? out.longLosses / out.games * 100 : 0;
+  out.leaveRate = out.games ? out.leaves / out.games * 100 : 0;
+
+  // --- додаємо winrate по кожній ролі ---
+  for (const r in out.byRole) {
+    const v = out.byRole[r];
+    v.winrate = v.games ? v.wins / v.games * 100 : 0;
+  }
+
+  return out;
+}
+
 
     // ---- Прогноз (твої функції, з невеликим розширенням — повертаємо також reasons)
   function computeDetailedProbabilities(summary, role = 3, weights = defaultWeights) {
