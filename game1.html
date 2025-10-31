@@ -491,12 +491,12 @@ function analyzeTopHeroes(summary, heroesConst, minGames) {
 // ---- Змінні стану
 let lastMatches = null, lastSummary = null, lastHeroesConst = null;
 
-// ---- Кнопка демо ID
+// ---- Кнопка демо
 document.getElementById('demoBtn').addEventListener('click', () => {
   document.getElementById('idInput').value = '863386335';
 });
 
-// ---- Кнопка отримання прогнозу
+// ---- Кнопка отримати прогноз
 document.getElementById('fetchBtn').addEventListener('click', async () => {
   const raw = document.getElementById('idInput').value.trim();
   if (!raw) return alert('Введіть ID');
@@ -508,38 +508,30 @@ document.getElementById('fetchBtn').addEventListener('click', async () => {
   document.getElementById('predictionArea').textContent = 'Завантаження...';
 
   try {
+    // Завантаження матчів і героїв
     const [matches, heroesConstRaw] = await Promise.all([
       fetchOpenDotaMatches(id, limit),
       fetchHeroesConstants()
     ]);
 
     const heroesConst = {};
-    Object.values(heroesConstRaw).forEach(h => { if(h.id!==undefined) heroesConst[h.id]=h; });
+    Object.values(heroesConstRaw).forEach(h => {
+      if (h.id !== undefined) heroesConst[h.id] = h;
+    });
 
     lastMatches = matches;
     lastSummary = analyzeMatches(matches);
     lastHeroesConst = heroesConst;
 
-    const baseResult = computeDetailedProbabilities(lastSummary);
-
+    // Рендер матчів та базовий прогноз
     renderMatches(matches, heroesConst);
+    const baseResult = computeDetailedProbabilities(lastSummary, 3); // дефолт роль 3
     renderPredictionUI(lastSummary, baseResult);
 
     // ---- Показ картки прогнозу ролі
-    showRoleCard(lastSummary, baseResult);
+    showRoleCard(lastSummary);
 
-    // ---- Селектор ролі
-    const roleSelect = document.getElementById("roleSelect");
-    const newSelect = roleSelect.cloneNode(true);
-    roleSelect.parentNode.replaceChild(newSelect, roleSelect);
-
-    newSelect.addEventListener("change", () => {
-      const role = Number(newSelect.value);
-      const result = computeDetailedProbabilities(lastSummary, role, defaultWeights);
-      updateRoleCard(lastSummary, result);
-    });
-
-    // ---- Ховаємо закономірності до натискання кнопки
+    // Сховати закономірності до натискання кнопки
     document.getElementById('patterns').style.display = 'none';
 
   } catch (err) {
@@ -547,6 +539,41 @@ document.getElementById('fetchBtn').addEventListener('click', async () => {
     document.getElementById('predictionArea').textContent = 'Помилка: ' + err.message;
   }
 });
+
+// ---- Показ закономірностей
+document.getElementById('patternsBtn').addEventListener('click', async () => {
+  if (!lastMatches || !lastSummary) {
+    alert('Спочатку отримайте прогноз (натисніть "Отримати прогноз").');
+    return;
+  }
+  try {
+    const analysis = analyzePatterns(lastMatches, lastSummary, lastHeroesConst);
+    buildCharts(analysis.dayRates, analysis.hourRates);
+    renderPatternsUI(analysis);
+  } catch (err) {
+    console.error(err);
+    alert('Проблема при побудові закономірностей: ' + err.message);
+  }
+});
+
+// ---- Функція показу картки прогнозу ролі
+function showRoleCard(summary) {
+  const card = document.getElementById('rolePredictionCard');
+  card.style.display = 'block';
+
+  const roleSelect = document.getElementById('roleSelect');
+
+  // Початковий рендер для дефолтної ролі
+  let defaultRole = Number(roleSelect.value);
+  updateRoleCard(summary, computeDetailedProbabilities(summary, defaultRole));
+
+  // onchange для зміни ролі
+  roleSelect.addEventListener('change', () => {
+    const role = Number(roleSelect.value);
+    const result = computeDetailedProbabilities(summary, role);
+    updateRoleCard(summary, result);
+  });
+}
 
 // ---- Кнопка показу закономірностей
 document.getElementById('patternsBtn').addEventListener('click', async () => {
