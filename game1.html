@@ -503,18 +503,12 @@ function clamp(v, min, max) {
 // оновлює дані картки при зміні ролі
 function updateRoleCard(summary, baseResult) {
   const roleSelect = document.getElementById("roleSelect");
-  const role = roleSelect ? Number(roleSelect.value) : null;
+  const role = roleSelect ? Number(roleSelect.value) : 3; // дефолт 3
 
-  // базовий шанс
-  let winProb = baseResult.winProb ?? 0;
+  // перерахуємо результат з урахуванням ролі
+  const resultWithRole = computeDetailedProbabilities(summary, role);
 
-  // врахування ролі
-  const roleDeltas = {1: 3, 2: 2, 3: 0, 4: -1, 5: -2};
-  const roleDelta = role ? (roleDeltas[role] || 0) : 0;
-  winProb += roleDelta;
-
-  // обмежуємо в межах 0–100
-  winProb = clamp(winProb, 0, 100);
+  let winProb = resultWithRole.winProb;
 
   // оновлюємо UI
   const el = document.getElementById("winPercent");
@@ -522,16 +516,18 @@ function updateRoleCard(summary, baseResult) {
     el.textContent = winProb.toFixed(1) + "%";
   }
 
- 
-  // додаткові пояснення (опціонально)
+  // пояснення
   const notesEl = document.getElementById('roleNotes');
   if (notesEl) {
     const notes = [];
-    notes.push(`Роль: ${role ?? "—"} (корекція: ${roleDelta >= 0 ? "+" : ""}${roleDelta}%).`);
-    notes.push(`Базовий шанс: ${baseResult.winPercent.toFixed(1)}% · Після ролі: ${winProb.toFixed(1)}%`);
+    notes.push(`Роль: ${role} (історія ${summary.byRole?.[role]?.games ?? 0} ігор).`);
+    notes.push(`Базовий шанс (модель): ${baseResult.winProb}% · Після ролі: ${winProb.toFixed(1)}%`);
     notesEl.innerText = notes.join(' · ');
   }
 }
+
+ 
+ 
 
     function setBar(id, pct){
       const textEl = document.getElementById('text_' + id);
