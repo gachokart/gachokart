@@ -558,7 +558,11 @@ function analyzeTopHeroes(summary, heroesConst, minGames) {
         renderPredictionUI(lastSummary, baseResult);
         // show role card and wire role change
         showRoleCard(lastSummary, baseResult);
-        document.getElementById('roleSelect').onchange = ()=> updateRoleCard(lastSummary, baseResult);
+        document.getElementById('roleSelect').addEventListener('change', ()=>{
+  const base = computeDetailedProbabilities(lastSummary); // базовий результат без ролі
+  updateRoleCard(lastSummary, base);
+});
+
         // hide patterns until user presses button
         document.getElementById('patterns').style.display='none';
         // reset charts area (will be built on patterns)
