@@ -582,12 +582,12 @@ document.getElementById('fetchBtn').addEventListener('click', async ()=>{
     showRoleCard(lastSummary, baseResult);
 
     // !!! головне: при зміні селектора ролей перераховувати з новим role
-    const roleSelect = document.getElementById('roleSelect');
-    roleSelect.addEventListener('change', ()=>{
-      const role = Number(roleSelect.value);
-      const resultWithRole = computeDetailedProbabilities(lastSummary, role);
-      updateRoleCard(lastSummary, resultWithRole);
-    });
+    document.getElementById('roleSelect').addEventListener('change', () => {
+  const role = Number(document.getElementById('roleSelect').value);
+  const resultWithRole = computeDetailedProbabilities(lastSummary, role, defaultWeights);
+  updateRoleCard(lastSummary, resultWithRole);
+});
+
 
     // Сховати закономірності до натискання кнопки
     document.getElementById('patterns').style.display='none';
