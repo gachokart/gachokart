@@ -532,7 +532,7 @@ function analyzeTopHeroes(summary, heroesConst, minGames) {
       notes.push(`Оцінки бустерів/руінерів — індекс від 1 до 95 (візуалізовано як %).`);
       document.getElementById('roleNotes').innerText = notes.join(' · ');
     }
-    }
+    });
     function setBar(id, pct){
       const textEl = document.getElementById('text_' + id);
       const barEl = document.getElementById('bar_' + id);
