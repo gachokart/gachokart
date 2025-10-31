@@ -247,6 +247,8 @@
 
     // ---- Прогноз (твої функції, з невеликим розширенням — повертаємо також reasons)
   function computeDetailedProbabilities(summary, role = 3, weights = defaultWeights) {
+  console.log("Using role:", roleId, summary.byRole[roleId]);
+  
   const reasons = [];
   let winProb = baseWinProb(summary, weights, reasons);
 
