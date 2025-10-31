@@ -494,13 +494,24 @@ function analyzeTopHeroes(summary, heroesConst, minGames) {
 
     function clamp(v,min,max){ return Math.max(min,Math.min(max,v)); }
 
-    function updateRoleCard(summary, baseResult){
-      const role = Number(document.getElementById('roleSelect').value || 3);
-      const resultWithRole = computeDetailedProbabilities(summary, role);
-      // win percent
-      const winP = resultWithRole.winProb;
-      document.getElementById('winPercent').innerText = winP + '%';
+   function updateRoleCard(summary, baseResult) {
+  const roleSelect = document.getElementById("roleSelect");
+  const role = roleSelect ? Number(roleSelect.value) : null;
 
+  // базовий шанс
+  let winProb = baseResult.winPercent;
+
+  // врахування ролі
+  const roleDeltas = {1: 3, 2: 2, 3: 0, 4: -1, 5: -2};
+  const roleDelta = role ? (roleDeltas[role] || 0) : 0;
+  winProb += roleDelta;
+
+  // обмежуємо в межах 0–100
+  winProb = Math.max(0, Math.min(100, winProb));
+
+  // оновлюємо UI
+  document.getElementById("roleWinPercent").textContent = winProb.toFixed(1) + "%";
+}
       // boosters/ruiners
       setBar('boosterMy', resultWithRole.boosterMy);
       setBar('ruinerMy', resultWithRole.ruinerMy);
@@ -569,14 +580,11 @@ function analyzeTopHeroes(summary, heroesConst, minGames) {
       if(!lastMatches || !lastSummary){ alert('Спочатку отримайте прогноз (натисніть "Отримати прогноз").'); return; }
       try{ const analysis = analyzePatterns(lastMatches, lastSummary, lastHeroesConst); buildCharts(analysis.dayRates, analysis.hourRates); renderPatternsUI(analysis); }catch(err){ console.error(err); alert('Проблема при побудові закономірностей: '+err.message); }
     });
-const roleSelect = document.getElementById("roleSelect");
-if (roleSelect) {
-  roleSelect.addEventListener("change", () => {
-    if (typeof lastSummary !== "undefined" && typeof lastBaseResult !== "undefined") {
-      updateRoleCard(lastSummary, lastBaseResult);
-    }
-  });
-}
+document.getElementById("roleSelect").addEventListener("change", () => {
+  if (window.lastSummary && window.lastBaseResult) {
+    updateRoleCard(window.lastSummary, window.lastBaseResult);
+  }
+});
 
 
     // ---- Ініціалізація (немає)
