@@ -498,10 +498,136 @@ function analyzeTopHeroes(summary, heroesConst, minGames) {
 
     // ---- Побудова графіків через Chart.js
     let chartDays=null, chartHours=null;
-    function buildCharts(dayRates, hourRates){ const daysLabels=['Нд','Пн','Вт','Ср','Чт','Пт','Сб']; const dayData = dayRates.map(d=>+d.winrate.toFixed(1)); const hourLabels = hourRates.map(h=>h.hour); const hourData = hourRates.map(h=>+h.winrate.toFixed(1));
-      const ctxD = document.getElementById('chartDays').getContext('2d'); if(chartDays) chartDays.destroy(); chartDays = new Chart(ctxD,{type:'bar',data:{labels:daysLabels, datasets:[{label:'Winrate %', data:dayData}]}, options:{scales:{y:{beginAtZero:true, max:100}}}});
-      const ctxH = document.getElementById('chartHours').getContext('2d'); if(chartHours) chartHours.destroy(); chartHours = new Chart(ctxH,{type:'line',data:{labels:hourLabels, datasets:[{label:'Winrate %', data:hourData, fill:true, tension:0.3}]}, options:{scales:{y:{beginAtZero:true, max:100}}}});
+    function buildChartsExtended(patterns) {
+  // Очищення області
+  const chartArea = document.getElementById('chartArea');
+  chartArea.innerHTML = `
+    <div class="card" style="margin-top:20px;">
+      <h3 style="text-align:center;">📊 Графіки динаміки</h3>
+      <div class="chart-container" style="display:grid;grid-template-columns:1fr;gap:30px;margin-top:20px;">
+        <canvas id="roleChart" height="200"></canvas>
+        <canvas id="dayChart" height="200"></canvas>
+        <canvas id="hourChart" height="200"></canvas>
+      </div>
+    </div>
+  `;
+
+  // ---- Дані для ролей
+  const roleLabels = Object.keys(patterns.roleRates || {});
+  const roleData = Object.values(patterns.roleRates || {}).map(r => r.winrate);
+
+  // ---- Дані по днях
+  const dayLabels = ['Пн','Вт','Ср','Чт','Пт','Сб','Нд'];
+  const dayData = dayLabels.map(d => {
+    const item = patterns.dayRates.find(x => x.name === d);
+    return item ? item.winrate : null;
+  });
+
+  // ---- Дані по годинах
+  const hourLabels = Array.from({length:24}, (_,i)=>i+':00');
+  const hourData = hourLabels.map(h=>{
+    const hourNum = parseInt(h);
+    const item = patterns.hourRates.find(x=>x.hour===hourNum);
+    return item ? item.winrate : null;
+  });
+
+  // ---- Стиль графіків
+  const commonOpts = {
+    responsive: true,
+    plugins: {
+      legend: { labels:{ color:'#ccc' } },
+      tooltip: { mode: 'index', intersect: false }
+    },
+    scales: {
+      x: { ticks:{ color:'#aaa' }, grid:{ color:'#333' } },
+      y: { ticks:{ color:'#aaa' }, grid:{ color:'#333' }, beginAtZero:true, max:100 }
     }
+  };
+
+  // ---- Графік ролей
+  new Chart(document.getElementById('roleChart'), {
+    type: 'bar',
+    data: {
+      labels: roleLabels,
+      datasets: [{
+        label: 'Winrate по ролях (%)',
+        data: roleData,
+        borderColor: '#00bcd4',
+        backgroundColor: 'rgba(0,188,212,0.4)',
+        borderWidth: 2
+      }]
+    },
+    options: commonOpts
+  });
+
+  // ---- Графік днів
+  new Chart(document.getElementById('dayChart'), {
+    type: 'line',
+    data: {
+      labels: dayLabels,
+      datasets: [{
+        label: 'Winrate по днях (%)',
+        data: dayData,
+        borderColor: '#4caf50',
+        backgroundColor: 'rgba(76,175,80,0.2)',
+        tension: 0.3,
+        fill: true
+      }]
+    },
+    options: commonOpts
+  });
+
+  // ---- Графік годин
+  new Chart(document.getElementById('hourChart'), {
+    type: 'line',
+    data: {
+      labels: hourLabels,
+      datasets: [{
+        label: 'Winrate по годинах (%)',
+        data: hourData,
+        borderColor: '#ff9800',
+        backgroundColor: 'rgba(255,152,0,0.2)',
+        tension: 0.3,
+        fill: true
+      }]
+    },
+    options: commonOpts
+  });
+}
+
+// 🔹 Розширюємо analyzePatterns(), щоб додати дані по ролях
+const oldAnalyzePatterns = analyzePatterns;
+analyzePatterns = function(matches, summary, heroesConst){
+  const result = oldAnalyzePatterns(matches, summary, heroesConst);
+
+  // Підрахунок winrate по ролях
+  const roleMap = {};
+  matches.forEach(m=>{
+    if(!m.player_slot) return;
+    const roleName = m.lane_role===1 ? 'Carry' :
+                     m.lane_role===2 ? 'Mid' :
+                     m.lane_role===3 ? 'Offlane' :
+                     m.lane_role===4 ? 'Support' :
+                     m.lane_role===5 ? 'Hard Supp' : 'Інше';
+    if(!roleMap[roleName]) roleMap[roleName]={games:0,wins:0};
+    roleMap[roleName].games++;
+    if(m.radiant_win === (m.player_slot < 128)) roleMap[roleName].wins++;
+  });
+
+  result.roleRates = {};
+  Object.entries(roleMap).forEach(([role,v])=>{
+    result.roleRates[role]={winrate:(v.wins/v.games*100).toFixed(1)};
+  });
+
+  return result;
+};
+
+// 🔹 Викликаємо extended buildCharts у renderPatternsUI
+const oldRenderPatternsUI = renderPatternsUI;
+renderPatternsUI = function(patterns) {
+  oldRenderPatternsUI(patterns);
+  buildChartsExtended(patterns);
+};
 
     function renderPatternsUI(patterns){ document.getElementById('patterns').style.display='block'; const pt=document.getElementById('patternText'); pt.innerHTML='';
       const seqRoot=document.createElement('div'); seqRoot.innerHTML='<strong>Послідовності W/L</strong>';
