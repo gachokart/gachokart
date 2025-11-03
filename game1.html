@@ -517,6 +517,14 @@ function analyzeTopHeroes(summary, heroesConst, minGames) {
 
     // ---- Побудова графіків через Chart.js
     let chartDays=null, chartHours=null;
+    const roleLabels = [
+  "Carry",
+  "Mid",
+  "Offlane",
+  "Support 4",
+  "Hard Support 5"
+];
+
     // === РОЗШИРЕНА ФУНКЦІЯ ДЛЯ ГРАФІКІВ ===
 function buildChartsExtended(patterns) {
   const chartsRoot = document.getElementById('charts');
