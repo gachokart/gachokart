@@ -526,115 +526,117 @@ function analyzeTopHeroes(summary, heroesConst, minGames) {
 ];
 
     // === РОЗШИРЕНА ФУНКЦІЯ ДЛЯ ГРАФІКІВ ===
-function buildChartsExtended(patterns) {
-  const chartsRoot = document.getElementById('charts');
-  if (!chartsRoot) {
-    console.warn("⚠️ Не знайдено блок #charts — графіки не будуть побудовані.");
-    return;
+// ---- Функція побудови графіків динаміки
+function buildChartsExtended(matches) {
+  if (!matches || !matches.length) return;
+
+  // ---- Групування winrate по ролях
+  const roleStats = { 1:{w:0,t:0}, 2:{w:0,t:0}, 3:{w:0,t:0}, 4:{w:0,t:0}, 5:{w:0,t:0} };
+  for (const m of matches) {
+    const role = m.lane_role || m.player_slot_role || 3; // fallback
+    if (roleStats[role]) {
+      roleStats[role].t++;
+      if (m.radiant_win === (m.player_slot < 128)) roleStats[role].w++;
+    }
   }
 
-  // Очистимо старі графіки, якщо вони були
-  chartsRoot.querySelectorAll('canvas').forEach(c => {
-    const ctx = c.getContext('2d');
-    ctx.clearRect(0, 0, c.width, c.height);
+  const roleLabels = ["Carry", "Mid", "Offlane", "Support 4", "Hard Support 5"];
+  const roleData = Object.values(roleStats).map(r => r.t ? Math.round((r.w / r.t) * 100) : 0);
+
+  // ---- Групування winrate по днях тижня
+  const dayNames = ["Нд", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
+  const dayStats = Array(7).fill(0).map(() => ({w:0,t:0}));
+  for (const m of matches) {
+    const d = new Date(m.start_time * 1000);
+    const day = d.getDay();
+    dayStats[day].t++;
+    if (m.radiant_win === (m.player_slot < 128)) dayStats[day].w++;
+  }
+  const dayData = dayStats.map(r => r.t ? Math.round((r.w / r.t) * 100) : 0);
+
+  // ---- Групування winrate по годинах доби
+  const hourStats = Array(24).fill(0).map(() => ({w:0,t:0}));
+  for (const m of matches) {
+    const h = new Date(m.start_time * 1000).getHours();
+    hourStats[h].t++;
+    if (m.radiant_win === (m.player_slot < 128)) hourStats[h].w++;
+  }
+  const hourData = hourStats.map(r => r.t ? Math.round((r.w / r.t) * 100) : 0);
+
+  // ---- Очищаємо перед побудовою
+  const clearChart = id => {
+    const el = document.getElementById(id);
+    if (el) el.replaceWith(el.cloneNode(true));
+  };
+  clearChart("chartRoles");
+  clearChart("chartDays");
+  clearChart("chartHours");
+
+  // ---- Стиль осей
+  const axisStyle = {
+    ticks: { color: "#9aa7bd" },
+    grid: { color: "rgba(255,255,255,0.05)" }
+  };
+
+  // ---- Графік по ролях
+  new Chart(document.getElementById("chartRoles"), {
+    type: "bar",
+    data: {
+      labels: roleLabels,
+      datasets: [{
+        label: "Winrate %",
+        data: roleData,
+        backgroundColor: "rgba(31,143,235,0.5)",
+        borderColor: "#1f8feb",
+        borderWidth: 1,
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: { y: axisStyle, x: axisStyle }
+    }
   });
 
-  // Перевіримо чи є потрібні дані
-  const roles = patterns?.roles || [];
-  const dayRates = patterns?.dayRates || [];
-  const hourRates = patterns?.hourRates || [];
+  // ---- Графік по днях
+  new Chart(document.getElementById("chartDays"), {
+    type: "line",
+    data: {
+      labels: dayNames,
+      datasets: [{
+        label: "Winrate %",
+        data: dayData,
+        fill: false,
+        borderColor: "#1f8feb",
+        tension: 0.3
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: { y: axisStyle, x: axisStyle }
+    }
+  });
 
-  // === 1️⃣ Графік Winrate по ролях ===
-  const ctxRoles = document.getElementById('chartRolesDyn');
-  if (ctxRoles) {
-    new Chart(ctxRoles.getContext('2d'), {
-      type: 'bar',
-      data: {
-        labels: roles.map(r => r.name),
-        datasets: [{
-          label: 'Winrate (%)',
-          data: roles.map(r => (r.winrate * 100).toFixed(1)),
-          borderWidth: 1.5,
-          borderColor: '#00ff88',
-          backgroundColor: 'rgba(0,255,136,0.25)',
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          title: { display: true, text: 'Winrate по ролях', color: '#eee' },
-          legend: { display: false }
-        },
-        scales: {
-          x: { ticks: { color: '#ccc' } },
-          y: { ticks: { color: '#ccc' }, beginAtZero: true }
-        }
-      }
-    });
-  }
-
-  // === 2️⃣ Графік Winrate по днях ===
-  const ctxDays = document.getElementById('chartDaysDyn');
-  if (ctxDays) {
-    new Chart(ctxDays.getContext('2d'), {
-      type: 'line',
-      data: {
-        labels: dayRates.map(d => d.day),
-        datasets: [{
-          label: 'Winrate (%)',
-          data: dayRates.map(d => (d.winrate * 100).toFixed(1)),
-          borderColor: '#33aaff',
-          backgroundColor: 'rgba(51,170,255,0.2)',
-          tension: 0.3,
-          fill: true
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          title: { display: true, text: 'Winrate по днях тижня', color: '#eee' },
-          legend: { display: false }
-        },
-        scales: {
-          x: { ticks: { color: '#ccc' } },
-          y: { ticks: { color: '#ccc' }, beginAtZero: true }
-        }
-      }
-    });
-  }
-
-  // === 3️⃣ Графік Winrate по годинах ===
-  const ctxHours = document.getElementById('chartHoursDyn');
-  if (ctxHours) {
-    new Chart(ctxHours.getContext('2d'), {
-      type: 'line',
-      data: {
-        labels: hourRates.map(h => h.hour),
-        datasets: [{
-          label: 'Winrate (%)',
-          data: hourRates.map(h => (h.winrate * 100).toFixed(1)),
-          borderColor: '#ffcc00',
-          backgroundColor: 'rgba(255,204,0,0.2)',
-          tension: 0.3,
-          fill: true
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          title: { display: true, text: 'Winrate по годинах доби', color: '#eee' },
-          legend: { display: false }
-        },
-        scales: {
-          x: { ticks: { color: '#ccc' } },
-          y: { ticks: { color: '#ccc' }, beginAtZero: true }
-        }
-      }
-    });
-  }
-
-  console.log("✅ Графіки динаміки успішно побудовані");
+  // ---- Графік по годинах
+  new Chart(document.getElementById("chartHours"), {
+    type: "line",
+    data: {
+      labels: Array.from({length:24}, (_,i)=>i+":00"),
+      datasets: [{
+        label: "Winrate %",
+        data: hourData,
+        fill: true,
+        borderColor: "#0db36b",
+        backgroundColor: "rgba(13,179,107,0.2)",
+        tension: 0.3
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: { y: axisStyle, x: axisStyle }
+    }
+  });
 }
+
 
   // ---- Стиль графіків
   const commonOpts = {
