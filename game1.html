@@ -727,7 +727,7 @@ renderPatternsUI = function(patterns) {
 
     document.getElementById('patternsBtn').addEventListener('click', async ()=>{
       if(!lastMatches || !lastSummary){ alert('Спочатку отримайте прогноз (натисніть "Отримати прогноз").'); return; }
-      try{ const analysis = analyzePatterns(lastMatches, lastSummary, lastHeroesConst); buildCharts(analysis.dayRates, analysis.hourRates); renderPatternsUI(analysis); }catch(err){ console.error(err); alert('Проблема при побудові закономірностей: '+err.message); }
+      try{ const analysis = analyzePatterns(lastMatches, lastSummary, lastHeroesConst); buildChartsExtended(analysis.dayRates, analysis.hourRates); renderPatternsUI(analysis); }catch(err){ console.error(err); alert('Проблема при побудові закономірностей: '+err.message); }
     });
 
     // ---- Ініціалізація (немає)
