@@ -3,7 +3,7 @@ const LS_KEY = "matches_cache_v1";
 
 async function fetchMatches() {
   try {
-    const res = await fetch(`${API_BASE}/matches`);
+    const res = await fetch(`${API_BASE}/api/matches`);
     if (!res.ok) throw new Error("Server error " + res.status);
     const data = await res.json();
     localStorage.setItem(LS_KEY, JSON.stringify(data));
