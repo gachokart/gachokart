@@ -10,7 +10,7 @@ const FILE_PATH = path.join(process.cwd(), "matches.json");
 
 app.use(cors({
   origin: ["https://gachokart.github.io"], // твій фронтенд
-  methods: ["GET", "PUT"],
+  methods: ["GET", "PUT", "OPTIONS"],      // 👈 додали OPTIONS
   allowedHeaders: ["Content-Type"]
 }));
 app.use(express.json());
@@ -23,6 +23,9 @@ app.get("/api/matches", (req, res) => {
   const data = JSON.parse(fs.readFileSync(FILE_PATH, "utf-8"));
   res.json(data);
 });
+
+// 👇 відповідає на preflight
+app.options("/api/matches", cors());
 
 app.put("/api/matches", (req, res) => {
   const matches = req.body;
