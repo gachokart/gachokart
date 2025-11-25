@@ -544,7 +544,7 @@ document.getElementById("saveResultsBtn").addEventListener("click", async () => 
 
   // Відправка на твій API
   await fetch("/api/matches", {
-    method: "POST",
+    method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(results)
   });
