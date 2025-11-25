@@ -17,7 +17,7 @@ async function fetchMatches() {
 async function saveMatches(matches) {
   localStorage.setItem(LS_KEY, JSON.stringify(matches));
   const res = await fetch(`${API_BASE}/api/matches`, {
-    method: "PUT",
+    method: "PUT", // 👈 тільки PUT
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(matches),
   });
