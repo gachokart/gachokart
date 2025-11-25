@@ -5,49 +5,33 @@ import cors from "cors";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
 const FILE_PATH = path.join(process.cwd(), "matches.json");
 
-// ✅ CORS: дозволяємо GET, PUT і OPTIONS
 app.use(cors({
-  origin: ["https://gachokart.github.io"], // твій фронтенд
+  origin: ["https://gachokart.github.io"],
   methods: ["GET", "PUT", "OPTIONS"],
   allowedHeaders: ["Content-Type"]
 }));
 
 app.use(express.json());
 
-// ✅ Якщо файл не існує — створюємо
-if (!fs.existsSync(FILE_PATH)) fs.writeFileSync(FILE_PATH, "[]");
-
-// ✅ Кореневий маршрут
-app.get("/", (req, res) => res.send("GachoKart API is running"));
-
-// ✅ Preflight для будь-якого запиту
+// Preflight для будь-якого запиту
 app.options("*", cors());
 
-// ✅ Отримати matches.json
+if (!fs.existsSync(FILE_PATH)) fs.writeFileSync(FILE_PATH, "[]");
+
 app.get("/api/matches", (req, res) => {
-  try {
-    const data = JSON.parse(fs.readFileSync(FILE_PATH, "utf-8"));
-    res.json(data);
-  } catch (e) {
-    res.status(500).send("Failed to read data");
-  }
+  const data = JSON.parse(fs.readFileSync(FILE_PATH, "utf-8"));
+  res.json(data);
 });
 
-// ✅ Зберегти matches.json (повний масив)
 app.put("/api/matches", (req, res) => {
   const matches = req.body;
   if (!Array.isArray(matches)) {
     return res.status(400).send("Body must be an array of matches");
   }
-  try {
-    fs.writeFileSync(FILE_PATH, JSON.stringify(matches, null, 2));
-    res.json({ ok: true, count: matches.length });
-  } catch (e) {
-    res.status(500).send("Failed to write data");
-  }
+  fs.writeFileSync(FILE_PATH, JSON.stringify(matches, null, 2));
+  res.json({ ok: true, count: matches.length });
 });
 
 app.listen(PORT, () => console.log(`Listening on ${PORT}`));
