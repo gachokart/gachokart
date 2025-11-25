@@ -19,12 +19,12 @@ if (!fs.existsSync(FILE_PATH)) fs.writeFileSync(FILE_PATH, "[]");
 
 app.get("/", (req, res) => res.send("GachoKart API is running"));
 
-app.get("/matches", (req, res) => {
+app.get("/api/matches", (req, res) => {
   const data = JSON.parse(fs.readFileSync(FILE_PATH, "utf-8"));
   res.json(data);
 });
 
-app.put("/matches", (req, res) => {
+app.put("/api/matches", (req, res) => {
   const matches = req.body;
   fs.writeFileSync(FILE_PATH, JSON.stringify(matches, null, 2));
   res.json({ ok: true, count: matches.length });
