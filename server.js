@@ -28,9 +28,9 @@ app.get("/api/matches", (req, res) => {
 app.options("/api/matches", cors());
 
 app.put("/api/matches", (req, res) => {
-  const matches = req.body;
-  fs.writeFileSync(FILE_PATH, JSON.stringify(matches, null, 2));
-  res.json({ ok: true, count: matches.length });
+  const data = req.body; // тепер це об'єкт
+  fs.writeFileSync(FILE_PATH, JSON.stringify(data, null, 2));
+  res.json({ ok: true, count: data.matches.length });
 });
 
 app.listen(PORT, () => console.log(`Listening on ${PORT}`));
