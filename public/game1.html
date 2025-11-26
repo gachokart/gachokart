@@ -543,11 +543,23 @@ document.getElementById("saveResultsBtn").addEventListener("click", async () => 
   });
 
   // Відправка на твій API (Render)
-await fetch("https://gachokart.onrender.com/api/matches", {
+fetch("/api/matches", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(results)
-});
+  body: JSON.stringify({
+    match_id: 1234567890,   // ← обов’язково
+    radiant_win: true,
+    hero_id: 1,
+    role: "carry",
+    booster_ruiner: "none",
+    kills: 10,
+    deaths: 2,
+    assists: 5
+  })
+})
+.then(r => r.json())
+.then(console.log)
+.catch(console.error);
 
   alert("Результати збережено!");
 });
