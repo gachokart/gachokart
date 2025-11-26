@@ -1,37 +1,41 @@
-import express from "express";
-import fs from "fs";
-import path from "path";
-import cors from "cors";
+const express = require("express");
+const { Pool } = require("pg");
+const path = require("path");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-const FILE_PATH = path.join(process.cwd(), "matches.json");
-
-app.use(cors({
-  origin: ["https://gachokart.github.io"],
-  methods: ["GET", "PUT", "OPTIONS"],
-  allowedHeaders: ["Content-Type"]
-}));
-
 app.use(express.json());
 
-// Preflight для будь-якого запиту
-app.options("*", cors());
-
-if (!fs.existsSync(FILE_PATH)) fs.writeFileSync(FILE_PATH, "[]");
-
-app.get("/api/matches", (req, res) => {
-  const data = JSON.parse(fs.readFileSync(FILE_PATH, "utf-8"));
-  res.json(data);
+// Підключення до PostgreSQL через Environment Variable
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
 });
 
-app.put("/api/matches", (req, res) => {
-  const matches = req.body;
-  if (!Array.isArray(matches)) {
-    return res.status(400).send("Body must be an array of matches");
-  }
-  fs.writeFileSync(FILE_PATH, JSON.stringify(matches, null, 2));
-  res.json({ ok: true, count: matches.length });
+// Віддавати статичні файли (наприклад game1.html)
+app.use(express.static(path.join(__dirname, "public")));
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "game1.html"));
 });
 
-app.listen(PORT, () => console.log(`Listening on ${PORT}`));
+// API: отримати всі матчі
+app.get("/api/matches", async (req, res) => {
+  const result = await pool.query("SELECT * FROM matches ORDER BY id DESC");
+  res.json({ matches: result.rows });
+});
+
+// API: додати новий матч
+app.post("/api/matches", async (req, res) => {
+  const { match_id, hero_id, role, booster_ruiner } = req.body;
+
+  await pool.query(
+    `INSERT INTO matches (match_id, hero_id, role, booster_ruiner, start_time, radiant_win, kills, deaths, assists)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+    [match_id, hero_id, role, booster_ruiner, Date.now(), null, 0, 0, 0]
+  );
+
+  res.json({ message: "Match added successfully!" });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
