@@ -542,12 +542,12 @@ document.getElementById("saveResultsBtn").addEventListener("click", async () => 
     results.push({ match_id: matchId, role, booster_ruiner: status });
   });
 
-  // Відправка на твій API
-  await fetch("/api/matches", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(results)
-  });
+  // Відправка на твій API (Render)
+await fetch("https://gachokart.onrender.com/api/matches", {
+  method: "PUT",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(results)
+});
 
   alert("Результати збережено!");
 });
