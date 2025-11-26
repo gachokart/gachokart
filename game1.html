@@ -544,7 +544,7 @@ document.getElementById("saveResultsBtn").addEventListener("click", async () => 
 
   // Відправка на твій API (Render)
 await fetch("https://gachokart.onrender.com/api/matches", {
-  method: "PUT",
+  method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify(results)
 });
