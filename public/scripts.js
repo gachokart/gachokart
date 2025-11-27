@@ -34,7 +34,7 @@ async function saveMatch(match) {
 }
 
 // Example usage: attach to button
-document.getElementById("saveBtn").addEventListener("click", () => {
+document.getElementById("saveResultsBtn").addEventListener("click", () => {
   const match = {
     match_id: Date.now(), // unique ID
     hero_id: 42,
