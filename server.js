@@ -1,28 +1,4 @@
-// server.js
-const express = require("express");
-const path = require("path");
-const { Pool } = require("pg");
-
-const app = express();
-app.use(express.json());
-
-// Підключення до PostgreSQL (Render дає тобі DATABASE_URL)
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
-
-// Віддавати статичні файли з public/
-app.use(express.static(path.join(__dirname, "public")));
-
-// Корінь сайту -> index.html
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "game1.html"));
-});
-
-// ============================
 // API: отримати матчі з гравцями та героями
-// ============================
 app.get("/api/matches", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -48,52 +24,7 @@ app.get("/api/matches", async (req, res) => {
     `);
     res.json(result.rows);
   } catch (err) {
-    console.error(err);
+    console.error("Error in /api/matches:", err);
     res.status(500).json({ error: err.message });
   }
-});
-
-// ============================
-// API: додати новий матч
-// ============================
-app.post("/api/matches", async (req, res) => {
-  const { match_id, start_time, duration, radiant_win } = req.body;
-  try {
-    await pool.query(
-      `INSERT INTO matches (match_id, start_time, duration, radiant_win)
-       VALUES ($1, $2, $3, $4)
-       ON CONFLICT (match_id) DO NOTHING`,
-      [match_id, start_time, duration, radiant_win]
-    );
-    res.json({ message: "Match added successfully!" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ============================
-// API: додати гравця у матч
-// ============================
-app.post("/api/players", async (req, res) => {
-  const { match_id, account_id, player_slot, hero_id, role, booster_ruiner } = req.body;
-  try {
-    await pool.query(
-      `INSERT INTO players (match_id, account_id, player_slot, hero_id, role, booster_ruiner)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [match_id, account_id, player_slot, hero_id, role, booster_ruiner]
-    );
-    res.json({ message: "Player added successfully!" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ============================
-// Запуск сервера
-// ============================
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
 });
