@@ -1,48 +1,52 @@
-const API_BASE = "https://gachokart.onrender.com"; // бекенд Render
-const LS_KEY = "matches_cache_v1";
-
-async function fetchMatches() {
+// Load all matches
+async function loadMatches() {
   try {
-    const res = await fetch(`${API_BASE}/api/matches`);
-    if (!res.ok) throw new Error("Server error " + res.status);
+    const res = await fetch("/api/matches");
     const data = await res.json();
-    localStorage.setItem(LS_KEY, JSON.stringify(data));
-    return data;
-  } catch {
-    const cached = localStorage.getItem(LS_KEY);
-    return cached ? JSON.parse(cached) : [];
+    console.log("Matches:", data.matches);
+
+    const list = document.getElementById("matches");
+    list.innerHTML = "";
+    data.matches.forEach(m => {
+      const li = document.createElement("li");
+      li.textContent = `Match ${m.match_id} | Hero: ${m.hero_id ?? "-"} | K/D/A: ${m.kills}/${m.deaths}/${m.assists}`;
+      list.appendChild(li);
+    });
+  } catch (err) {
+    console.error("Error loading matches:", err);
   }
 }
 
-async function saveMatches(matches) {
-  // matches може бути масивом або одним об’єктом
-  localStorage.setItem(LS_KEY, JSON.stringify(matches));
-  const res = await fetch(`${API_BASE}/api/matches`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(matches),
-  });
-  if (!res.ok) throw new Error("Save failed " + res.status);
-  return res.json();
-}
-
-// 🔎 Тестовий виклик
-(async () => {
+// Save one match
+async function saveMatch(match) {
   try {
-    const response = await saveMatches([
-      {
-        match_id: 1234567890,   // 👈 обов’язково
-        radiant_win: true,
-        hero_id: 1,
-        role: "carry",
-        booster_ruiner: "none",
-        kills: 10,
-        deaths: 2,
-        assists: 5
-      }
-    ]);
-    console.log("Saved:", response);
-  } catch (e) {
-    console.error(e);
+    const res = await fetch("/api/matches", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(match)
+    });
+    const data = await res.json();
+    console.log("Saved:", data);
+    loadMatches(); // reload list
+  } catch (err) {
+    console.error("Error saving match:", err);
   }
-})();
+}
+
+// Example usage: attach to button
+document.getElementById("saveBtn").addEventListener("click", () => {
+  const match = {
+    match_id: Date.now(), // unique ID
+    hero_id: 42,
+    role: "Carry",
+    booster_ruiner: "none",
+    kills: 10,
+    deaths: 2,
+    assists: 8,
+    radiant_win: true
+  };
+  saveMatch(match);
+});
+
+// Load matches on page start
+window.addEventListener("DOMContentLoaded", loadMatches);
