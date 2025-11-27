@@ -47,46 +47,44 @@ app.get("/api/matches", async (req, res) => {
   }
 });
 
-// Bulk insert/update matches via PUT
-app.put("/api/matches", async (req, res) => {
+// Add single match via POST
+app.post("/api/matches", async (req, res) => {
   try {
-    const matches = Array.isArray(req.body) ? req.body : [req.body];
-
-    for (const m of matches) {
-      if (!m.match_id) {
-        return res.status(400).json({ error: "match_id is required" });
-      }
-
-      await pool.query(
-        `INSERT INTO matches (match_id, start_time, radiant_win, raw)
-         VALUES ($1, $2, $3, $4)
-         ON CONFLICT (match_id) DO UPDATE SET
-           start_time = EXCLUDED.start_time,
-           radiant_win = EXCLUDED.radiant_win`,
-        [m.match_id, Date.now(), m.radiant_win ?? null, null]
-      );
-
-      if (m.hero_id) {
-        await pool.query(
-          `INSERT INTO players (match_id, player_slot, hero_id, role, booster_ruiner, kills, deaths, assists)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-           ON CONFLICT DO NOTHING`,
-          [
-            m.match_id,
-            0,
-            m.hero_id,
-            m.role ?? null,
-            m.booster_ruiner ?? null,
-            m.kills ?? 0,
-            m.deaths ?? 0,
-            m.assists ?? 0
-          ]
-        );
-      }
+    const m = req.body;
+    if (!m.match_id) {
+      return res.status(400).json({ error: "match_id is required" });
     }
 
-    res.json({ ok: true, count: matches.length });
+    // Insert match
+    await pool.query(
+      `INSERT INTO matches (match_id, start_time, radiant_win, raw)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (match_id) DO NOTHING`,
+      [m.match_id, Date.now(), m.radiant_win ?? null, null]
+    );
+
+    // Insert player if hero_id present
+    if (m.hero_id) {
+      await pool.query(
+        `INSERT INTO players (match_id, player_slot, hero_id, role, booster_ruiner, kills, deaths, assists)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         ON CONFLICT DO NOTHING`,
+        [
+          m.match_id,
+          0,
+          m.hero_id,
+          m.role ?? null,
+          m.booster_ruiner ?? null,
+          m.kills ?? 0,
+          m.deaths ?? 0,
+          m.assists ?? 0
+        ]
+      );
+    }
+
+    res.json({ ok: true });
   } catch (e) {
+    console.error(e);
     res.status(500).json({ error: e.message });
   }
 });
