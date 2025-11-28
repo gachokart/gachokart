@@ -3,6 +3,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const { Pool } = require("pg");
+const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,6 +17,8 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
+
+// === API ROUTES ===
 
 // GET all matches
 app.get("/api/matches", async (req, res) => {
@@ -80,7 +83,17 @@ app.post("/api/matches", async (req, res) => {
   }
 });
 
-// Start server
+// === STATIC FRONTEND ===
+
+// Віддавати статичні файли з public/
+app.use(express.static(path.join(__dirname, "public")));
+
+// Якщо користувач заходить на "/", віддавати index.html
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// === START SERVER ===
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
