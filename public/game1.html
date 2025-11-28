@@ -55,6 +55,20 @@
   </style>
 </head>
 <body>
+  <form onsubmit="event.preventDefault(); saveMatch();">
+  <input id="match_id" type="number" placeholder="Match ID" required>
+  <input id="hero_id" type="number" placeholder="Hero ID" required>
+  <input id="role" type="text" placeholder="Role">
+  <input id="booster_ruiner" type="text" placeholder="Booster/Ruiner">
+  <label>
+    Radiant Win:
+    <input id="radiant_win" type="checkbox">
+  </label>
+  <input id="kills" type="number" placeholder="Kills">
+  <input id="deaths" type="number" placeholder="Deaths">
+  <input id="assists" type="number" placeholder="Assists">
+  <button type="submit">Save Match</button>
+</form>
   <div class="wrap">
     <header>
       <div class="card" style="flex:1;display:flex;align-items:center;justify-content:space-between;padding:12px">
