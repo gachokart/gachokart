@@ -90,9 +90,20 @@
         <div id="statsSummary" class="meta"></div>
         <div style="margin-top:8px;max-height:420px;overflow:auto">
           <table id="matchesTable">
-            <thead><tr><th>Дата</th><th>Герой</th><th>K/D/A</th><th>Результат</th><th>Тривалість</th></tr></thead>
-            <tbody></tbody>
-          </table>
+  <thead>
+    <tr>
+      <th>Дата</th>
+      <th>Герой</th>
+      <th>K/D/A</th>
+      <th>Результат</th>
+      <th>Тривалість</th>
+      <th>Моя роль</th>
+      <th>Статус (бустер/руінер)</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+          <button id="saveResultsBtn">Зберегти результати</button>
         </div>
       </div>
 
@@ -176,10 +187,10 @@
       </aside>
     </div>
   </div>
-
+<ul id="matches"></ul>
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+<script src="scripts.js"></script>
   <script>
     // ---- Утиліти (залишив без змін)
     function steam64ToAccountId(steam64){ try{ const n=BigInt(steam64); const base=BigInt('76561197960265728'); if(n<=BigInt(4294967295)) return Number(n); return Number(n-base);}catch(e){return NaN} }
@@ -485,7 +496,31 @@ function analyzeTopHeroes(summary, heroesConst, minGames) {
 }
 
     // ---- Рендер UI (оновлений щоб показувати role card)
-    function renderMatches(matches, heroesConst){ const tbody=document.querySelector('#matchesTable tbody'); tbody.innerHTML=''; matches.forEach(m=>{ const tr=document.createElement('tr'); const d=new Date((m.start_time||0)*1000); const hid=m.hero_id||0; const heroName = heroesConst && heroesConst[hid] ? heroesConst[hid].localized_name : hid; tr.innerHTML=`<td>${d.toLocaleString()}</td><td>${heroName}</td><td>${m.kills||0}/${m.deaths||0}/${m.assists||0}</td><td>${playerWon(m)?'W':'L'}</td><td>${secsToMinSecs(m.duration||0)}</td>`; tbody.appendChild(tr); }); }
+    function renderMatches(matches, heroesConst){ const tbody=document.querySelector('#matchesTable tbody'); tbody.innerHTML=''; matches.forEach(m=>{ const tr=document.createElement('tr'); const d=new Date((m.start_time||0)*1000); const hid=m.hero_id||0; const heroName = heroesConst && heroesConst[hid] ? heroesConst[hid].localized_name : hid; tr.innerHTML = `
+      <td>${d.toLocaleString()}</td>
+      <td>${heroName}</td>
+      <td>${m.kills||0}/${m.deaths||0}/${m.assists||0}</td>
+      <td>${playerWon(m)?'W':'L'}</td>
+      <td>${secsToMinSecs(m.duration||0)}</td>
+      <td>
+        <select class="roleInput">
+          <option value="Carry">Carry</option>
+          <option value="Mid">Mid</option>
+          <option value="Offlane">Offlane</option>
+          <option value="Support">Support</option>
+          <option value="Hard Support">Hard Support</option>
+        </select>
+      </td>
+      <td>
+        <select class="statusInput">
+          <option value="none">Немає</option>
+          <option value="booster">Бустер</option>
+          <option value="ruiner">Руінер</option>
+        </select>
+      </td>
+    `;
+    tbody.appendChild(tr);
+ }); }
 
     function renderPredictionUI(summary, result){
       document.getElementById('statsSummary').innerText = `Ігор: ${summary.games} · Winrate: ${summary.winrate.toFixed(1)}% · Avg K/D/A: ${summary.avgK.toFixed(2)}/${summary.avgD.toFixed(2)}/${summary.avgA.toFixed(2)} · Avg KDA: ${summary.avgKDA.toFixed(2)} · Avg тривалість: ${Math.round(summary.avgDuration/60)} хв`;
@@ -495,7 +530,39 @@ function analyzeTopHeroes(summary, heroesConst, minGames) {
       const det=document.getElementById('predictionDetails');
       det.innerHTML=`<div class="reason"><strong>Шанси (модель)</strong><div class="small">Бустер (мої): ${result.boosterMy}% · Руінер (мої): ${result.ruinerMy}%<br>Бустер (ворог): ${result.boosterEnemy}% · Руінер (ворог): ${result.ruinerEnemy}%</div></div>`;
     }
+document.getElementById("saveResultsBtn").addEventListener("click", async () => {
+  const rows = document.querySelectorAll("#matchesTable tbody tr");
+  const results = [];
 
+  rows.forEach((tr, i) => {
+    const role = tr.querySelector(".roleInput").value;
+    const status = tr.querySelector(".statusInput").value;
+    const matchId = lastMatches[i]?.match_id;
+
+    results.push({ match_id: matchId, role, booster_ruiner: status });
+  });
+
+  // Відправка на твій API (Render)
+fetch("/api/matches", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    match_id: 1234567890,   // ← обов’язково
+    radiant_win: true,
+    hero_id: 1,
+    role: "carry",
+    booster_ruiner: "none",
+    kills: 10,
+    deaths: 2,
+    assists: 5
+  })
+})
+.then(r => r.json())
+.then(console.log)
+.catch(console.error);
+
+  alert("Результати збережено!");
+});
     // ---- Побудова графіків через Chart.js
     let chartDays=null, chartHours=null;
     function buildCharts(dayRates, hourRates){ const daysLabels=['Нд','Пн','Вт','Ср','Чт','Пт','Сб']; const dayData = dayRates.map(d=>+d.winrate.toFixed(1)); const hourLabels = hourRates.map(h=>h.hour); const hourData = hourRates.map(h=>+h.winrate.toFixed(1));
@@ -608,6 +675,33 @@ function analyzeTopHeroes(summary, heroesConst, minGames) {
   </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
