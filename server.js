@@ -1,10 +1,9 @@
-// server.js
-import express from "express";
-import bodyParser from "body-parser";
-import pkg from "pg";
-import cors from "cors";
+// server.js (CommonJS)
+const express = require("express");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+const { Pool } = require("pg");
 
-const { Pool } = pkg;
 const app = express();
 const PORT = process.env.PORT || 3000;
 
