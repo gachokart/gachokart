@@ -1,52 +1,66 @@
-// Load all matches
+// scripts.js
+
 async function loadMatches() {
   try {
     const res = await fetch("/api/matches");
-    const data = await res.json();
-    console.log("Matches:", data.matches);
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
 
-    const list = document.getElementById("matches");
-    list.innerHTML = "";
-    data.matches.forEach(m => {
-      const li = document.createElement("li");
-      li.textContent = `Match ${m.match_id} | Hero: ${m.hero_id ?? "-"} | K/D/A: ${m.kills}/${m.deaths}/${m.assists}`;
-      list.appendChild(li);
-    });
+    const matches = await res.json();
+
+    console.log("Matches:", matches);
+
+    // Завжди перевіряємо, що matches — масив
+    if (Array.isArray(matches)) {
+      const container = document.getElementById("matches");
+      container.innerHTML = "";
+
+      matches.forEach(match => {
+        const div = document.createElement("div");
+        div.textContent = `Match ${match.match_id} — Hero ${match.hero_id}`;
+        container.appendChild(div);
+      });
+    } else {
+      console.warn("Matches response is not an array:", matches);
+    }
   } catch (err) {
     console.error("Error loading matches:", err);
   }
 }
 
-// Save one match
-async function saveMatch(match) {
+async function saveMatch() {
+  const match = {
+    match_id: document.getElementById("match_id").value,
+    hero_id: document.getElementById("hero_id").value,
+    role: document.getElementById("role").value,
+    booster_ruiner: document.getElementById("booster_ruiner").value,
+    radiant_win: document.getElementById("radiant_win").checked,
+    kills: document.getElementById("kills").value,
+    deaths: document.getElementById("deaths").value,
+    assists: document.getElementById("assists").value
+  };
+
   try {
     const res = await fetch("/api/matches", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(match)
     });
+
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+
     const data = await res.json();
     console.log("Saved:", data);
-    loadMatches(); // reload list
+
+    // Після збереження перезавантажуємо список
+    loadMatches();
   } catch (err) {
     console.error("Error saving match:", err);
   }
 }
 
-// Example usage: attach to button
-document.getElementById("saveResultsBtn").addEventListener("click", () => {
-  const match = {
-    match_id: Date.now(), // unique ID
-    hero_id: 42,
-    role: "Carry",
-    booster_ruiner: "none",
-    kills: 10,
-    deaths: 2,
-    assists: 8,
-    radiant_win: true
-  };
-  saveMatch(match);
-});
-
-// Load matches on page start
-window.addEventListener("DOMContentLoaded", loadMatches);
+// Викликаємо при завантаженні сторінки
+document.addEventListener("DOMContentLoaded", loadMatches);
