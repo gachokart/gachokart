@@ -6,7 +6,7 @@ const { Pool } = require("pg");
 const path = require("path");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000; // Render задає PORT автоматично
 
 // Middleware
 app.use(cors());
@@ -92,9 +92,6 @@ app.get("/", (req, res) => {
 });
 
 // === START SERVER ===
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
