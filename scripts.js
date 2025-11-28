@@ -1,66 +1,78 @@
-// scripts.js
+const API_BASE = location.origin; // автоматично підставляє твій домен
 
+// Завантажити всі матчі
 async function loadMatches() {
   try {
-    const res = await fetch("/api/matches");
-    if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`);
-    }
-
+    const res = await fetch(`${API_BASE}/api/matches`);
     const matches = await res.json();
-
-    console.log("Matches:", matches);
-
-    // Завжди перевіряємо, що matches — масив
-    if (Array.isArray(matches)) {
-      const container = document.getElementById("matches");
-      container.innerHTML = "";
-
-      matches.forEach(match => {
-        const div = document.createElement("div");
-        div.textContent = `Match ${match.match_id} — Hero ${match.hero_id}`;
-        container.appendChild(div);
-      });
-    } else {
-      console.warn("Matches response is not an array:", matches);
-    }
+    renderMatches(matches);
   } catch (err) {
     console.error("Error loading matches:", err);
   }
 }
 
-async function saveMatch() {
-  const match = {
-    match_id: document.getElementById("match_id").value,
-    hero_id: document.getElementById("hero_id").value,
-    role: document.getElementById("role").value,
-    booster_ruiner: document.getElementById("booster_ruiner").value,
-    radiant_win: document.getElementById("radiant_win").checked,
-    kills: document.getElementById("kills").value,
-    deaths: document.getElementById("deaths").value,
-    assists: document.getElementById("assists").value
-  };
+// Відобразити матчі з селекторами
+function renderMatches(matches) {
+  const container = document.getElementById("matches");
+  container.innerHTML = "";
+
+  matches.forEach(m => {
+    const div = document.createElement("div");
+    div.className = "match-row";
+
+    div.innerHTML = `
+      <span>
+        Match ${m.match_id} | Hero ${m.hero_id} | ${m.kills || 0}/${m.deaths || 0}/${m.assists || 0} |
+        ${m.radiant_win ? "Win" : "Loss"} | Duration ${m.duration || 0}
+      </span>
+      <select id="role-${m.match_id}">
+        <option value="">--Role--</option>
+        <option value="carry" ${m.role==="carry"?"selected":""}>Carry</option>
+        <option value="mid" ${m.role==="mid"?"selected":""}>Mid</option>
+        <option value="offlane" ${m.role==="offlane"?"selected":""}>Offlane</option>
+        <option value="support" ${m.role==="support"?"selected":""}>Support</option>
+        <option value="hard support" ${m.role==="hard support"?"selected":""}>Hard Support</option>
+      </select>
+      <select id="booster-${m.match_id}">
+        <option value="">--Booster/Ruiner--</option>
+        <option value="booster" ${m.booster_ruiner==="booster"?"selected":""}>Booster</option>
+        <option value="ruiner" ${m.booster_ruiner==="ruiner"?"selected":""}>Ruiner</option>
+        <option value="none" ${m.booster_ruiner==="none"?"selected":""}>None</option>
+      </select>
+      <button onclick="saveAnnotations(${m.match_id}, ${m.hero_id})">Save</button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// Зберегти вибір у базу
+async function saveAnnotations(match_id, hero_id) {
+  const role = document.getElementById(`role-${match_id}`).value;
+  const booster_ruiner = document.getElementById(`booster-${match_id}`).value;
+
+  const payload = { match_id, hero_id, role, booster_ruiner };
+  console.log("POST body:", payload);
 
   try {
-    const res = await fetch("/api/matches", {
+    const res = await fetch(`${API_BASE}/api/matches`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(match)
+      body: JSON.stringify(payload)
     });
 
+    const data = await res.json();
+    console.log("Server response:", data);
+
     if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`);
+      console.warn("Server refused:", data);
+      return;
     }
 
-    const data = await res.json();
-    console.log("Saved:", data);
-
-    // Після збереження перезавантажуємо список
-    loadMatches();
+    await loadMatches(); // оновити список після збереження
   } catch (err) {
-    console.error("Error saving match:", err);
+    console.error("Error saving annotations:", err);
   }
 }
 
-// Викликаємо при завантаженні сторінки
-document.addEventListener("DOMContentLoaded", loadMatches);
+// При старті сторінки
+window.onload = loadMatches;
