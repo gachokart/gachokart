@@ -11,7 +11,7 @@ app.get("/api/matches", async (req, res) => {
   try {
     const response = await fetch("https://api.opendota.com/api/players/863386335/recentMatches");
     const matches = await response.json();
-    res.json({ matches });
+    res.json(matches);
   } catch (err) {
     res.status(500).json({ error: "Не вдалося отримати дані з OpenDota" });
   }
