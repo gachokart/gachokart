@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   const loadBtn = document.getElementById("loadBtn");
   const matchesDiv = document.getElementById("matches");
-
+  
   loadBtn.addEventListener("click", async () => {
     matchesDiv.innerHTML = "Завантаження...";
     try {
