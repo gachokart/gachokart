@@ -3,8 +3,8 @@ const path = require("path");
 const fetch = require("node-fetch");
 const app = express();
 
-// Статичні файли (фронтенд)
-app.use(express.static(path.join(__dirname)));
+// Видаємо всі статичні файли з public/
+app.use(express.static(path.join(__dirname, "public")));
 
 // API endpoint для матчів з OpenDota
 app.get("/api/matches", async (req, res) => {
@@ -19,10 +19,8 @@ app.get("/api/matches", async (req, res) => {
 
 // Головна сторінка
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "game1.html"));
+  res.sendFile(path.join(__dirname, "public", "game1.html"));
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
