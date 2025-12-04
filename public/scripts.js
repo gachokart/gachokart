@@ -1,15 +1,16 @@
 document.addEventListener("DOMContentLoaded", () => {
   const loadBtn = document.getElementById("loadBtn");
   const matchesDiv = document.getElementById("matches");
-  
+
   loadBtn.addEventListener("click", async () => {
     matchesDiv.innerHTML = "Завантаження...";
     try {
       const response = await fetch("/api/matches");
       if (!response.ok) throw new Error("Помилка запиту: " + response.status);
-      const data = await response.json();
 
+      const data = await response.json();
       matchesDiv.innerHTML = "";
+
       if (data.matches && data.matches.length > 0) {
         data.matches.forEach((m, i) => {
           const div = document.createElement("div");
@@ -31,3 +32,4 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+      
