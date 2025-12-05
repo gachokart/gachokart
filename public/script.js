@@ -48,7 +48,14 @@ document.addEventListener("DOMContentLoaded", async () => {
           matchData.players.forEach((p, idx) => {
             const heroBlock = document.createElement("div");
             heroBlock.className = "hero-block";
-            heroBlock.innerHTML = `<strong>Герой ${idx+1} (ID: ${p.hero_id})</strong><br>`;
+
+            // Виділення мого героя
+            if (p.account_id === 863386335) {
+              heroBlock.style.background = "#d1ffd1"; // зелений фон
+              heroBlock.innerHTML = `<strong>Герой ${idx+1} (ID: ${p.hero_id}) – Мій герой</strong><br>`;
+            } else {
+              heroBlock.innerHTML = `<strong>Герой ${idx+1} (ID: ${p.hero_id})</strong><br>`;
+            }
             
             // Селектор ролі
             const roleSelect = document.createElement("select");
@@ -70,6 +77,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             detailsDiv.appendChild(heroBlock);
           });
+
+          // Кнопка "Зберегти матч"
+          const saveBtn = document.createElement("button");
+          saveBtn.textContent = "Зберегти матч";
+          saveBtn.style.marginTop = "20px";
+          saveBtn.addEventListener("click", () => {
+            alert(`Матч ${m.match_id} збережено!`);
+            // тут можна додати логіку збереження у базу чи локально
+          });
+          detailsDiv.appendChild(saveBtn);
         });
 
         matchesDiv.appendChild(div);
@@ -81,4 +98,3 @@ document.addEventListener("DOMContentLoaded", async () => {
     matchesDiv.textContent = "Помилка: " + err.message;
   }
 });
-
