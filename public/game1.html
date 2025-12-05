@@ -1,1 +1,61 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dota Match Viewer</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <header class="header">
+    <h1>Dota Match Viewer</h1>
+    <div class="actions">
+      <button class="btn primary" onclick="loadMatches()">Завантажити останні матчі</button>
+      <button class="btn" onclick="getPredict()">Отримати предікт</button>
+    </div>
+  </header>
 
+  <main class="container">
+    <section class="card">
+      <h2>Останні матчі</h2>
+      <div id="matches" class="matches-list"></div>
+    </section>
+
+    <section class="card">
+      <h2>Форма збереження матчу</h2>
+      <div id="matchForm" class="form-container hidden">
+        <h3 id="formTitle">Матч</h3>
+
+        <div class="match-meta">
+          <div><strong>Match ID:</strong> <span id="metaMatchId">—</span></div>
+          <div><strong>Radiant win:</strong> <span id="metaRadiantWin">—</span></div>
+          <div><strong>Duration (s):</strong> <span id="metaDuration">—</span></div>
+          <div><strong>Game mode:</strong> <span id="metaGameMode">—</span></div>
+        </div>
+
+        <table class="grid">
+          <thead>
+            <tr>
+              <th>Hero ID</th>
+              <th>Роль</th>
+              <th>Статус (0–10)</th>
+              <th>Мій?</th>
+            </tr>
+          </thead>
+          <tbody id="playersTable"></tbody>
+        </table>
+
+        <div class="form-actions">
+          <button class="btn primary" onclick="submitMatch()">Зберегти матч</button>
+          <button class="btn danger" onclick="cancelForm()">Скасувати</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Результат предікта</h2>
+      <pre id="predict" class="pre"></pre>
+    </section>
+  </main>
+</body>
+</html>
