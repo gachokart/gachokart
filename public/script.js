@@ -65,21 +65,21 @@ async function loadSavedMatches() {
 
     container.innerHTML = "";
     matches.forEach(m => {
-      const item = document.createElement("div");
-      item.className = "match-item";
-      item.innerHTML = `
-        <div class="match-row">
-          <div>
-            <strong>${m.match_id}</strong>
-            <span class="muted"> | Duration: ${m.duration}s | Radiant win: ${m.radiant_win}</span>
-          </div>
-          <div>
-            <button class="btn small" onclick="openMatchForm(${m.match_id})">Переглянути</button>
-          </div>
-        </div>
-      `;
-      container.appendChild(item);
-    });
+  const item = document.createElement("div");
+  item.className = "match-item";
+  item.innerHTML = `
+    <div class="match-row">
+      <div>
+        <strong>${m.match_id}</strong>
+        <span class="muted"> | Duration: ${m.duration}s | Radiant win: ${m.radiant_win}</span>
+      </div>
+      <div>
+        <button class="btn small" onclick="openSavedMatch(${m.match_id})">Переглянути</button>
+      </div>
+    </div>
+  `;
+  container.appendChild(item);
+});
   } catch (err) {
     console.error("loadSavedMatches error:", err);
     container.innerHTML = "<div class='error'>Помилка завантаження збережених матчів</div>";
