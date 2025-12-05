@@ -15,6 +15,21 @@ const pool = new Pool({
 // Utility: OpenDota Player ID (replace with your own if needed)
 const MY_ACCOUNT_ID = 863386335;
 
+// API: отримати гравців збереженого матчу
+app.get("/api/savedMatchPlayers/:id", async (req, res) => {
+  try {
+    const matchId = req.params.id;
+    const result = await pool.query(
+      "SELECT hero_id, role, status, is_mine FROM match_players WHERE match_id = $1",
+      [matchId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Saved match players error:", err);
+    res.status(500).json({ error: "Не вдалося отримати гравців матчу" });
+  }
+});
+
 // API: збережені матчі з Postgres
 app.get("/api/savedMatches", async (req, res) => {
   try {
