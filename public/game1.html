@@ -5,47 +5,16 @@
   <title>Game1 – OpenDota Matches</title>
   <script src="/script.js" defer></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      gap: 20px;
-      margin: 20px;
-    }
-    #matches {
-      width: 40%;
-    }
-    #details {
-      width: 60%;
-      border-left: 2px solid #ccc;
-      padding-left: 20px;
-    }
-    .match {
-      border: 1px solid #ccc;
-      padding: 10px;
-      margin-bottom: 10px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .match:hover {
-      background: #f0f0f0;
-    }
-    .hero-block {
-      border: 1px solid #ddd;
-      padding: 10px;
-      margin-bottom: 10px;
-    }
-    select {
-      margin: 5px;
-    }
+    body { font-family: Arial, sans-serif; display: flex; gap: 20px; margin: 20px; }
+    #matches { width: 40%; }
+    #details { width: 60%; border-left: 2px solid #ccc; padding-left: 20px; }
+    .match { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; cursor: pointer; }
+    .match:hover { background: #f0f0f0; }
+    .hero-block { border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; }
   </style>
 </head>
 <body>
-  <div id="matches">
-    <h2>Останні матчі</h2>
-    <p>Завантаження...</p>
-  </div>
-  <div id="details">
-    <em>Натисни на матч, щоб побачити героїв</em>
-  </div>
+  <div id="matches"><p>Завантаження...</p></div>
+  <div id="details"><em>Натисни на матч, щоб побачити героїв</em></div>
 </body>
 </html>
