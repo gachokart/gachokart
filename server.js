@@ -15,6 +15,19 @@ const pool = new Pool({
 // Utility: OpenDota Player ID (replace with your own if needed)
 const MY_ACCOUNT_ID = 863386335;
 
+// API: збережені матчі з Postgres
+app.get("/api/savedMatches", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT * FROM matches ORDER BY start_time DESC LIMIT 20"
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Saved matches error:", err);
+    res.status(500).json({ error: "Не вдалося отримати збережені матчі" });
+  }
+});
+
 // API: recent matches for quick list
 app.get("/api/matches", async (req, res) => {
   try {
