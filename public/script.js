@@ -50,16 +50,24 @@ document.addEventListener("DOMContentLoaded", async () => {
             heroBlock.className = "hero-block";
             heroBlock.innerHTML = `<strong>Герой ${idx+1} (ID: ${p.hero_id})</strong><br>`;
             
-            // 2 селектори під кожного героя
-            for (let j=1; j<=2; j++) {
-              const select = document.createElement("select");
-              ["Роль 1","Роль 2","Роль 3","Роль 4","Роль 5"].forEach(r=>{
-                const opt=document.createElement("option");
-                opt.textContent=r;
-                select.appendChild(opt);
-              });
-              heroBlock.appendChild(select);
+            // Селектор ролі
+            const roleSelect = document.createElement("select");
+            ["Carry","Mid","Offlane","Support","Hard Support"].forEach(role=>{
+              const opt=document.createElement("option");
+              opt.textContent=role;
+              roleSelect.appendChild(opt);
+            });
+            heroBlock.appendChild(roleSelect);
+
+            // Селектор статусу (0-10)
+            const statusSelect = document.createElement("select");
+            for (let k=0; k<=10; k++) {
+              const opt=document.createElement("option");
+              opt.textContent=k;
+              statusSelect.appendChild(opt);
             }
+            heroBlock.appendChild(statusSelect);
+
             detailsDiv.appendChild(heroBlock);
           });
         });
@@ -70,6 +78,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       matchesDiv.textContent = "Немає матчів.";
     }
   } catch (err) {
+    matchesDiv.textContent = "Помилка: " + err.message;
+  }
+});
     matchesDiv.textContent = "Помилка: " + err.message;
   }
 });
