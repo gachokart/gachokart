@@ -86,6 +86,33 @@ async function loadSavedMatches() {
   }
 }
 
+async function openSavedMatch(matchId) {
+  try {
+    const res = await fetch(`/api/savedMatchPlayers/${matchId}`);
+    const players = await res.json();
+
+    const table = byId("playersTable");
+    table.innerHTML = "";
+
+    players.forEach(p => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${p.hero_id}</td>
+        <td><span class="role-tag">${p.role}</span></td>
+        <td>${p.status}</td>
+        <td>${p.is_mine ? "✅" : ""}</td>
+      `;
+      table.appendChild(row);
+    });
+
+    byId("formTitle").innerText = `Збережений матч ${matchId}`;
+    show(byId("matchForm"));
+  } catch (err) {
+    console.error("openSavedMatch error:", err);
+    alert("Не вдалося відкрити збережений матч");
+  }
+}
+
 async function openMatchForm(matchId) {
   try {
     const res = await fetch(`/api/match/${matchId}`);
