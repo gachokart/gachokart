@@ -112,16 +112,10 @@ async function openSavedMatch(matchId) {
     table.innerHTML = "";
 
     players.forEach(p => {
-      const hero = heroMap[p.hero_id];
-      const heroName = hero ? hero.name : p.hero_id;
-      const heroIcon = hero ? hero.icon : "";
-
+      const heroName = heroMap[p.hero_id] || p.hero_id; // якщо нема в мапі, показує id
       const row = document.createElement("tr");
       row.innerHTML = `
-        <td>
-          ${heroIcon ? `<img src="${heroIcon}" alt="${heroName}" class="hero-icon">` : ""}
-          ${heroName}
-        </td>
+        <td>${heroName}</td>
         <td><span class="role-tag">${p.role}</span></td>
         <td>${p.status}</td>
         <td>${p.is_mine ? "✅" : ""}</td>
@@ -136,7 +130,6 @@ async function openSavedMatch(matchId) {
     alert("Не вдалося відкрити збережений матч");
   }
 }
-
 async function openMatchForm(matchId) {
   try {
     const res = await fetch(`/api/match/${matchId}`);
