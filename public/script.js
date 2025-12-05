@@ -51,6 +51,40 @@ async function loadMatches() {
     container.innerHTML = "<div class='error'>Помилка завантаження матчів</div>";
   }
 }
+async function loadSavedMatches() {
+  const container = byId("matches");
+  container.innerHTML = "<div class='info'>Завантаження збережених...</div>";
+  try {
+    const res = await fetch("/api/savedMatches");
+    const matches = await res.json();
+
+    if (!Array.isArray(matches) || matches.length === 0) {
+      container.innerHTML = "<div class='info'>Немає збережених матчів</div>";
+      return;
+    }
+
+    container.innerHTML = "";
+    matches.forEach(m => {
+      const item = document.createElement("div");
+      item.className = "match-item";
+      item.innerHTML = `
+        <div class="match-row">
+          <div>
+            <strong>${m.match_id}</strong>
+            <span class="muted"> | Duration: ${m.duration}s | Radiant win: ${m.radiant_win}</span>
+          </div>
+          <div>
+            <button class="btn small" onclick="openMatchForm(${m.match_id})">Переглянути</button>
+          </div>
+        </div>
+      `;
+      container.appendChild(item);
+    });
+  } catch (err) {
+    console.error("loadSavedMatches error:", err);
+    container.innerHTML = "<div class='error'>Помилка завантаження збережених матчів</div>";
+  }
+}
 
 async function openMatchForm(matchId) {
   try {
