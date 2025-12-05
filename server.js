@@ -41,7 +41,6 @@ app.post("/api/saveMatch", async (req, res) => {
   const { matchId, selections, start_time, duration, radiant_win, lobby_type, game_mode, cluster, radiant_score } = req.body;
 
   try {
-    // 1. Зберігаємо загальні дані про матч
     await pool.query(
       `INSERT INTO matches (match_id, start_time, duration, radiant_win, lobby_type, game_mode, cluster, radiant_score)
        VALUES ($1, to_timestamp($2), $3, $4, $5, $6, $7, $8)
@@ -49,7 +48,6 @@ app.post("/api/saveMatch", async (req, res) => {
       [matchId, start_time, duration, radiant_win, lobby_type, game_mode, cluster, radiant_score]
     );
 
-    // 2. Зберігаємо гравців
     for (const sel of selections) {
       await pool.query(
         `INSERT INTO match_players (match_id, hero_id, role, status, is_mine)
