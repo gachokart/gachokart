@@ -118,13 +118,20 @@ async function openSavedMatch(matchId) {
     const res = await fetch(`/api/savedMatchPlayers/${matchId}`);
     const players = await res.json();
 
-    const table = byId("playersTable");
+    const table = document.getElementById("playersTable");
     table.innerHTML = "";
 
     players.forEach(p => {
+      const hero = heroMap[p.hero_id];
+      const heroName = hero ? hero.name : p.hero_id;
+      const heroIcon = hero ? hero.icon : "";
+
       const row = document.createElement("tr");
       row.innerHTML = `
-        <td>${p.hero_id}</td>
+        <td>
+          ${heroIcon ? `<img src="${heroIcon}" alt="${heroName}" class="hero-icon">` : ""}
+          ${heroName}
+        </td>
         <td><span class="role-tag">${p.role}</span></td>
         <td>${p.status}</td>
         <td>${p.is_mine ? "✅" : ""}</td>
@@ -132,8 +139,8 @@ async function openSavedMatch(matchId) {
       table.appendChild(row);
     });
 
-    byId("formTitle").innerText = `Збережений матч ${matchId}`;
-    show(byId("matchForm"));
+    document.getElementById("formTitle").innerText = `Збережений матч ${matchId}`;
+    document.getElementById("matchForm").style.display = "block";
   } catch (err) {
     console.error("openSavedMatch error:", err);
     alert("Не вдалося відкрити збережений матч");
