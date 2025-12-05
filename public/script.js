@@ -81,6 +81,4 @@ document.addEventListener("DOMContentLoaded", async () => {
     matchesDiv.textContent = "Помилка: " + err.message;
   }
 });
-    matchesDiv.textContent = "Помилка: " + err.message;
-  }
-});
+
