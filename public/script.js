@@ -1,3 +1,6 @@
+let currentMatchId = null;
+let currentSelections = [];
+
 async function loadMatches() {
   const res = await fetch("/api/matches");
   const matches = await res.json();
@@ -6,45 +9,89 @@ async function loadMatches() {
 
   matches.forEach(m => {
     const div = document.createElement("div");
-    div.innerHTML = `Match ID: ${m.match_id} 
-      <button onclick="saveMatch(${m.match_id})">Зберегти</button>`;
+    div.className = "match-item";
+    div.innerHTML = `
+      <span>Match ID: ${m.match_id}</span>
+      <button onclick="openMatchForm(${m.match_id})">Вибрати ролі</button>
+    `;
     container.appendChild(div);
   });
 }
 
-async function saveMatch(matchId) {
+async function openMatchForm(matchId) {
   const res = await fetch(`/api/match/${matchId}`);
   const matchData = await res.json();
 
-  const selections = matchData.players.map(p => ({
+  currentMatchId = matchData.match_id;
+  currentSelections = matchData.players.map(p => ({
     hero_id: p.hero_id,
-    role: p.lane_role === 1 ? "Carry" :
-          p.lane_role === 2 ? "Mid" :
-          p.lane_role === 3 ? "Offlane" :
-          "Support",
-    status: Math.floor(Math.random() * 10), // приклад
+    role: "Carry", // дефолт
+    status: 0,
     isMine: p.account_id === 863386335
   }));
 
+  const table = document.getElementById("playersTable");
+  table.innerHTML = "";
+
+  currentSelections.forEach((sel, idx) => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${sel.hero_id}</td>
+      <td>
+        <select onchange="updateRole(${idx}, this.value)">
+          <option>Carry</option>
+          <option>Mid</option>
+          <option>Offlane</option>
+          <option>Support</option>
+          <option>Hard Support</option>
+        </select>
+      </td>
+      <td>
+        <input type="number" min="0" max="10" value="${sel.status}" onchange="updateStatus(${idx}, this.value)">
+      </td>
+      <td>
+        <input type="checkbox" ${sel.isMine ? "checked" : ""} onchange="updateIsMine(${idx}, this.checked)">
+      </td>
+    `;
+    table.appendChild(row);
+  });
+
+  document.getElementById("formTitle").innerText = `Матч ${matchId}`;
+  document.getElementById("matchForm").style.display = "block";
+}
+
+function updateRole(idx, value) {
+  currentSelections[idx].role = value;
+}
+
+function updateStatus(idx, value) {
+  currentSelections[idx].status = parseInt(value);
+}
+
+function updateIsMine(idx, value) {
+  currentSelections[idx].isMine = value;
+}
+
+async function submitMatch() {
   const payload = {
-    matchId: matchData.match_id,
-    start_time: matchData.start_time,
-    duration: matchData.duration,
-    radiant_win: matchData.radiant_win,
-    lobby_type: matchData.lobby_type,
-    game_mode: matchData.game_mode,
-    cluster: matchData.cluster,
-    radiant_score: matchData.radiant_score,
-    selections: selections
+    matchId: currentMatchId,
+    start_time: Math.floor(Date.now() / 1000),
+    duration: 2500,
+    radiant_win: true,
+    lobby_type: 1,
+    game_mode: 22,
+    cluster: 123,
+    radiant_score: 45,
+    selections: currentSelections
   };
 
-  const saveRes = await fetch("/api/saveMatch", {
+  const res = await fetch("/api/saveMatch", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
   });
 
-  const result = await saveRes.json();
+  const result = await res.json();
   alert(result.message);
 }
 
