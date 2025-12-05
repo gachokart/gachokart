@@ -18,17 +18,7 @@ function show(el) {
 function hide(el) {
   el.classList.add("hidden");
 }
-async function loadHeroes() {
-  const res = await fetch("https://api.opendota.com/api/heroes");
-  const heroes = await res.json();
-  heroes.forEach(h => {
-    const shortName = h.name.replace("npc_dota_hero_", "");
-    heroMap[h.id] = {
-      name: h.localized_name,
-      icon: `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/${shortName}_full.png`
-    };
-  });
-}
+
 async function loadMatches() {
   const container = byId("matches");
   container.innerHTML = "<div class='info'>Завантаження...</div>";
