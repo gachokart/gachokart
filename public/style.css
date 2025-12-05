@@ -146,3 +146,11 @@ h2 { margin: 0 0 12px 0; font-size: 18px; }
 .role-tag.Offlane { background: #3b82f6; }
 .role-tag.Support { background: #22c55e; }
 .role-tag["Hard Support"] { background: #9333ea; }
+.hero-icon {
+  width: 40px;
+  height: 22px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
