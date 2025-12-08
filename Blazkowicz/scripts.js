@@ -278,6 +278,3 @@ async function getPredict() {
     pre.textContent = "Помилка отримання предікта";
   }
 }
-window.onload = () => {
-  loadHeroes();
-};
