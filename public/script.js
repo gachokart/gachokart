@@ -3,38 +3,36 @@ const MY_ACCOUNT_ID = 863386335;
 let currentMatchId = null;
 let currentSelections = [];
 let currentMeta = null;
+
+// Hero map: id -> { name, icon }
 let heroMap = {};
 
 async function loadHeroes() {
-  const res = await fetch("https://api.opendota.com/api/heroes");
-  const heroes = await res.json();
-  heroes.forEach(h => {
-    const shortName = h.name.replace("npc_dota_hero_", "");
-    heroMap[h.id] = {
-      name: h.localized_name,
-      icon: `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/${shortName}_full.png`
-    };
-  });
+  try {
+    const res = await fetch("https://api.opendota.com/api/heroes");
+    const heroes = await res.json();
+    heroes.forEach(h => {
+      const shortName = h.name.replace("npc_dota_hero_", "");
+      heroMap[h.id] = {
+        name: h.localized_name,
+        icon: `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/${shortName}_full.png`
+      };
+    });
+    console.log("Hero map loaded:", heroMap);
+  } catch (err) {
+    console.error("loadHeroes error:", err);
+  }
 }
 
 window.onload = () => {
   loadHeroes();
 };
 
+function byId(id) { return document.getElementById(id); }
+function show(el) { el.classList.remove("hidden"); }
+function hide(el) { el.classList.add("hidden"); }
 
-
-function byId(id) {
-  return document.getElementById(id);
-}
-
-function show(el) {
-  el.classList.remove("hidden");
-}
-
-function hide(el) {
-  el.classList.add("hidden");
-}
-
+// ------------ OpenDota recent matches (editable form) ------------
 async function loadMatches() {
   const container = byId("matches");
   container.innerHTML = "<div class='info'>Завантаження...</div>";
@@ -48,7 +46,6 @@ async function loadMatches() {
     }
 
     container.innerHTML = "";
-    // Show latest 10
     matches.slice(0, 10).forEach(m => {
       const item = document.createElement("div");
       item.className = "match-item";
@@ -71,71 +68,6 @@ async function loadMatches() {
   }
 }
 
-
-
-
-async function loadSavedMatches() {
-  const container = byId("matches");
-  container.innerHTML = "<div class='info'>Завантаження збережених...</div>";
-  try {
-    const res = await fetch("/api/savedMatches");
-    const matches = await res.json();
-
-    if (!Array.isArray(matches) || matches.length === 0) {
-      container.innerHTML = "<div class='info'>Немає збережених матчів</div>";
-      return;
-    }
-
-    container.innerHTML = "";
-    matches.forEach(m => {
-  const item = document.createElement("div");
-  item.className = "match-item";
-  item.innerHTML = `
-    <div class="match-row">
-      <div>
-        <strong>${m.match_id}</strong>
-        <span class="muted"> | Duration: ${m.duration}s | Radiant win: ${m.radiant_win}</span>
-      </div>
-      <div>
-        <button class="btn small" onclick="openSavedMatch(${m.match_id})">Переглянути</button>
-      </div>
-    </div>
-  `;
-  container.appendChild(item);
-});
-  } catch (err) {
-    console.error("loadSavedMatches error:", err);
-    container.innerHTML = "<div class='error'>Помилка завантаження збережених матчів</div>";
-  }
-}
-
-async function openSavedMatch(matchId) {
-  try {
-    const res = await fetch(`/api/savedMatchPlayers/${matchId}`);
-    const players = await res.json();
-
-    const table = document.getElementById("playersTable");
-    table.innerHTML = "";
-
-    players.forEach(p => {
-      const heroName = heroMap[p.hero_id] || p.hero_id; // якщо нема в мапі, показує id
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${heroName}</td>
-        <td><span class="role-tag">${p.role}</span></td>
-        <td>${p.status}</td>
-        <td>${p.is_mine ? "✅" : ""}</td>
-      `;
-      table.appendChild(row);
-    });
-
-    document.getElementById("formTitle").innerText = `Збережений матч ${matchId}`;
-    document.getElementById("matchForm").style.display = "block";
-  } catch (err) {
-    console.error("openSavedMatch error:", err);
-    alert("Не вдалося відкрити збережений матч");
-  }
-}
 async function openMatchForm(matchId) {
   try {
     const res = await fetch(`/api/match/${matchId}`);
@@ -152,7 +84,6 @@ async function openMatchForm(matchId) {
       radiant_score: matchData.radiant_score
     };
 
-    // Default selections (user can change)
     currentSelections = matchData.players.map(p => ({
       hero_id: p.hero_id,
       role: "Support",
@@ -160,35 +91,40 @@ async function openMatchForm(matchId) {
       isMine: p.account_id === MY_ACCOUNT_ID
     }));
 
-    // Fill meta panel
     byId("formTitle").innerText = `Матч ${currentMatchId}`;
     byId("metaMatchId").innerText = currentMatchId;
     byId("metaRadiantWin").innerText = String(currentMeta.radiant_win);
     byId("metaDuration").innerText = String(currentMeta.duration);
     byId("metaGameMode").innerText = String(currentMeta.game_mode);
 
-    // Render table
     const table = byId("playersTable");
     table.innerHTML = "";
 
     currentSelections.forEach((sel, idx) => {
+      const hero = heroMap[sel.hero_id];
+      const heroName = hero ? hero.name : sel.hero_id;
+      const heroIcon = hero ? hero.icon : "";
+
       const row = document.createElement("tr");
       row.innerHTML = `
-        <td>${sel.hero_id}</td>
+        <td>
+          ${heroIcon ? `<img src="${heroIcon}" alt="${heroName}" class="hero-icon">` : ""}
+          ${heroName}
+        </td>
         <td>
           <select class="select" onchange="updateRole(${idx}, this.value)">
-            <option value="Carry" ${sel.role === "Carry" ? "selected" : ""}>Carry</option>
-            <option value="Mid" ${sel.role === "Mid" ? "selected" : ""}>Mid</option>
-            <option value="Offlane" ${sel.role === "Offlane" ? "selected" : ""}>Offlane</option>
-            <option value="Support" ${sel.role === "Support" ? "selected" : ""}>Support</option>
-            <option value="Hard Support" ${sel.role === "Hard Support" ? "selected" : ""}>Hard Support</option>
+            <option value="Carry">Carry</option>
+            <option value="Mid">Mid</option>
+            <option value="Offlane">Offlane</option>
+            <option value="Support" selected>Support</option>
+            <option value="Hard Support">Hard Support</option>
           </select>
         </td>
         <td>
-          <input class="input" type="number" min="0" max="10" value="${sel.status}" onchange="updateStatus(${idx}, this.value)" />
+          <input class="input" type="number" min="0" max="10" value="${sel.status}" onchange="updateStatus(${idx}, this.value)">
         </td>
         <td>
-          <input type="checkbox" ${sel.isMine ? "checked" : ""} onchange="updateIsMine(${idx}, this.checked)" />
+          <input type="checkbox" ${sel.isMine ? "checked" : ""} onchange="updateIsMine(${idx}, this.checked)">
         </td>
       `;
       table.appendChild(row);
@@ -201,18 +137,12 @@ async function openMatchForm(matchId) {
   }
 }
 
-function updateRole(idx, value) {
-  currentSelections[idx].role = value;
-}
-
+function updateRole(idx, value) { currentSelections[idx].role = value; }
 function updateStatus(idx, value) {
   const v = Number(value);
   currentSelections[idx].status = isNaN(v) ? 0 : Math.max(0, Math.min(10, v));
 }
-
-function updateIsMine(idx, value) {
-  currentSelections[idx].isMine = Boolean(value);
-}
+function updateIsMine(idx, value) { currentSelections[idx].isMine = Boolean(value); }
 
 function cancelForm() {
   hide(byId("matchForm"));
@@ -227,16 +157,9 @@ async function submitMatch() {
     return;
   }
 
-  // Validate at least 1 selection has a role/status
-  const invalid = currentSelections.some(sel => !sel.role || sel.status === null || sel.status === undefined);
-  if (invalid) {
-    alert("Будь ласка, заповни роль і статус для кожного героя");
-    return;
-  }
-
   const payload = {
     matchId: currentMatchId,
-    start_time: currentMeta.start_time || Math.floor(Date.now() / 1000), // prefer real match start_time
+    start_time: currentMeta.start_time || Math.floor(Date.now() / 1000),
     duration: currentMeta.duration || 0,
     radiant_win: Boolean(currentMeta.radiant_win),
     lobby_type: currentMeta.lobby_type || 0,
@@ -253,7 +176,6 @@ async function submitMatch() {
       body: JSON.stringify(payload)
     });
     const result = await res.json();
-
     if (result.error) {
       alert("Помилка: " + result.error);
       return;
@@ -266,18 +188,92 @@ async function submitMatch() {
   }
 }
 
-async function getPredict() {
-  const pre = byId("predict");
-  pre.textContent = "Завантаження...";
+// ------------ Saved matches (static view with names + portraits) ------------
+async function loadSavedMatches() {
+  const container = byId("matches");
+  container.innerHTML = "<div class='info'>Завантаження збережених...</div>";
   try {
-    const res = await fetch("/api/predict");
-    const data = await res.json();
-    pre.textContent = JSON.stringify(data, null, 2);
+    const res = await fetch("/api/savedMatches");
+    const matches = await res.json();
+
+    if (!Array.isArray(matches) || matches.length === 0) {
+      container.innerHTML = "<div class='info'>Немає збережених матчів</div>";
+      return;
+    }
+
+    container.innerHTML = "";
+    matches.forEach(m => {
+      const item = document.createElement("div");
+      item.className = "match-item";
+      item.innerHTML = `
+        <div class="match-row">
+          <div>
+            <strong>${m.match_id}</strong>
+            <span class="muted"> | Duration: ${m.duration}s | Radiant win: ${m.radiant_win}</span>
+          </div>
+          <div>
+            <button class="btn small" onclick="openSavedMatch(${m.match_id})">Переглянути</button>
+          </div>
+        </div>
+      `;
+      container.appendChild(item);
+    });
   } catch (err) {
-    console.error("getPredict error:", err);
-    pre.textContent = "Помилка отримання предікта";
+    console.error("loadSavedMatches error:", err);
+    container.innerHTML = "<div class='error'>Помилка завантаження збережених матчів</div>";
   }
 }
-window.onload = () => {
-  loadHeroes();
-};
+
+async function openSavedMatch(matchId) {
+  try {
+    const res = await fetch(`/api/savedMatchPlayers/${matchId}`);
+    const players = await res.json();
+
+    byId("formTitle").innerText = `Збережений матч ${matchId}`;
+    byId("metaMatchId").innerText = matchId;
+    byId("metaRadiantWin").innerText = "—";
+    byId("metaDuration").innerText = "—";
+    byId("metaGameMode").innerText = "—";
+
+    const table = byId("playersTable");
+    table.innerHTML = "";
+
+    players.forEach(p => {
+      const hero = heroMap[p.hero_id];
+      const heroName = hero ? hero.name : p.hero_id;
+      const heroIcon = hero ? hero.icon : "";
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>
+          ${heroIcon ? `<img src="${heroIcon}" alt="${heroName}" class="hero-icon">` : ""}
+          ${heroName}
+        </td>
+        <td>${roleTagHtml(p.role)}</td>
+        <td>${p.status}</td>
+        <td>${p.is_mine ? "✅" : ""}</td>
+      `;
+      table.appendChild(row);
+    });
+
+    // Hide save controls for saved matches (static view)
+    byId("matchForm").querySelector(".form-actions .primary").style.display = "none";
+    byId("matchForm").querySelector(".form-actions .danger").style.display = "inline-block";
+
+    show(byId("matchForm"));
+  } catch (err) {
+    console.error("openSavedMatch error:", err);
+    alert("Не вдалося відкрити збережений матч");
+  }
+}
+
+function roleTagHtml(role) {
+  const cls = {
+    "Carry": "role-tag Carry",
+    "Mid": "role-tag Mid",
+    "Offlane": "role-tag Offlane",
+    "Support": "role-tag Support",
+    "Hard Support": "role-tag HardSupport"
+  }[role] || "role-tag Unknown";
+  return `<span class="${cls}">${role}</span>`;
+}
