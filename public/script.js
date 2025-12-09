@@ -91,25 +91,24 @@ async function openMatchForm(matchId) {
       isMine: p.account_id === MY_ACCOUNT_ID
     }));
 
-    byId("formTitle").innerText = `Матч ${currentMatchId}`;
-    byId("metaMatchId").innerText = currentMatchId;
-    byId("metaRadiantWin").innerText = String(currentMeta.radiant_win);
-    byId("metaDuration").innerText = String(currentMeta.duration);
-    byId("metaGameMode").innerText = String(currentMeta.game_mode);
-
     const table = byId("playersTable");
     table.innerHTML = "";
-// визначаємо мою сторону
-const myPlayer = matchData.players.find(p => p.account_id === MY_ACCOUNT_ID);
-const mySideRadiant = myPlayer.player_slot < 128;
 
-// моя команда
-const myTeam = players.filter(p => mySideRadiant ? p.player_slot < 128 : p.player_slot >= 128);
+    // визначаємо мою сторону
+    const myPlayer = matchData.players.find(p => p.account_id === MY_ACCOUNT_ID);
+    const mySideRadiant = myPlayer && myPlayer.player_slot < 128;
 
-// суперники
-const enemyTeam = players.filter(p => mySideRadiant ? p.player_slot >= 128 : p.player_slot < 128);
-    
-    // заголовок для моєї команди
+    // моя команда
+    const myTeam = matchData.players.filter(p =>
+      mySideRadiant ? p.player_slot < 128 : p.player_slot >= 128
+    );
+
+    // суперники
+    const enemyTeam = matchData.players.filter(p =>
+      mySideRadiant ? p.player_slot >= 128 : p.player_slot < 128
+    );
+
+    // малюємо таблицю
     const myHeader = document.createElement("tr");
     myHeader.innerHTML = `<td colspan="4" class="team-header my-team">Моя команда</td>`;
     table.appendChild(myHeader);
@@ -118,27 +117,23 @@ const enemyTeam = players.filter(p => mySideRadiant ? p.player_slot >= 128 : p.p
       const hero = heroMap[sel.hero_id];
       const heroName = hero ? hero.name : sel.hero_id;
       const heroIcon = hero ? hero.icon : "";
-
       const row = document.createElement("tr");
       row.className = "my-team-row";
       row.innerHTML = `
         <td>${heroIcon ? `<img src="${heroIcon}" class="hero-icon">` : ""} ${heroName}</td>
-        <td>
-          <select onchange="updateRole(${idx}, this.value)">
-            <option value="Carry">Carry</option>
-            <option value="Mid">Mid</option>
-            <option value="Offlane">Offlane</option>
-            <option value="Support" selected>Support</option>
-            <option value="Hard Support">Hard Support</option>
-          </select>
-        </td>
+        <td><select onchange="updateRole(${idx}, this.value)">
+          <option value="Carry">Carry</option>
+          <option value="Mid">Mid</option>
+          <option value="Offlane">Offlane</option>
+          <option value="Support" selected>Support</option>
+          <option value="Hard Support">Hard Support</option>
+        </select></td>
         <td><input type="number" min="0" max="10" value="${sel.status}" onchange="updateStatus(${idx}, this.value)"></td>
         <td><input type="checkbox" ${sel.isMine ? "checked" : ""} onchange="updateIsMine(${idx}, this.checked)"></td>
       `;
       table.appendChild(row);
     });
 
-    // заголовок для суперників
     const enemyHeader = document.createElement("tr");
     enemyHeader.innerHTML = `<td colspan="4" class="team-header enemy-team">Суперники</td>`;
     table.appendChild(enemyHeader);
@@ -147,20 +142,17 @@ const enemyTeam = players.filter(p => mySideRadiant ? p.player_slot >= 128 : p.p
       const hero = heroMap[sel.hero_id];
       const heroName = hero ? hero.name : sel.hero_id;
       const heroIcon = hero ? hero.icon : "";
-
       const row = document.createElement("tr");
       row.className = "enemy-team-row";
       row.innerHTML = `
         <td>${heroIcon ? `<img src="${heroIcon}" class="hero-icon">` : ""} ${heroName}</td>
-        <td>
-          <select onchange="updateRole(${idx}, this.value)">
-            <option value="Carry">Carry</option>
-            <option value="Mid">Mid</option>
-            <option value="Offlane">Offlane</option>
-            <option value="Support" selected>Support</option>
-            <option value="Hard Support">Hard Support</option>
-          </select>
-        </td>
+        <td><select onchange="updateRole(${idx}, this.value)">
+          <option value="Carry">Carry</option>
+          <option value="Mid">Mid</option>
+          <option value="Offlane">Offlane</option>
+          <option value="Support" selected>Support</option>
+          <option value="Hard Support">Hard Support</option>
+        </select></td>
         <td><input type="number" min="0" max="10" value="${sel.status}" onchange="updateStatus(${idx}, this.value)"></td>
         <td><input type="checkbox" ${sel.isMine ? "checked" : ""} onchange="updateIsMine(${idx}, this.checked)"></td>
       `;
@@ -173,6 +165,7 @@ const enemyTeam = players.filter(p => mySideRadiant ? p.player_slot >= 128 : p.p
     alert("Не вдалося відкрити матч");
   }
 }
+
 function updateRole(idx, value) { currentSelections[idx].role = value; }
 function updateStatus(idx, value) {
   const v = Number(value);
@@ -267,15 +260,11 @@ async function openSavedMatch(matchId) {
 
     const table = byId("playersTable");
     table.innerHTML = "";
-// визначаємо мою сторону
-const myPlayer = matchData.players.find(p => p.account_id === MY_ACCOUNT_ID);
-const mySideRadiant = myPlayer.player_slot < 128;
 
-// моя команда
-const myTeam = players.filter(p => p.is_mine);
-const enemyTeam = players.filter(p => !p.is_mine);
+    // тут немає player_slot, тому ділимо по is_mine
+    const myTeam = players.filter(p => p.is_mine);
+    const enemyTeam = players.filter(p => !p.is_mine);
 
-    // заголовок для моєї команди
     const myHeader = document.createElement("tr");
     myHeader.innerHTML = `<td colspan="4" class="team-header my-team">Моя команда</td>`;
     table.appendChild(myHeader);
@@ -295,7 +284,6 @@ const enemyTeam = players.filter(p => !p.is_mine);
       table.appendChild(row);
     });
 
-    // заголовок для суперників
     const enemyHeader = document.createElement("tr");
     enemyHeader.innerHTML = `<td colspan="4" class="team-header enemy-team">Суперники</td>`;
     table.appendChild(enemyHeader);
@@ -321,6 +309,7 @@ const enemyTeam = players.filter(p => !p.is_mine);
     alert("Не вдалося відкрити збережений матч");
   }
 }
+
 function roleTagHtml(role) {
   const cls = {
     "Carry": "role-tag Carry",
