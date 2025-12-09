@@ -100,19 +100,26 @@ async function openMatchForm(matchId) {
     const table = byId("playersTable");
     table.innerHTML = "";
 
-    currentSelections.forEach((sel, idx) => {
+    // моя команда
+    const myTeam = currentSelections.filter(p => p.isMine);
+    const enemyTeam = currentSelections.filter(p => !p.isMine);
+
+    // заголовок для моєї команди
+    const myHeader = document.createElement("tr");
+    myHeader.innerHTML = `<td colspan="4" class="team-header my-team">Моя команда</td>`;
+    table.appendChild(myHeader);
+
+    myTeam.forEach((sel, idx) => {
       const hero = heroMap[sel.hero_id];
       const heroName = hero ? hero.name : sel.hero_id;
       const heroIcon = hero ? hero.icon : "";
 
       const row = document.createElement("tr");
+      row.className = "my-team-row";
       row.innerHTML = `
+        <td>${heroIcon ? `<img src="${heroIcon}" class="hero-icon">` : ""} ${heroName}</td>
         <td>
-          ${heroIcon ? `<img src="${heroIcon}" alt="${heroName}" class="hero-icon">` : ""}
-          ${heroName}
-        </td>
-        <td>
-          <select class="select" onchange="updateRole(${idx}, this.value)">
+          <select onchange="updateRole(${idx}, this.value)">
             <option value="Carry">Carry</option>
             <option value="Mid">Mid</option>
             <option value="Offlane">Offlane</option>
@@ -120,12 +127,37 @@ async function openMatchForm(matchId) {
             <option value="Hard Support">Hard Support</option>
           </select>
         </td>
+        <td><input type="number" min="0" max="10" value="${sel.status}" onchange="updateStatus(${idx}, this.value)"></td>
+        <td><input type="checkbox" ${sel.isMine ? "checked" : ""} onchange="updateIsMine(${idx}, this.checked)"></td>
+      `;
+      table.appendChild(row);
+    });
+
+    // заголовок для суперників
+    const enemyHeader = document.createElement("tr");
+    enemyHeader.innerHTML = `<td colspan="4" class="team-header enemy-team">Суперники</td>`;
+    table.appendChild(enemyHeader);
+
+    enemyTeam.forEach((sel, idx) => {
+      const hero = heroMap[sel.hero_id];
+      const heroName = hero ? hero.name : sel.hero_id;
+      const heroIcon = hero ? hero.icon : "";
+
+      const row = document.createElement("tr");
+      row.className = "enemy-team-row";
+      row.innerHTML = `
+        <td>${heroIcon ? `<img src="${heroIcon}" class="hero-icon">` : ""} ${heroName}</td>
         <td>
-          <input class="input" type="number" min="0" max="10" value="${sel.status}" onchange="updateStatus(${idx}, this.value)">
+          <select onchange="updateRole(${idx}, this.value)">
+            <option value="Carry">Carry</option>
+            <option value="Mid">Mid</option>
+            <option value="Offlane">Offlane</option>
+            <option value="Support" selected>Support</option>
+            <option value="Hard Support">Hard Support</option>
+          </select>
         </td>
-        <td>
-          <input type="checkbox" ${sel.isMine ? "checked" : ""} onchange="updateIsMine(${idx}, this.checked)">
-        </td>
+        <td><input type="number" min="0" max="10" value="${sel.status}" onchange="updateStatus(${idx}, this.value)"></td>
+        <td><input type="checkbox" ${sel.isMine ? "checked" : ""} onchange="updateIsMine(${idx}, this.checked)"></td>
       `;
       table.appendChild(row);
     });
@@ -136,7 +168,6 @@ async function openMatchForm(matchId) {
     alert("Не вдалося відкрити матч");
   }
 }
-
 function updateRole(idx, value) { currentSelections[idx].role = value; }
 function updateStatus(idx, value) {
   const v = Number(value);
@@ -229,26 +260,27 @@ async function openSavedMatch(matchId) {
     const res = await fetch(`/api/savedMatchPlayers/${matchId}`);
     const players = await res.json();
 
-    byId("formTitle").innerText = `Збережений матч ${matchId}`;
-    byId("metaMatchId").innerText = matchId;
-    byId("metaRadiantWin").innerText = "—";
-    byId("metaDuration").innerText = "—";
-    byId("metaGameMode").innerText = "—";
-
     const table = byId("playersTable");
     table.innerHTML = "";
 
-    players.forEach(p => {
+    // моя команда
+    const myTeam = players.filter(p => p.is_mine);
+    // суперники
+    const enemyTeam = players.filter(p => !p.is_mine);
+
+    // заголовок для моєї команди
+    const myHeader = document.createElement("tr");
+    myHeader.innerHTML = `<td colspan="4" class="team-header my-team">Моя команда</td>`;
+    table.appendChild(myHeader);
+
+    myTeam.forEach(p => {
       const hero = heroMap[p.hero_id];
       const heroName = hero ? hero.name : p.hero_id;
       const heroIcon = hero ? hero.icon : "";
-
       const row = document.createElement("tr");
+      row.className = "my-team-row";
       row.innerHTML = `
-        <td>
-          ${heroIcon ? `<img src="${heroIcon}" alt="${heroName}" class="hero-icon">` : ""}
-          ${heroName}
-        </td>
+        <td>${heroIcon ? `<img src="${heroIcon}" class="hero-icon">` : ""} ${heroName}</td>
         <td>${roleTagHtml(p.role)}</td>
         <td>${p.status}</td>
         <td>${p.is_mine ? "✅" : ""}</td>
@@ -256,9 +288,25 @@ async function openSavedMatch(matchId) {
       table.appendChild(row);
     });
 
-    // Hide save controls for saved matches (static view)
-    byId("matchForm").querySelector(".form-actions .primary").style.display = "none";
-    byId("matchForm").querySelector(".form-actions .danger").style.display = "inline-block";
+    // заголовок для суперників
+    const enemyHeader = document.createElement("tr");
+    enemyHeader.innerHTML = `<td colspan="4" class="team-header enemy-team">Суперники</td>`;
+    table.appendChild(enemyHeader);
+
+    enemyTeam.forEach(p => {
+      const hero = heroMap[p.hero_id];
+      const heroName = hero ? hero.name : p.hero_id;
+      const heroIcon = hero ? hero.icon : "";
+      const row = document.createElement("tr");
+      row.className = "enemy-team-row";
+      row.innerHTML = `
+        <td>${heroIcon ? `<img src="${heroIcon}" class="hero-icon">` : ""} ${heroName}</td>
+        <td>${roleTagHtml(p.role)}</td>
+        <td>${p.status}</td>
+        <td>${p.is_mine ? "✅" : ""}</td>
+      `;
+      table.appendChild(row);
+    });
 
     show(byId("matchForm"));
   } catch (err) {
@@ -266,7 +314,6 @@ async function openSavedMatch(matchId) {
     alert("Не вдалося відкрити збережений матч");
   }
 }
-
 function roleTagHtml(role) {
   const cls = {
     "Carry": "role-tag Carry",
