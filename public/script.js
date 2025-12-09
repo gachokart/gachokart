@@ -100,7 +100,7 @@ async function openMatchForm(matchId) {
     const table = byId("playersTable");
     table.innerHTML = "";
 // визначаємо мою сторону
-const myPlayer = players.find(p => p.account_id === MY_ACCOUNT_ID);
+const myPlayer = matchData.players.find(p => p.account_id === MY_ACCOUNT_ID);
 const mySideRadiant = myPlayer.player_slot < 128;
 
 // моя команда
@@ -268,14 +268,12 @@ async function openSavedMatch(matchId) {
     const table = byId("playersTable");
     table.innerHTML = "";
 // визначаємо мою сторону
-const myPlayer = players.find(p => p.account_id === MY_ACCOUNT_ID);
+const myPlayer = matchData.players.find(p => p.account_id === MY_ACCOUNT_ID);
 const mySideRadiant = myPlayer.player_slot < 128;
 
 // моя команда
-const myTeam = players.filter(p => mySideRadiant ? p.player_slot < 128 : p.player_slot >= 128);
-
-// суперники
-const enemyTeam = players.filter(p => mySideRadiant ? p.player_slot >= 128 : p.player_slot < 128);
+const myTeam = players.filter(p => p.is_mine);
+const enemyTeam = players.filter(p => !p.is_mine);
 
     // заголовок для моєї команди
     const myHeader = document.createElement("tr");
