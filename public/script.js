@@ -95,18 +95,18 @@ async function openMatchForm(matchId) {
     table.innerHTML = "";
 
     // визначаємо мою сторону
-    const myPlayer = matchData.players.find(p => p.account_id === MY_ACCOUNT_ID);
-    const mySideRadiant = myPlayer && myPlayer.player_slot < 128;
+const myPlayer = matchData.players.find(p => p.account_id === MY_ACCOUNT_ID);
+const mySideRadiant = myPlayer && myPlayer.player_slot < 128;
 
-    // моя команда
-    const myTeam = matchData.players.filter(p =>
-      mySideRadiant ? p.player_slot < 128 : p.player_slot >= 128
-    );
+// моя команда
+const myTeam = currentSelections.filter((sel, idx) =>
+  mySideRadiant ? matchData.players[idx].player_slot < 128 : matchData.players[idx].player_slot >= 128
+);
 
-    // суперники
-    const enemyTeam = matchData.players.filter(p =>
-      mySideRadiant ? p.player_slot >= 128 : p.player_slot < 128
-    );
+// суперники
+const enemyTeam = currentSelections.filter((sel, idx) =>
+  mySideRadiant ? matchData.players[idx].player_slot >= 128 : matchData.players[idx].player_slot < 128
+);
 
     // малюємо таблицю
     const myHeader = document.createElement("tr");
@@ -262,8 +262,8 @@ async function openSavedMatch(matchId) {
     table.innerHTML = "";
 
     // тут немає player_slot, тому ділимо по is_mine
-    const myTeam = players.filter(p => p.is_mine);
-    const enemyTeam = players.filter(p => !p.is_mine);
+const myTeam = players.filter(p => p.is_mine);
+const enemyTeam = players.filter(p => !p.is_mine);
 
     const myHeader = document.createElement("tr");
     myHeader.innerHTML = `<td colspan="4" class="team-header my-team">Моя команда</td>`;
