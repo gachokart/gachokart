@@ -156,6 +156,7 @@ async function openSavedMatch(matchId) {
     alert("Не вдалося відкрити збережений матч");
   }
 }
+
 function updateRole(idx, value) { currentSelections[idx].role = value; }
 function updateStatus(idx, value) {
   const v = Number(value);
