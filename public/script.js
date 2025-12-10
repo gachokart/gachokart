@@ -246,23 +246,60 @@ async function loadSavedMatches() {
   }
 }
 
-async function openSavedMatch(matchId) {
+async function openMatchForm(matchId) {
   try {
-    const res = await fetch(`/api/savedMatchPlayers/${matchId}`);
-    const players = await res.json();
+    const res = await fetch(`/api/match/${matchId}`);
+    const matchData = await res.json();
+
+    currentMatchId = matchData.match_id;
+    currentMeta = {
+      start_time: matchData.start_time,
+      duration: matchData.duration,
+      radiant_win: matchData.radiant_win,
+      lobby_type: matchData.lobby_type,
+      game_mode: matchData.game_mode,
+      cluster: matchData.cluster,
+      radiant_score: matchData.radiant_score
+    };
+
+    currentSelections = matchData.players.map(p => ({
+      hero_id: p.hero_id,
+      role: "Support",
+      status: (p.kills + p.assists - p.deaths), // проста оцінка замість 0
+      isMine: p.account_id === MY_ACCOUNT_ID
+    }));
 
     const table = byId("playersTable");
     table.innerHTML = "";
 
-    // визначаємо мою команду через індекс у масиві
-    const myIndex = players.findIndex(p => p.is_mine);
+    // заповнюємо мета-блок
+    byId("formTitle").innerText = `Матч ${currentMatchId}`;
+    byId("metaMatchId").innerText = matchData.match_id || "—";
+    byId("metaRadiantWin").innerText = matchData.radiant_win ? "Radiant переміг" : "Dire переміг";
+    byId("metaDuration").innerText = matchData.duration ? `${Math.floor(matchData.duration/60)} хв` : "—";
+
+    if (matchData.start_time) {
+      const date = new Date(matchData.start_time * 1000);
+      byId("metaGameMode").innerText = date.toLocaleDateString("uk-UA", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    } else {
+      byId("metaGameMode").innerText = "—";
+    }
+
+    // визначаємо мою команду через індекс у масиві (Radiant перші 5, Dire другі 5)
+    const myIndex = matchData.players.findIndex(p => p.account_id === MY_ACCOUNT_ID);
     let myTeam, enemyTeam;
     if (myIndex < 5) {
-      myTeam = players.slice(0, 5);
-      enemyTeam = players.slice(5, 10);
+      myTeam = currentSelections.slice(0, 5);
+      enemyTeam = currentSelections.slice(5, 10);
     } else {
-      myTeam = players.slice(5, 10);
-      enemyTeam = players.slice(0, 5);
+      myTeam = currentSelections.slice(5, 10);
+      enemyTeam = currentSelections.slice(0, 5);
     }
 
     // малюємо мою команду
@@ -270,17 +307,23 @@ async function openSavedMatch(matchId) {
     myHeader.innerHTML = `<td colspan="4" class="team-header my-team">Моя команда (${myTeam.length})</td>`;
     table.appendChild(myHeader);
 
-    myTeam.forEach(p => {
-      const hero = heroMap[p.hero_id];
-      const heroName = hero ? hero.name : p.hero_id;
+    myTeam.forEach((sel, idx) => {
+      const hero = heroMap[sel.hero_id];
+      const heroName = hero ? hero.name : sel.hero_id;
       const heroIcon = hero ? hero.icon : "";
       const row = document.createElement("tr");
       row.className = "my-team-row";
       row.innerHTML = `
         <td>${heroIcon ? `<img src="${heroIcon}" class="hero-icon">` : ""} ${heroName}</td>
-        <td>${roleTagHtml(p.role)}</td>
-        <td>${p.status}</td>
-        <td>${p.is_mine ? "✅" : ""}</td>
+        <td><select onchange="updateRole(${idx}, this.value)">
+          <option value="Carry">Carry</option>
+          <option value="Mid">Mid</option>
+          <option value="Offlane">Offlane</option>
+          <option value="Support" ${sel.role==="Support"?"selected":""}>Support</option>
+          <option value="Hard Support">Hard Support</option>
+        </select></td>
+        <td><input type="number" min="0" max="10" value="${sel.status}" onchange="updateStatus(${idx}, this.value)"></td>
+        <td><input type="checkbox" ${sel.isMine ? "checked" : ""} onchange="updateIsMine(${idx}, this.checked)"></td>
       `;
       table.appendChild(row);
     });
@@ -290,28 +333,33 @@ async function openSavedMatch(matchId) {
     enemyHeader.innerHTML = `<td colspan="4" class="team-header enemy-team">Суперники (${enemyTeam.length})</td>`;
     table.appendChild(enemyHeader);
 
-    enemyTeam.forEach(p => {
-      const hero = heroMap[p.hero_id];
-      const heroName = hero ? hero.name : p.hero_id;
+    enemyTeam.forEach((sel, idx) => {
+      const hero = heroMap[sel.hero_id];
+      const heroName = hero ? hero.name : sel.hero_id;
       const heroIcon = hero ? hero.icon : "";
       const row = document.createElement("tr");
       row.className = "enemy-team-row";
       row.innerHTML = `
         <td>${heroIcon ? `<img src="${heroIcon}" class="hero-icon">` : ""} ${heroName}</td>
-        <td>${roleTagHtml(p.role)}</td>
-        <td>${p.status}</td>
-        <td>${p.is_mine ? "✅" : ""}</td>
+        <td><select onchange="updateRole(${idx}, this.value)">
+          <option value="Carry">Carry</option>
+          <option value="Mid">Mid</option>
+          <option value="Offlane">Offlane</option>
+          <option value="Support" ${sel.role==="Support"?"selected":""}>Support</option>
+          <option value="Hard Support">Hard Support</option>
+        </select></td>
+        <td><input type="number" min="0" max="10" value="${sel.status}" onchange="updateStatus(${idx}, this.value)"></td>
+        <td><input type="checkbox" ${sel.isMine ? "checked" : ""} onchange="updateIsMine(${idx}, this.checked)"></td>
       `;
       table.appendChild(row);
     });
 
     show(byId("matchForm"));
   } catch (err) {
-    console.error("openSavedMatch error:", err);
-    alert("Не вдалося відкрити збережений матч");
+    console.error("openMatchForm error:", err);
+    alert("Не вдалося відкрити матч");
   }
 }
-
 function roleTagHtml(role) {
   const cls = {
     "Carry": "role-tag Carry",
