@@ -70,17 +70,19 @@ async function loadMatches() {
 
 async function openSavedMatch(matchId) {
   try {
+    // тягнемо гравців цього матчу
     const res = await fetch(`/api/savedMatchPlayers/${matchId}`);
     const players = await res.json();
 
-    const table = byId("playersTable");
-    table.innerHTML = "";
-
-    // мета-дані з таблиці matches
+    // тягнемо мета-дані всіх матчів і знаходимо потрібний
     const metaRes = await fetch(`/api/savedMatches`);
     const allMatches = await metaRes.json();
     const matchMeta = allMatches.find(m => m.match_id == matchId);
 
+    const table = byId("playersTable");
+    table.innerHTML = "";
+
+    // заповнюємо мета-блок
     byId("formTitle").innerText = `Збережений матч ${matchId}`;
     byId("metaMatchId").innerText = matchMeta?.match_id || "—";
     byId("metaRadiantWin").innerText = matchMeta?.radiant_win ? "Radiant переміг" : "Dire переміг";
