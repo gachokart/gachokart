@@ -94,23 +94,20 @@ async function openMatchForm(matchId) {
     const table = byId("playersTable");
     table.innerHTML = "";
 
-    // визначаємо мою сторону
-const myPlayer = matchData.players.find(p => p.account_id === MY_ACCOUNT_ID);
-const mySideRadiant = myPlayer && myPlayer.player_slot < 128;
+    // визначаємо мою команду через індекс у масиві
+    const myIndex = matchData.players.findIndex(p => p.account_id === MY_ACCOUNT_ID);
+    let myTeam, enemyTeam;
+    if (myIndex < 5) {
+      myTeam = currentSelections.slice(0, 5);
+      enemyTeam = currentSelections.slice(5, 10);
+    } else {
+      myTeam = currentSelections.slice(5, 10);
+      enemyTeam = currentSelections.slice(0, 5);
+    }
 
-// моя команда
-const myTeam = currentSelections.filter((sel, idx) =>
-  mySideRadiant ? matchData.players[idx].player_slot < 128 : matchData.players[idx].player_slot >= 128
-);
-
-// суперники
-const enemyTeam = currentSelections.filter((sel, idx) =>
-  mySideRadiant ? matchData.players[idx].player_slot >= 128 : matchData.players[idx].player_slot < 128
-);
-
-    // малюємо таблицю
+    // малюємо мою команду
     const myHeader = document.createElement("tr");
-    myHeader.innerHTML = `<td colspan="4" class="team-header my-team">Моя команда</td>`;
+    myHeader.innerHTML = `<td colspan="4" class="team-header my-team">Моя команда (${myTeam.length})</td>`;
     table.appendChild(myHeader);
 
     myTeam.forEach((sel, idx) => {
@@ -134,8 +131,9 @@ const enemyTeam = currentSelections.filter((sel, idx) =>
       table.appendChild(row);
     });
 
+    // малюємо суперників
     const enemyHeader = document.createElement("tr");
-    enemyHeader.innerHTML = `<td colspan="4" class="team-header enemy-team">Суперники</td>`;
+    enemyHeader.innerHTML = `<td colspan="4" class="team-header enemy-team">Суперники (${enemyTeam.length})</td>`;
     table.appendChild(enemyHeader);
 
     enemyTeam.forEach((sel, idx) => {
@@ -261,12 +259,20 @@ async function openSavedMatch(matchId) {
     const table = byId("playersTable");
     table.innerHTML = "";
 
-    // тут немає player_slot, тому ділимо по is_mine
-const myTeam = players.filter(p => p.is_mine);
-const enemyTeam = players.filter(p => !p.is_mine);
+    // визначаємо мою команду через індекс у масиві
+    const myIndex = players.findIndex(p => p.is_mine);
+    let myTeam, enemyTeam;
+    if (myIndex < 5) {
+      myTeam = players.slice(0, 5);
+      enemyTeam = players.slice(5, 10);
+    } else {
+      myTeam = players.slice(5, 10);
+      enemyTeam = players.slice(0, 5);
+    }
 
+    // малюємо мою команду
     const myHeader = document.createElement("tr");
-    myHeader.innerHTML = `<td colspan="4" class="team-header my-team">Моя команда</td>`;
+    myHeader.innerHTML = `<td colspan="4" class="team-header my-team">Моя команда (${myTeam.length})</td>`;
     table.appendChild(myHeader);
 
     myTeam.forEach(p => {
@@ -284,8 +290,9 @@ const enemyTeam = players.filter(p => !p.is_mine);
       table.appendChild(row);
     });
 
+    // малюємо суперників
     const enemyHeader = document.createElement("tr");
-    enemyHeader.innerHTML = `<td colspan="4" class="team-header enemy-team">Суперники</td>`;
+    enemyHeader.innerHTML = `<td colspan="4" class="team-header enemy-team">Суперники (${enemyTeam.length})</td>`;
     table.appendChild(enemyHeader);
 
     enemyTeam.forEach(p => {
