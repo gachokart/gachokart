@@ -94,6 +94,26 @@ async function openMatchForm(matchId) {
     const table = byId("playersTable");
     table.innerHTML = "";
 
+    // Заповнюємо мета-інформацію
+    byId("formTitle").innerText = `Матч ${currentMatchId}`;
+    byId("metaMatchId").innerText = matchData.match_id || "—";
+    byId("metaRadiantWin").innerText = matchData.radiant_win ? "Radiant переміг" : "Dire переміг";
+    byId("metaDuration").innerText = matchData.duration ? `${Math.floor(matchData.duration/60)} хв` : "—";
+
+    // замість game_mode показуємо дату
+    if (matchData.start_time) {
+      const date = new Date(matchData.start_time * 1000); // UNIX → мілісекунди
+      byId("metaGameMode").innerText = date.toLocaleDateString("uk-UA", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    } else {
+      byId("metaGameMode").innerText = "—";
+    }
+
     // визначаємо мою команду через індекс у масиві
     const myIndex = matchData.players.findIndex(p => p.account_id === MY_ACCOUNT_ID);
     let myTeam, enemyTeam;
