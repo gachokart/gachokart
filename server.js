@@ -34,7 +34,7 @@ app.get("/api/savedMatchPlayers/:id", async (req, res) => {
 app.get("/api/savedMatches", async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT * FROM matches ORDER BY start_time DESC LIMIT 20"
+      "SELECT * FROM matches ORDER BY start_time DESC "
     );
     res.json(result.rows);
   } catch (err) {
