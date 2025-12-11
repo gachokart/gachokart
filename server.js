@@ -89,11 +89,18 @@ app.post("/api/saveMatch", async (req, res) => {
   try {
     // 1) Upsert match header
     await pool.query(
-      `INSERT INTO matches (match_id, start_time, duration, radiant_win, lobby_type, game_mode, cluster, radiant_score)
-       VALUES ($1, to_timestamp($2), $3, $4, $5, $6, $7, $8)
-       ON CONFLICT (match_id) DO UPDATE`,
-      [matchId, start_time, duration, radiant_win, lobby_type, game_mode, cluster, radiant_score]
-    );
+  `INSERT INTO matches (match_id, start_time, duration, radiant_win, lobby_type, game_mode, cluster, radiant_score)
+   VALUES ($1, to_timestamp($2), $3, $4, $5, $6, $7, $8)
+   ON CONFLICT (match_id) DO UPDATE
+   SET start_time = EXCLUDED.start_time,
+       duration = EXCLUDED.duration,
+       radiant_win = EXCLUDED.radiant_win,
+       lobby_type = EXCLUDED.lobby_type,
+       game_mode = EXCLUDED.game_mode,
+       cluster = EXCLUDED.cluster,
+       radiant_score = EXCLUDED.radiant_score;`,   // ← додай крапку з комою всередині рядка
+  [matchId, start_time, duration, radiant_win, lobby_type, game_mode, cluster, radiant_score]
+);
 
     // 2) Clear existing players for this match to avoid duplicates
     await pool.query(`DELETE FROM match_players WHERE match_id = $1`, [matchId]);
