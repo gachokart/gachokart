@@ -91,7 +91,7 @@ app.post("/api/saveMatch", async (req, res) => {
     await pool.query(
       `INSERT INTO matches (match_id, start_time, duration, radiant_win, lobby_type, game_mode, cluster, radiant_score)
        VALUES ($1, to_timestamp($2), $3, $4, $5, $6, $7, $8)
-       ON CONFLICT (match_id) DO NOTHING`,
+       ON CONFLICT (match_id) DO UPDATE`,
       [matchId, start_time, duration, radiant_win, lobby_type, game_mode, cluster, radiant_score]
     );
 
