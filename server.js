@@ -88,7 +88,7 @@ app.post("/api/saveMatch", async (req, res) => {
 
   try {
     // 1) Upsert match header
-    await pool.query(
+await pool.query(
   `INSERT INTO matches (match_id, start_time, duration, radiant_win, lobby_type, game_mode, cluster, radiant_score)
    VALUES ($1, to_timestamp($2), $3, $4, $5, $6, $7, $8)
    ON CONFLICT (match_id) DO UPDATE
@@ -98,22 +98,21 @@ app.post("/api/saveMatch", async (req, res) => {
        lobby_type = EXCLUDED.lobby_type,
        game_mode = EXCLUDED.game_mode,
        cluster = EXCLUDED.cluster,
-       radiant_score = EXCLUDED.radiant_score;`,   // ← додай крапку з комою всередині рядка
+       radiant_score = EXCLUDED.radiant_score;`,
   [matchId, start_time, duration, radiant_win, lobby_type, game_mode, cluster, radiant_score]
 );
 
-    // 2) Clear existing players for this match to avoid duplicates
-    await pool.query(`DELETE FROM match_players WHERE match_id = $1`, [matchId]);
+// 2) Clear existing players
+await pool.query(`DELETE FROM match_players WHERE match_id = $1`, [matchId]);
 
-    // 3) Insert players
-    for (const sel of selections) {
-      if (!sel.hero_id) continue; // guard
-      await pool.query(
-        `INSERT INTO match_players (match_id, hero_id, role, status, is_mine)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [matchId, sel.hero_id, sel.role, sel.status, sel.isMine]
-      );
-    }
+// 3) Insert players with role/status
+for (const sel of selections) {
+  await pool.query(
+    `INSERT INTO match_players (match_id, hero_id, role, status, is_mine)
+     VALUES ($1, $2, $3, $4, $5)`,
+    [matchId, sel.hero_id, sel.role, sel.status, sel.isMine]
+  );
+}
 
     res.json({ success: true, message: `Матч ${matchId} збережено у базі` });
   } catch (err) {
