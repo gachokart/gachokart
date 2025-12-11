@@ -73,15 +73,13 @@ async function loadSavedMatches() {
     const res = await fetch("/api/savedMatches");
     const matches = await res.json();
 
-    console.log("Loaded saved matches:", matches);
-
     const list = document.getElementById("savedMatchesList");
     list.innerHTML = "";
 
     matches.forEach(m => {
       const li = document.createElement("li");
       li.textContent = `Матч ${m.match_id} — ${m.radiant_win ? "Radiant" : "Dire"} — ${Math.floor(m.duration/60)} хв`;
-      li.onclick = () => openSavedMatch(m.match_id);
+      li.onclick = () => openSavedMatch(m.match_id);   // ← ось тут
       list.appendChild(li);
     });
   } catch (err) {
