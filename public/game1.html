@@ -17,16 +17,24 @@
   </header>
 
   <main class="container">
+    <!-- Останні матчі -->
     <section class="card">
       <h2>Останні матчі</h2>
       <div id="matches" class="matches-list"></div>
     </section>
 
+    <!-- Список збережених матчів -->
+    <section class="card">
+      <h2>Збережені матчі</h2>
+      <ul id="savedMatchesList" class="matches-list"></ul>
+    </section>
+
+    <!-- Форма редагування конкретного матчу -->
     <section class="card">
       <h2>Форма збереження матчу</h2>
       <div id="matchForm" class="form-container hidden">
         <h3 id="formTitle">Матч</h3>
-<div id="savedMatchesList"></div>
+
         <div class="match-meta">
           <div><strong>Match ID:</strong> <span id="metaMatchId">—</span></div>
           <div><strong>Radiant win:</strong> <span id="metaRadiantWin">—</span></div>
@@ -53,6 +61,7 @@
       </div>
     </section>
 
+    <!-- Результат предікта -->
     <section class="card">
       <h2>Результат предікта</h2>
       <pre id="predict" class="pre"></pre>
