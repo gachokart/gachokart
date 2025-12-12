@@ -107,7 +107,7 @@ async function openMatchForm(matchId) {
       hero_id: p.hero_id,
       role: "Support",
       status: (p.kills + p.assists - p.deaths), // проста оцінка замість 0
-      isMine: p.account_id === MY_ACCOUNT_ID
+      is_mine: p.account_id === MY_ACCOUNT_ID
     }));
 
     const table = byId("playersTable");
