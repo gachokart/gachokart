@@ -1,7 +1,16 @@
 import express from "express";
 import bodyParser from "body-parser";
 import { Pool } from "pg";
+import path from "path";
+import { fileURLToPath } from "url";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Вже є: app.use(express.static("public"));
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "game1.html"));
+});
 const app = express();
 app.use(bodyParser.json());
 app.use(express.static("public")); // щоб віддавати фронтенд
