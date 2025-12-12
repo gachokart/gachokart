@@ -15,6 +15,18 @@ const pool = new Pool({
 // Utility: OpenDota Player ID (replace with your own if needed)
 const MY_ACCOUNT_ID = 863386335;
 
+// API: останні матчі з OpenDota
+app.get("/api/matches", async (req, res) => {
+  try {
+    const response = await fetch(`https://api.opendota.com/api/players/${MY_ACCOUNT_ID}/recentMatches`);
+    const matches = await response.json();
+    res.json(matches);
+  } catch (err) {
+    console.error("Recent matches error:", err);
+    res.status(500).json({ error: "Не вдалося отримати дані з OpenDota" });
+  }
+});
+
 // API: збереження матчу (matches + match_players)
 app.post("/api/saveMatch", async (req, res) => {
   const {
