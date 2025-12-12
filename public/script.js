@@ -233,13 +233,13 @@ async function submitMatch() {
       // визначаємо сторону: перші 5 — Radiant, другі 5 — Dire
       const player_slot = idx < 5 ? idx : idx + 128;
 
-      players.push({
-        hero_id: heroId,
-        role,
-        status,
-        is_mine: isMine,
-        player_slot
-      });
+players.push({
+  hero_id: heroId,
+  role,
+  status,
+  is_mine: isMine,
+  player_slot
+});
     });
 
     const res = await fetch("/api/saveMatch", {
