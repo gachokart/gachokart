@@ -1,15 +1,21 @@
 import express from "express";
 import bodyParser from "body-parser";
 import { Pool } from "pg";
-import path from "path";
 
 const app = express();
 app.use(bodyParser.json());
-app.use(express.static("public"));
+app.use(express.static("public")); // щоб віддавати фронтенд
 
+// Підключення до Postgres
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || "postgres://postgres:password@localhost:5432/dota",
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
+});
+
+// Логування кожного запиту
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
 });
 
 // === Збереження матчу ===
@@ -19,6 +25,7 @@ app.post("/api/saveMatch", async (req, res) => {
     console.log("Saving match:", matchId);
     console.log("Players:", players);
 
+    // Апсерт заголовка матчу
     await pool.query(
       `INSERT INTO matches (match_id, start_time, duration, radiant_win, lobby_type, game_mode, cluster, radiant_score)
        VALUES ($1, NOW(), 0, false, 0, 0, 0, 0)
@@ -26,6 +33,7 @@ app.post("/api/saveMatch", async (req, res) => {
       [matchId]
     );
 
+    // Апсерт гравців
     for (const p of players) {
       await pool.query(
         `INSERT INTO match_players (match_id, hero_id, role, status, is_mine, player_slot)
@@ -48,19 +56,30 @@ app.post("/api/saveMatch", async (req, res) => {
 
 // === Отримати список матчів ===
 app.get("/api/savedMatches", async (req, res) => {
-  const result = await pool.query("SELECT * FROM matches ORDER BY start_time DESC");
-  res.json(result.rows);
+  try {
+    const result = await pool.query("SELECT * FROM matches ORDER BY start_time DESC");
+    res.json(result.rows);
+  } catch (err) {
+    console.error("savedMatches error:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // === Отримати гравців конкретного матчу ===
 app.get("/api/savedMatchPlayers/:id", async (req, res) => {
-  const matchId = req.params.id;
-  const result = await pool.query(
-    "SELECT * FROM match_players WHERE match_id = $1 ORDER BY player_slot ASC",
-    [matchId]
-  );
-  res.json(result.rows);
+  try {
+    const matchId = req.params.id;
+    const result = await pool.query(
+      "SELECT * FROM match_players WHERE match_id = $1 ORDER BY player_slot ASC",
+      [matchId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("savedMatchPlayers error:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
+// Запуск сервера
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
