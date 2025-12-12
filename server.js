@@ -48,56 +48,35 @@ app.get("/api/match/:id", async (req, res) => {
 
 // API: збереження матчу (matches + match_players)
 app.post("/api/saveMatch", async (req, res) => {
-  const {
-    matchId,
-    selections,
-    start_time,
-    duration,
-    radiant_win,
-    lobby_type,
-    game_mode,
-    cluster,
-    radiant_score
-  } = req.body;
-
-  if (!matchId || !Array.isArray(selections) || selections.length === 0) {
-    return res.status(400).json({ error: "Неповні дані: matchId або selections" });
-  }
-
   try {
-    // 1) Upsert match header
+    const { matchId, players } = req.body;
+
+    // апсерт заголовка матчу
     await pool.query(
       `INSERT INTO matches (match_id, start_time, duration, radiant_win, lobby_type, game_mode, cluster, radiant_score)
-       VALUES ($1, to_timestamp($2), $3, $4, $5, $6, $7, $8)
-       ON CONFLICT (match_id) DO UPDATE
-       SET start_time = EXCLUDED.start_time,
-           duration = EXCLUDED.duration,
-           radiant_win = EXCLUDED.radiant_win,
-           lobby_type = EXCLUDED.lobby_type,
-           game_mode = EXCLUDED.game_mode,
-           cluster = EXCLUDED.cluster,
-           radiant_score = EXCLUDED.radiant_score;`,
-      [matchId, start_time, duration, radiant_win, lobby_type, game_mode, cluster, radiant_score]
+       VALUES ($1, NOW(), 0, false, 0, 0, 0, 0)
+       ON CONFLICT (match_id) DO NOTHING;`,
+      [matchId]
     );
 
-    // 2) Clear existing players
-    await pool.query(`DELETE FROM match_players WHERE match_id = $1`, [matchId]);
-
-    // 3) Insert players
-    for (const sel of selections) {
+    // апсерт гравців
+    for (const p of players) {
       await pool.query(
-        `INSERT INTO match_players (match_id, hero_id, role, status, is_mine)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [matchId, sel.hero_id, sel.role, sel.status, sel.isMine]
+        `INSERT INTO match_players (match_id, hero_id, role, status, is_mine, player_slot)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         ON CONFLICT (match_id, hero_id) DO UPDATE
+         SET role = EXCLUDED.role,
+             status = EXCLUDED.status,
+             is_mine = EXCLUDED.is_mine,
+             player_slot = EXCLUDED.player_slot;`,
+        [matchId, p.hero_id, p.role, p.status, p.is_mine, p.player_slot]
       );
     }
 
-    console.log("Inserted players:", selections);
-
-    res.json({ success: true, message: `Матч ${matchId} збережено у базі` });
+    res.json({ ok: true });
   } catch (err) {
-    console.error("Save match error:", err);
-    res.status(500).json({ error: "Помилка збереження у базу" });
+    console.error("saveMatch error:", err);
+    res.status(500).json({ error: "Не вдалося зберегти матч" });
   }
 });
 
