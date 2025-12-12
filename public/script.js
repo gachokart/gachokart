@@ -288,12 +288,9 @@ async function openSavedMatch(matchId) {
       byId("metaGameMode").innerText = "—";
     }
 
-    // визначаємо мою команду через індекс у масиві (Radiant перші 5, Dire другі 5)
-    const myIndex = players.findIndex(p => p.is_mine);
-    let myTeam, enemyTeam;
-   // визначаємо мою команду через прапорець is_mine
-const myTeam = players.filter(p => p.is_mine);
-const enemyTeam = players.filter(p => !p.is_mine);
+    // визначаємо мою команду через прапорець is_mine
+    const myTeam = players.filter(p => p.is_mine);
+    const enemyTeam = players.filter(p => !p.is_mine);
 
     // малюємо мою команду
     const myHeader = document.createElement("tr");
