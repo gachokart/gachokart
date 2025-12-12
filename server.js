@@ -52,12 +52,16 @@ app.post("/api/saveMatch", async (req, res) => {
     const { matchId, players } = req.body;
 
     // апсерт заголовка матчу
-    await pool.query(
-      `INSERT INTO matches (match_id, start_time, duration, radiant_win, lobby_type, game_mode, cluster, radiant_score)
-       VALUES ($1, NOW(), 0, false, 0, 0, 0, 0)
-       ON CONFLICT (match_id) DO NOTHING;`,
-      [matchId]
-    );
+   await pool.query(
+  `INSERT INTO match_players (match_id, hero_id, role, status, is_mine, player_slot)
+   VALUES ($1, $2, $3, $4, $5, $6)
+   ON CONFLICT (match_id, hero_id) DO UPDATE
+   SET role = EXCLUDED.role,
+       status = EXCLUDED.status,
+       is_mine = EXCLUDED.is_mine,
+       player_slot = EXCLUDED.player_slot;`,
+  [matchId, p.hero_id, p.role, p.status, p.is_mine, p.player_slot]
+);
 
     // апсерт гравців
     for (const p of players) {
