@@ -15,60 +15,7 @@ const pool = new Pool({
 // Utility: OpenDota Player ID (replace with your own if needed)
 const MY_ACCOUNT_ID = 863386335;
 
-// API: отримати гравців збереженого матчу
-app.get("/api/savedMatchPlayers/:id", async (req, res) => {
-  try {
-    const matchId = req.params.id;
-    const result = await pool.query(
-      "SELECT hero_id, role, status, is_mine FROM match_players WHERE match_id = $1",
-      [matchId]
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error("Saved match players error:", err);
-    res.status(500).json({ error: "Не вдалося отримати гравців матчу" });
-  }
-});
-
-// API: збережені матчі з Postgres
-app.get("/api/savedMatches", async (req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT * FROM matches ORDER BY start_time DESC "
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error("Saved matches error:", err);
-    res.status(500).json({ error: "Не вдалося отримати збережені матчі" });
-  }
-});
-
-// API: recent matches for quick list
-app.get("/api/matches", async (req, res) => {
-  try {
-    const response = await fetch(`https://api.opendota.com/api/players/${MY_ACCOUNT_ID}/recentMatches`);
-    const matches = await response.json();
-    res.json(matches);
-  } catch (err) {
-    console.error("Recent matches error:", err);
-    res.status(500).json({ error: "Не вдалося отримати дані з OpenDota" });
-  }
-});
-
-// API: full match details
-app.get("/api/match/:id", async (req, res) => {
-  try {
-    const matchId = req.params.id;
-    const response = await fetch(`https://api.opendota.com/api/matches/${matchId}`);
-    const matchData = await response.json();
-    res.json(matchData);
-  } catch (err) {
-    console.error("Match fetch error:", err);
-    res.status(500).json({ error: "Не вдалося отримати дані матчу" });
-  }
-});
-
-// API: save match to DB (matches + match_players, no duplicates)
+// API: збереження матчу (matches + match_players)
 app.post("/api/saveMatch", async (req, res) => {
   const {
     matchId,
@@ -88,36 +35,67 @@ app.post("/api/saveMatch", async (req, res) => {
 
   try {
     // 1) Upsert match header
-await pool.query(
-  `INSERT INTO matches (match_id, start_time, duration, radiant_win, lobby_type, game_mode, cluster, radiant_score)
-   VALUES ($1, to_timestamp($2), $3, $4, $5, $6, $7, $8)
-   ON CONFLICT (match_id) DO UPDATE
-   SET start_time = EXCLUDED.start_time,
-       duration = EXCLUDED.duration,
-       radiant_win = EXCLUDED.radiant_win,
-       lobby_type = EXCLUDED.lobby_type,
-       game_mode = EXCLUDED.game_mode,
-       cluster = EXCLUDED.cluster,
-       radiant_score = EXCLUDED.radiant_score;`,
-  [matchId, start_time, duration, radiant_win, lobby_type, game_mode, cluster, radiant_score]
-);
+    await pool.query(
+      `INSERT INTO matches (match_id, start_time, duration, radiant_win, lobby_type, game_mode, cluster, radiant_score)
+       VALUES ($1, to_timestamp($2), $3, $4, $5, $6, $7, $8)
+       ON CONFLICT (match_id) DO UPDATE
+       SET start_time = EXCLUDED.start_time,
+           duration = EXCLUDED.duration,
+           radiant_win = EXCLUDED.radiant_win,
+           lobby_type = EXCLUDED.lobby_type,
+           game_mode = EXCLUDED.game_mode,
+           cluster = EXCLUDED.cluster,
+           radiant_score = EXCLUDED.radiant_score;`,
+      [matchId, start_time, duration, radiant_win, lobby_type, game_mode, cluster, radiant_score]
+    );
 
-// 2) Clear existing players
-await pool.query(`DELETE FROM match_players WHERE match_id = $1`, [matchId]);
+    // 2) Clear existing players
+    await pool.query(`DELETE FROM match_players WHERE match_id = $1`, [matchId]);
 
-// 3) Insert players with role/status
-for (const sel of selections) {
-  await pool.query(
-    `INSERT INTO match_players (match_id, hero_id, role, status, is_mine)
-     VALUES ($1, $2, $3, $4, $5)`,
-    [matchId, sel.hero_id, sel.role, sel.status, sel.isMine]
-  );
-}
+    // 3) Insert players
+    for (const sel of selections) {
+      await pool.query(
+        `INSERT INTO match_players (match_id, hero_id, role, status, is_mine)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [matchId, sel.hero_id, sel.role, sel.status, sel.isMine]
+      );
+    }
+
+    console.log("Inserted players:", selections);
 
     res.json({ success: true, message: `Матч ${matchId} збережено у базі` });
   } catch (err) {
     console.error("Save match error:", err);
     res.status(500).json({ error: "Помилка збереження у базу" });
+  }
+});
+
+// API: список збережених матчів
+app.get("/api/savedMatches", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT * FROM matches ORDER BY start_time DESC"
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Saved matches error:", err);
+    res.status(500).json({ error: "Не вдалося отримати збережені матчі" });
+  }
+});
+
+// API: гравці конкретного матчу
+app.get("/api/savedMatchPlayers/:id", async (req, res) => {
+  try {
+    const matchId = parseInt(req.params.id, 10); // 🔎 важливо: привести до числа
+    const result = await pool.query(
+      "SELECT hero_id, role, status, is_mine FROM match_players WHERE match_id = $1",
+      [matchId]
+    );
+    console.log("savedMatchPlayers rows:", result.rows);
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Saved match players error:", err);
+    res.status(500).json({ error: "Не вдалося отримати гравців матчу" });
   }
 });
 
