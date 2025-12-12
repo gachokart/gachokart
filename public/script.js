@@ -79,12 +79,11 @@ async function loadSavedMatches() {
     matches.forEach(m => {
       const li = document.createElement("li");
       li.textContent = `Матч ${m.match_id} — ${m.radiant_win ? "Radiant" : "Dire"} — ${Math.floor(m.duration/60)} хв`;
-      li.onclick = () => openSavedMatch(m.match_id);   // ← ось тут
+      li.onclick = () => openSavedMatch(m.match_id); // відкриває форму тільки при кліку
       list.appendChild(li);
     });
   } catch (err) {
     console.error("loadSavedMatches error:", err);
-    alert("Не вдалося завантажити список збережених матчів");
   }
 }
 
