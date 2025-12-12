@@ -219,34 +219,38 @@ function cancelForm() {
 
 async function submitMatch() {
   try {
-    const payload = {
-      matchId: currentMatchId,
-      start_time: currentMeta.start_time,
-      duration: currentMeta.duration,
-      radiant_win: currentMeta.radiant_win,
-      lobby_type: currentMeta.lobby_type,
-      game_mode: currentMeta.game_mode,
-      cluster: currentMeta.cluster,
-      radiant_score: currentMeta.radiant_score,
-      selections: currentSelections
-    };
+    const matchId = byId("metaMatchId").innerText;
 
-    console.log("Submitting match payload:", payload);
+    const rows = document.querySelectorAll("#playersTable tr");
+    const players = [];
+
+    rows.forEach((row, idx) => {
+      const heroId = row.dataset.heroId;
+      const role = row.querySelector(".role-select")?.value || "";
+      const status = parseInt(row.querySelector(".status-input")?.value || "0", 10);
+      const isMine = row.querySelector(".is-mine-checkbox")?.checked || false;
+
+      // визначаємо сторону: перші 5 — Radiant, другі 5 — Dire
+      const player_slot = idx < 5 ? idx : idx + 128;
+
+      players.push({
+        hero_id: heroId,
+        role,
+        status,
+        is_mine: isMine,
+        player_slot
+      });
+    });
 
     const res = await fetch("/api/saveMatch", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({ matchId, players })
     });
 
-    const data = await res.json();
-    console.log("Server response:", data);
-
-    if (data.success) {
-      alert(`Матч ${currentMatchId} збережено`);
-    } else {
-      alert("Помилка при збереженні матчу");
-    }
+    if (!res.ok) throw new Error("Помилка збереження матчу");
+    alert("Матч успішно збережено!");
+    cancelForm();
   } catch (err) {
     console.error("submitMatch error:", err);
     alert("Не вдалося зберегти матч");
@@ -257,11 +261,9 @@ async function submitMatch() {
 
 async function openSavedMatch(matchId) {
   try {
-    // тягнемо гравців цього матчу
     const res = await fetch(`/api/savedMatchPlayers/${matchId}`);
     const players = await res.json();
 
-    // тягнемо мета-дані всіх матчів і знаходимо потрібний
     const metaRes = await fetch(`/api/savedMatches`);
     const allMatches = await metaRes.json();
     const matchMeta = allMatches.find(m => m.match_id == matchId);
@@ -269,33 +271,13 @@ async function openSavedMatch(matchId) {
     const table = byId("playersTable");
     table.innerHTML = "";
 
-    // заповнюємо мета-блок
-    byId("formTitle").innerText = `Збережений матч ${matchId}`;
-    byId("metaMatchId").innerText = matchMeta?.match_id || "—";
-    byId("metaRadiantWin").innerText = matchMeta?.radiant_win ? "Radiant переміг" : "Dire переміг";
-    byId("metaDuration").innerText = matchMeta?.duration ? `${Math.floor(matchMeta.duration/60)} хв` : "—";
-
-    if (matchMeta?.start_time) {
-      const date = new Date(matchMeta.start_time);
-      byId("metaGameMode").innerText = date.toLocaleDateString("uk-UA", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit"
-      });
-    } else {
-      byId("metaGameMode").innerText = "—";
-    }
-
-    // визначаємо мою команду через прапорець is_mine
+    // визначаємо мою сторону
     const myPlayer = players.find(p => p.is_mine);
-const mySideRadiant = myPlayer.player_slot < 128;
+    const mySideRadiant = myPlayer.player_slot < 128;
 
-const myTeam = players.filter(p => mySideRadiant ? p.player_slot < 128 : p.player_slot >= 128);
-const enemyTeam = players.filter(p => mySideRadiant ? p.player_slot >= 128 : p.player_slot < 128);
+    const myTeam = players.filter(p => mySideRadiant ? p.player_slot < 128 : p.player_slot >= 128);
+    const enemyTeam = players.filter(p => mySideRadiant ? p.player_slot >= 128 : p.player_slot < 128);
 
-    // малюємо мою команду
     const myHeader = document.createElement("tr");
     myHeader.innerHTML = `<td colspan="4" class="team-header my-team">Моя команда (${myTeam.length})</td>`;
     table.appendChild(myHeader);
@@ -315,7 +297,6 @@ const enemyTeam = players.filter(p => mySideRadiant ? p.player_slot >= 128 : p.p
       table.appendChild(row);
     });
 
-    // малюємо суперників
     const enemyHeader = document.createElement("tr");
     enemyHeader.innerHTML = `<td colspan="4" class="team-header enemy-team">Суперники (${enemyTeam.length})</td>`;
     table.appendChild(enemyHeader);
@@ -341,7 +322,6 @@ const enemyTeam = players.filter(p => mySideRadiant ? p.player_slot >= 128 : p.p
     alert("Не вдалося відкрити збережений матч");
   }
 }
-
 
 
 function roleTagHtml(role) {
