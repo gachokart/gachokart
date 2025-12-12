@@ -291,13 +291,9 @@ async function openSavedMatch(matchId) {
     // визначаємо мою команду через індекс у масиві (Radiant перші 5, Dire другі 5)
     const myIndex = players.findIndex(p => p.is_mine);
     let myTeam, enemyTeam;
-    if (myIndex < 5) {
-      myTeam = players.slice(0, 5);
-      enemyTeam = players.slice(5, 10);
-    } else {
-      myTeam = players.slice(5, 10);
-      enemyTeam = players.slice(0, 5);
-    }
+   // визначаємо мою команду через прапорець is_mine
+const myTeam = players.filter(p => p.is_mine);
+const enemyTeam = players.filter(p => !p.is_mine);
 
     // малюємо мою команду
     const myHeader = document.createElement("tr");
