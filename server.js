@@ -27,6 +27,25 @@ app.get("/api/matches", async (req, res) => {
   }
 });
 
+// API: отримати повні дані матчу з OpenDota
+app.get("/api/match/:id", async (req, res) => {
+  try {
+    const matchId = req.params.id;
+    console.log("Fetching match from OpenDota:", matchId);
+
+    const response = await fetch(`https://api.opendota.com/api/matches/${matchId}`);
+    if (!response.ok) {
+      return res.status(response.status).json({ error: "OpenDota не повернув дані" });
+    }
+
+    const matchData = await response.json();
+    res.json(matchData);
+  } catch (err) {
+    console.error("Match fetch error:", err);
+    res.status(500).json({ error: "Не вдалося отримати дані матчу" });
+  }
+});
+
 // API: збереження матчу (matches + match_players)
 app.post("/api/saveMatch", async (req, res) => {
   const {
