@@ -289,8 +289,11 @@ async function openSavedMatch(matchId) {
     }
 
     // визначаємо мою команду через прапорець is_mine
-    const myTeam = players.filter(p => p.is_mine);
-    const enemyTeam = players.filter(p => !p.is_mine);
+    const myPlayer = players.find(p => p.is_mine);
+const mySideRadiant = myPlayer.player_slot < 128;
+
+const myTeam = players.filter(p => mySideRadiant ? p.player_slot < 128 : p.player_slot >= 128);
+const enemyTeam = players.filter(p => mySideRadiant ? p.player_slot >= 128 : p.player_slot < 128);
 
     // малюємо мою команду
     const myHeader = document.createElement("tr");
